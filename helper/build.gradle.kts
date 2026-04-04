@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -41,6 +42,7 @@ kotlin {
 //            implementation(project(":helper:helper"))
 
             // Ktor
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.logging)
@@ -58,22 +60,27 @@ kotlin {
         }
 
         androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.okhttp)
         }
 
         iosMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.darwin)
         }
 
         jvmMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.cio)
         }
 
         jsMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.js)
         }
 
         wasmJsMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.js)
         }
     }
