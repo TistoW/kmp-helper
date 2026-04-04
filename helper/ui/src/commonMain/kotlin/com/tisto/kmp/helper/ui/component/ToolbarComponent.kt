@@ -24,14 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.tisto.helper.core.helper.ui.theme.ComposeHelperTheme
-import com.tisto.helper.core.helper.ui.theme.Heights
-import com.tisto.helper.core.helper.ui.theme.Padding
-import com.tisto.helper.core.helper.ui.theme.TextAppearance
-import com.tisto.helper.core.helper.ui.theme.Colors
-import com.tisto.helper.core.helper.ui.theme.Spacing
-import com.tisto.helper.core.helper.utils.ext.MobilePreview
-import com.tisto.helper.core.helper.utils.ext.TabletPreview
+//import com.tisto.helper.core.helper.ui.theme.ComposeHelperTheme
+//import com.tisto.helper.core.helper.ui.theme.Heights
+//import com.tisto.helper.core.helper.ui.theme.Padding
+//import com.tisto.helper.core.helper.ui.theme.TextAppearance
+//import com.tisto.helper.core.helper.ui.theme.Colors
+//import com.tisto.helper.core.helper.ui.theme.Spacing
+//import com.tisto.helper.core.helper.utils.ext.MobilePreview
+//import com.tisto.helper.core.helper.utils.ext.TabletPreview
 
 @Composable
 fun Toolbars(
@@ -52,96 +52,25 @@ fun Toolbars(
     isLoadingSave: Boolean = false,
 ) {
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(Colors.White)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = Padding.small, end = Padding.box),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (onBack != null && !isHideBack) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = iconBack
-                            ?: Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            } else {
-                Spacer(modifier = width(Spacing.box))
-            }
-            Text(
-                text = title ?: "Title",
-                style = TextAppearance.body1Bold(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Padding.small)
-                    .align(Alignment.CenterVertically)
-            )
-
-            if (onDelete != null) {
-                ButtonNormal(
-                    text = deleteText ?: "Hapus",
-                    onClick = onDelete,
-                    isLoading = isLoadingDelete,
-                    enabled = isEnabledDelete,
-                    modifier = height(Heights.normal)
-                        .padding(end = Padding.box)
-                        .defaultMinSize(minWidth = 90.dp),
-                    strokeWidth = 1.dp,
-                    textColor = Colors.ColorPrimary
-                )
-            }
-
-            if (onSave != null) {
-                ButtonNormal(
-                    text = saveText ?: "Simpan",
-                    onClick = onSave,
-                    isLoading = isLoadingSave,
-                    enabled = isEnabledSave,
-                    modifier = height(Heights.normal)
-                        .defaultMinSize(minWidth = 90.dp)
-                )
-            }
-
-            if (onMore != null) {
-                IconButton(onClick = onMore) {
-                    Icon(
-                        imageVector = iconMore, contentDescription = "Add"
-                    )
-                }
-            }
-
-        }
-
-        SimpleHorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
-    }
 }
 
 
-@MobilePreview
-@Composable
-fun MobileToolbarPreviews() {
-    ComposeHelperTheme {
-        Toolbars()
-    }
-}
-
-@TabletPreview
-@Composable
-fun TabletToolbarPreviews() {
-    ComposeHelperTheme {
-        Toolbars(
-            onSave = {},
-            onDelete = {},
-        )
-    }
-
-}
+//@MobilePreview
+//@Composable
+//fun MobileToolbarPreviews() {
+//    ComposeHelperTheme {
+//        Toolbars()
+//    }
+//}
+//
+//@TabletPreview
+//@Composable
+//fun TabletToolbarPreviews() {
+//    ComposeHelperTheme {
+//        Toolbars(
+//            onSave = {},
+//            onDelete = {},
+//        )
+//    }
+//
+//}
