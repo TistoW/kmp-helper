@@ -1,6 +1,6 @@
 package com.tisto.kmp
 
-import com.tisto.kmp.helper.kmpHelper
+import com.tisto.kmp.helper.network.kmpHelper
 
 class Greeting {
     private val platform = getPlatform()
