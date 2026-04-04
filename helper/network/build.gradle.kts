@@ -20,7 +20,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "Helper"
+            baseName = "helper-network"
             isStatic = true
         }
     }
@@ -87,7 +87,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.tisto.kmp.helper"
+    namespace = "com.tisto.kmp.helper.network"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
