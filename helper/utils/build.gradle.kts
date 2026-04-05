@@ -19,7 +19,7 @@ val localProperties = Properties().apply {
     }
 }
 
-val kmpTargetsEnabled = localProperties.getProperty("kmp.targets.enabled", "false").toBoolean()
+val kmpTargetsEnabled = localProperties.getProperty("kmp.targets.enabled", "true").toBoolean()
 
 kotlin {
     androidTarget {
