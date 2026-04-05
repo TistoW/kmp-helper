@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -8,6 +9,19 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// ============================================
+// READ local.properties
+// ============================================
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+val kmpTargetsEnabled = localProperties.getProperty("kmp.targets.enabled", "false").toBoolean()
+
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -15,25 +29,31 @@ kotlin {
         }
     }
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "helper-ui"
-            isStatic = true
+    if (kmpTargetsEnabled) {
+        // iOS
+        listOf(
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach {
+            it.binaries.framework {
+                baseName = "helper-ui"
+                isStatic = true
+            }
         }
-    }
 
-    jvm()
+        // JVM (Desktop)
+        jvm()
 
-    js {
-        browser()
-    }
+        // JavaScript
+        js {
+            browser()
+        }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
+        // WebAssembly
+        @OptIn(ExperimentalWasmDsl::class)
+        wasmJs {
+            browser()
+        }
     }
 
     sourceSets {
