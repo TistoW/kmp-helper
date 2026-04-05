@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
