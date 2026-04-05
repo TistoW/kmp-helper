@@ -35,7 +35,7 @@ kotlin {
             iosSimulatorArm64()
         ).forEach {
             it.binaries.framework {
-                baseName = "helper-ui"
+                baseName = "helper-utils"
                 isStatic = true
             }
         }

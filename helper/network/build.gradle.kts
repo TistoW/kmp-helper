@@ -37,7 +37,7 @@ kotlin {
             iosSimulatorArm64()
         ).forEach {
             it.binaries.framework {
-                baseName = "helper-ui"
+                baseName = "helper-network"
                 isStatic = true
             }
         }
@@ -59,8 +59,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-//            implementation(project(":helper:common"))
-//            implementation(project(":helper:helper"))
+
+            implementation(project(":helper:utils"))
 
             // Ktor
             implementation(project.dependencies.platform(libs.ktor.bom))

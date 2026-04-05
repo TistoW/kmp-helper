@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.project
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -58,6 +60,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+
+            implementation(project(":helper:network"))
+            implementation(project(":helper:utils"))
+
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.ui)
@@ -70,6 +76,10 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+
+            implementation(libs.coil) // Core Coil
+            implementation(libs.coil3.coil.compose) // AsyncImage composable
+            implementation(libs.coil.network.ktor3)
 
         }
 
