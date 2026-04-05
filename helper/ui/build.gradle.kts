@@ -46,7 +46,7 @@ kotlin {
             implementation(libs.compose.material.icons.core)
             implementation(libs.compose.material.icons.extended)
 
-            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
 

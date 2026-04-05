@@ -45,17 +45,21 @@ object TextAppearances {
         @Composable get() = label3.copy(fontWeight = FontWeight.Bold)
 
     // Title
-    val title1: TextStyle
-        @Composable get() = MaterialTheme.typography.titleLarge
+
+    fun title1() = MaterialTheme.typography.titleLarge
 
     val title1Bold: TextStyle
-        @Composable get() = title1.copy(fontWeight = FontWeight.Bold)
+        @Composable get() = title1().copy(fontWeight = FontWeight.Bold)
 
-    val title2: TextStyle
-        @Composable get() = MaterialTheme.typography.titleMedium
+    @Composable
+    fun title1Bold() = title1().copy(fontWeight = FontWeight.Bold)
 
-    val title2Bold: TextStyle
-        @Composable get() = title2.copy(fontWeight = FontWeight.Bold)
+    @Composable
+    fun title2() = MaterialTheme.typography.titleMedium
+
+    @Composable
+    fun title2Bold() = title2().copy(fontWeight = FontWeight.Bold)
+
 
     val title3: TextStyle
         @Composable get() = MaterialTheme.typography.titleSmall
