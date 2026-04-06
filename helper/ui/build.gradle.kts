@@ -62,7 +62,7 @@ kotlin {
         commonMain.dependencies {
 
             implementation(project(":helper:network"))
-            implementation(project(":helper:utils"))
+        //    implementation(project(":helper:utils"))
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

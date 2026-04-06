@@ -59,7 +59,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
 
-            implementation(project(":helper:utils"))
+        //    implementation(project(":helper:utils"))
 
             implementation(libs.compose.runtime)
             implementation(libs.lifecycle.viewmodelCompose)

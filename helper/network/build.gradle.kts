@@ -60,7 +60,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
 
-            implementation(project(":helper:utils"))
+        //    implementation(project(":helper:utils"))
 
             // Ktor
             implementation(project.dependencies.platform(libs.ktor.bom))
