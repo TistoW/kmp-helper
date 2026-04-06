@@ -2,6 +2,7 @@ package com.tisto.kmp.helper.ui.icon
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.tisto.kmp.helper.ui.icon.myicon.IcCameraSolar
+import com.tisto.kmp.helper.ui.icon.myicon.IcFilterSolar
 import com.tisto.kmp.helper.ui.icon.myicon.IcLoading
 import com.tisto.kmp.helper.ui.icon.myicon.IcSearch
 import kotlin.collections.List as ____KtList
@@ -18,7 +19,8 @@ public val MyIcon.AllIcons: ____KtList<ImageVector>
         __AllIcons = listOf(
             IcLoading,
             IcSearch,
-            IcCameraSolar
+            IcCameraSolar,
+            IcFilterSolar
         )
         return __AllIcons!!
     }
