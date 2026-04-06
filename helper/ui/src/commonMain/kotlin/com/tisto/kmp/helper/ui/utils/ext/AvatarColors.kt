@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.utils.ext
+package com.tisto.kmp.helper.ui.utils.ext
 
 import androidx.compose.ui.graphics.Color
 
