@@ -85,7 +85,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.tisto.kmp.helper.android"
+    namespace = "com.tisto.kmp.helper.utils"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
