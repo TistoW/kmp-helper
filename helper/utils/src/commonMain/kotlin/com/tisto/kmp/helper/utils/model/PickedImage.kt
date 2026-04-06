@@ -1,0 +1,9 @@
+package com.tisto.kmp.helper.utils.model
+
+import io.github.vinceglb.filekit.PlatformFile
+
+data class PickedImage(
+    val file: PlatformFile,
+    val name: String,
+    val mimeType: String?,
+)
