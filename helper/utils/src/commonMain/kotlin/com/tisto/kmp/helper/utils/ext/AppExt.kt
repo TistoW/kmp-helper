@@ -181,3 +181,12 @@ fun <T> LiveData<T>.observeOnce(
         }
     })
 }
+
+
+fun <T> List<T>.insertAt(value: T, index: Int = 1): List<T> {
+    return when {
+        index <= 0 -> listOf(value) + this
+        index >= size -> this + value
+        else -> take(index) + value + drop(index)
+    }
+}
