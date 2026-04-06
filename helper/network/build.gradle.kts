@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlin.compose)
 }
 
 // ============================================
@@ -62,6 +63,13 @@ kotlin {
 
             implementation(project(":helper:utils"))
 
+            // Compose
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.material3)
+
             // Ktor
             implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.core)
@@ -79,8 +87,13 @@ kotlin {
             // Helper
             implementation(libs.uuid)
 
-            //
+            // filekit
             implementation(libs.filekit.core)
+
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
         }
 
         androidMain.dependencies {
