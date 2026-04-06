@@ -78,6 +78,9 @@ kotlin {
 
             // Helper
             implementation(libs.uuid)
+
+            //
+            implementation(libs.filekit.core)
         }
 
         androidMain.dependencies {
