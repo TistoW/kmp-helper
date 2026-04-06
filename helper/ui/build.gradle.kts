@@ -81,6 +81,11 @@ kotlin {
             implementation(libs.coil3.coil.compose) // AsyncImage composable
             implementation(libs.coil.network.ktor3)
 
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
         }
 
         androidMain.dependencies {
