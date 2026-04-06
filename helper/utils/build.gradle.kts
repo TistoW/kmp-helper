@@ -63,6 +63,7 @@ kotlin {
             implementation(libs.lifecycle.runtimeCompose)
 
             implementation(libs.filekit.core)
+            implementation(libs.kotlinx.datetime)
         }
 
         androidMain.dependencies {

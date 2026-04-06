@@ -86,6 +86,8 @@ kotlin {
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
+            implementation(libs.filekit.dialogs.compose)
+            implementation(libs.filekit.core)
         }
 
         androidMain.dependencies {
