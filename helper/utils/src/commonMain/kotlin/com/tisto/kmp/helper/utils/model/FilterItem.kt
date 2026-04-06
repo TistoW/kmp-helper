@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.model
+package com.tisto.kmp.helper.utils.model
 
 const val defaultOrderType = "ASC"
 const val defaultOrderBy = "name"
