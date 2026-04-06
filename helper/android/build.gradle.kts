@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -35,7 +36,7 @@ kotlin {
             iosSimulatorArm64()
         ).forEach {
             it.binaries.framework {
-                baseName = "helper-utils"
+                baseName = "helper-android"
                 isStatic = true
             }
         }
@@ -57,13 +58,24 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+
+            implementation(project(":helper:utils"))
+
             implementation(libs.compose.runtime)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
         }
 
         androidMain.dependencies {
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.appcompat)
+            implementation(libs.material)
 
+            implementation(libs.converter.gson)
+            implementation(libs.gson)
+
+            implementation(libs.zxing.android.embedded)
+            implementation(libs.qrgenerator)
         }
 
         iosMain.dependencies {
