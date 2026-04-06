@@ -64,6 +64,9 @@ kotlin {
             implementation(libs.compose.runtime)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.dialogs.compose)
         }
 
         androidMain.dependencies {
