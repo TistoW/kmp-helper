@@ -1,9 +1,18 @@
 package com.tisto.kmp.helper.network.expect
 
+expect fun PlatformTypeExpect(): String
+
 interface Platform {
     val name: String
     val type: String
 }
+
+class AndroidPlatform : Platform {
+    override val name: String = "Android"
+    override val type: String = "android"
+}
+
+fun getPlatform(): Platform = AndroidPlatform()
 
 object PlatformType {
     val isWasm: Boolean
