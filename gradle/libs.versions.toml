@@ -45,6 +45,7 @@ gson = "2.13.2"
 converterGson = "3.0.0"
 qrgenerator = "1.0.1"
 zxingAndroidEmbedded = "4.3.0"
+filekitDialogsCompose = "0.13.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -114,6 +115,8 @@ converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 qrgenerator = { module = "com.github.androidmads:QRGenerator", version.ref = "qrgenerator" }
 
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitDialogsCompose" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekitDialogsCompose" }
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

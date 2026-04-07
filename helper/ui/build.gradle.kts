@@ -73,6 +73,8 @@ kotlin {
             implementation(libs.compose.material.icons.core)
             implementation(libs.compose.material.icons.extended)
 
+            implementation(libs.navigation.compose)
+
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
@@ -91,7 +93,7 @@ kotlin {
         }
 
         androidMain.dependencies {
-
+            implementation(libs.androidx.activity.compose)
         }
 
         iosMain.dependencies {
