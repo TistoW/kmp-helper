@@ -16,7 +16,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
-import com.tisto.kmp.helper.android.constants.AppConstants
+import com.tisto.kmp.helper.utils.constants.AppConstants
 import kotlin.math.sqrt
 
 

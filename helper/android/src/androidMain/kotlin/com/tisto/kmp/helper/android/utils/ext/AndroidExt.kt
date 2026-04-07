@@ -43,7 +43,7 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.set
 import com.google.gson.internal.Primitives
 import com.google.gson.reflect.TypeToken
-import com.tisto.kmp.helper.android.constants.AppConstants.TIME_STAMP_FORMAT
+import com.tisto.kmp.helper.utils.constants.AppConstants.TIME_STAMP_FORMAT
 import retrofit2.Response
 import java.lang.Exception
 import java.lang.reflect.Type

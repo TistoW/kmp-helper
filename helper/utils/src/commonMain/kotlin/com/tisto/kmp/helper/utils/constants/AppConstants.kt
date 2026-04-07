@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.constants
+package com.tisto.kmp.helper.utils.constants
 
 object AppConstants {
     const val TIME_STAMP_FORMAT = "yyyy-MM-dd"

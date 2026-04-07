@@ -61,6 +61,7 @@ kotlin {
         commonMain.dependencies {
 
             implementation(project(":helper:utils"))
+            implementation(project(":helper:network"))
 
             implementation(libs.compose.runtime)
             implementation(libs.lifecycle.viewmodelCompose)
