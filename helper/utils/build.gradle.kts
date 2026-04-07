@@ -68,7 +68,15 @@ kotlin {
         }
 
         androidMain.dependencies {
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.appcompat)
+            implementation(libs.material)
 
+            implementation(libs.converter.gson)
+            implementation(libs.gson)
+
+            implementation(libs.zxing.android.embedded)
+            implementation(libs.qrgenerator)
         }
 
         iosMain.dependencies {

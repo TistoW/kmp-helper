@@ -2,7 +2,7 @@ package com.tisto.kmp.helper.android.network
 
 import com.tisto.kmp.helper.android.network.response.BaseResponseRetrofit
 import com.tisto.kmp.helper.utils.ext.def
-import com.tisto.kmp.helper.android.utils.ext.getErrorBody
+import com.tisto.kmp.helper.utils.ext.getErrorBody
 import com.tisto.kmp.helper.utils.ext.logs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.utils.ext
+package com.tisto.kmp.helper.utils.ext
 
 import android.Manifest
 import android.annotation.SuppressLint
