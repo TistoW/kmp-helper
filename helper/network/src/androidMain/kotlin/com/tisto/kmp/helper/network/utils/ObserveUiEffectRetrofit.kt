@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.network
+package com.tisto.kmp.helper.network.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

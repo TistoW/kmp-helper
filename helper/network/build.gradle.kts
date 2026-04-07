@@ -88,6 +88,7 @@ kotlin {
             implementation(libs.uuid)
 
             // filekit
+            implementation(libs.filekit.dialogs.compose)
             implementation(libs.filekit.core)
 
             // Koin
@@ -99,6 +100,9 @@ kotlin {
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.ktor.bom))
             implementation(libs.ktor.client.okhttp)
+
+            implementation(libs.okhttp)
+            implementation(libs.retrofit)
         }
 
         iosMain.dependencies {

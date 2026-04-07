@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.network.response
+package com.tisto.kmp.helper.network.response
 
 data class ListResponseRetrofit<T>(
     override var message: String = "",

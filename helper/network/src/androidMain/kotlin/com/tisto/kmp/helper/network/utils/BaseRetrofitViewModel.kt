@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.network
+package com.tisto.kmp.helper.network.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

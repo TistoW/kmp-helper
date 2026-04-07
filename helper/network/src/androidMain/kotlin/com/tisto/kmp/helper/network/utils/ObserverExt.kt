@@ -1,9 +1,8 @@
-package com.tisto.kmp.helper.android.network
+package com.tisto.kmp.helper.network.utils
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
-import com.tisto.kmp.helper.android.network.response.ErrorResponse
-import com.tisto.kmp.helper.network.utils.Resource
+import com.tisto.kmp.helper.network.response.ErrorResponse
 
 fun <T> LiveData<ResourceRetrofit<T>>.observer(
     lifecycleOwner: LifecycleOwner,

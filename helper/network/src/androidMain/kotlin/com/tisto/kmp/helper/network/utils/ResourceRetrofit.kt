@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.network
+package com.tisto.kmp.helper.network.utils
 import com.tisto.kmp.helper.utils.ext.def
 
 data class ResourceRetrofit<out T>(

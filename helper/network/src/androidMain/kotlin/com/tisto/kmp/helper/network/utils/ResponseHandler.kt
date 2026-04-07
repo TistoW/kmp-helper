@@ -1,6 +1,6 @@
-package com.tisto.kmp.helper.android.network
+package com.tisto.kmp.helper.network.utils
 
-import com.tisto.kmp.helper.android.network.response.BaseResponseRetrofit
+import com.tisto.kmp.helper.network.response.BaseResponseRetrofit
 import com.tisto.kmp.helper.utils.ext.def
 import com.tisto.kmp.helper.utils.ext.getErrorBody
 import com.tisto.kmp.helper.utils.ext.logs

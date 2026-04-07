@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.base
+package com.tisto.kmp.helper.network.base
 
 import android.os.Bundle
 import android.view.View

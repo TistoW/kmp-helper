@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.android.network.response
+package com.tisto.kmp.helper.network.response
 
 data class ErrorResponse(
     val code: String? = null,
