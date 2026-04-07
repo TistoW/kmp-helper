@@ -130,7 +130,7 @@ qrgenerator = { module = "com.github.androidmads:QRGenerator", version.ref = "qr
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekitDialogsCompose" }
 filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekitDialogsCompose" }
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
+android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
