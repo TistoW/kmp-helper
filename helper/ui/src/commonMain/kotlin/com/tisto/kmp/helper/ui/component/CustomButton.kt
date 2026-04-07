@@ -36,6 +36,7 @@ fun ButtonNormal(
     contentColor: Color = Color.White,
     disabledBackgroundColor: Color = Colors.Gray4,
     strokeWidth: Dp = 0.dp, // ✅ 0.dp = filled, >0.dp = outlined
+    elevation: Dp = 0.dp, // ✅ 0.dp = filled, >0.dp = outlined
     cornerRadius: Dp = Radius.normal,
     strokeColor: Color = Colors.ColorPrimary,
     textColor: Color = Colors.White,
@@ -64,7 +65,7 @@ fun ButtonNormal(
         enabled = enabled && !isLoading,
         contentPadding = PaddingValues(horizontal = horizontalContentPadding, vertical = 0.dp),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 0.dp,
+            defaultElevation = elevation,
             pressedElevation = 0.dp,  // ✅ No elevation change
             hoveredElevation = 0.dp,  // ✅ No elevation on hover
             focusedElevation = 0.dp   // ✅ No elevation on focus
