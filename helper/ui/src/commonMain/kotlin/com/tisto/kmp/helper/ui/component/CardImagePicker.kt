@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -31,7 +32,10 @@ fun CardImagePicker(
     imageUrl: String? = null,
     elevation: Dp = 0.dp,
     strokeWidth: Dp = 0.3.dp,
+    iconSize: Dp = 30.dp,
     strokeColor: Color = Colors.Gray4,
+    contentPadding : Dp = Spacing.small,
+    isShowLabel: Boolean = true,
     onPicker: ((PickedImage?) -> Unit)? = null
 ) {
 
@@ -53,7 +57,7 @@ fun CardImagePicker(
         CustomCardBox(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(Spacing.small),
+                .padding(contentPadding),
             elevation = 0.dp,
             backgroundColor = Colors.Gray5,
             onClick = picker::pick
@@ -82,17 +86,20 @@ fun CardImagePicker(
                         Icon(
                             imageVector = MyIcon.IcCameraSolar,
                             contentDescription = null,
-                            modifier = Modifier.size(30.dp),
+                            modifier = Modifier.size(iconSize),
                             tint = Colors.Gray3
                         )
 
-                        Spacer(modifier = Modifier.height(Spacing.small))
+                        if (isShowLabel){
+                            Spacer(modifier = Modifier.height(Spacing.small))
 
-                        Text(
-                            text = "Upload Photo",
-                            style = TextAppearance.label2(),
-                            color = Colors.Gray3
-                        )
+                            Text(
+                                text = "Upload Photo",
+                                style = TextAppearance.label2(),
+                                color = Colors.Gray3
+                            )
+                        }
+
                     }
                 }
             }
@@ -100,4 +107,37 @@ fun CardImagePicker(
         }
     }
 
+}
+
+
+//@Preview
+//@Composable
+//private fun CardImagePicker1() {
+//    CardImagePicker(
+//        modifier = Modifier
+//            .width(75.dp)
+//            .height(75.dp),
+//        contentPadding = 0.dp,
+//        strokeWidth = 0.dp,
+//        onPicker = {
+////                updateRequest { copy(pickedImage = it) }
+//        }
+//    )
+//}
+
+@Preview
+@Composable
+private fun CardImagePicker2() {
+
+
+
+    Text("Ini apa")
+//    CardImagePicker(
+//        modifier = Modifier
+//            .width(75.dp)
+//            .height(75.dp),
+//        onPicker = {
+//
+//        }
+//    )
 }
