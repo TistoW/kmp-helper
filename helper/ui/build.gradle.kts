@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -7,6 +9,8 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeHotReload)
 }
 
 // ============================================
@@ -92,6 +96,9 @@ kotlin {
 
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+
+            // ✅ WAJIB untuk preview
+            implementation(libs.compose.ui.tooling.preview)
         }
 
         iosMain.dependencies {
@@ -111,6 +118,12 @@ kotlin {
         }
     }
 }
+
+dependencies {
+    debugImplementation(libs.compose.uiTooling)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
 
 android {
     namespace = "com.tisto.kmp.helper.ui"
