@@ -24,7 +24,7 @@ import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
-import com.tisto.kmp.helper.ui.utils.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.MobilePreview
 
 // ========================================
 // 1. BASIC CONFIRMATION DIALOG

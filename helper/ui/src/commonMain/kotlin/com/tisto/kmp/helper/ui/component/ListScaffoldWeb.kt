@@ -35,10 +35,10 @@ import com.tisto.kmp.helper.ui.theme.Heights
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.ui.utils.ext.MobilePreview
-import com.tisto.kmp.helper.ui.utils.ext.TabletPreview
-import com.tisto.kmp.helper.ui.utils.ext.ScreenConfig
-import com.tisto.kmp.helper.ui.utils.ext.isMobilePhone
+import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.TabletPreview
+import com.tisto.kmp.helper.ui.ext.ScreenConfig
+import com.tisto.kmp.helper.ui.ext.isMobilePhone
 import com.tisto.kmp.helper.utils.model.FilterGroup
 
 // ====================================

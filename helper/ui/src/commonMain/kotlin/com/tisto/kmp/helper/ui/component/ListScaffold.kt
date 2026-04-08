@@ -22,9 +22,9 @@ import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.ui.utils.ext.MobilePreview
-import com.tisto.kmp.helper.ui.utils.ext.TabletPreview
-import com.tisto.kmp.helper.ui.utils.ext.ScreenConfig
+import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.TabletPreview
+import com.tisto.kmp.helper.ui.ext.ScreenConfig
 import com.tisto.kmp.helper.utils.ext.reformatDate
 import com.tisto.kmp.helper.utils.model.FilterGroup
 import kotlinx.serialization.Serializable

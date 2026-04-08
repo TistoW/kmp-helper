@@ -28,8 +28,8 @@ import com.tisto.kmp.helper.ui.theme.Padding
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Spacing
-import com.tisto.kmp.helper.ui.utils.ext.MobilePreview
-import com.tisto.kmp.helper.ui.utils.ext.TabletPreview
+import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.TabletPreview
 
 @Composable
 fun Toolbars(

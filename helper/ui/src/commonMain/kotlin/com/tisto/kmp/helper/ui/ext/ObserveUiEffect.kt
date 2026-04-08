@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.ui.utils
+package com.tisto.kmp.helper.ui.ext
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

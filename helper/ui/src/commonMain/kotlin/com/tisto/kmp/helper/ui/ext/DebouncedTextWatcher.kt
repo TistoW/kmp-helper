@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.ui.utils.ext
+package com.tisto.kmp.helper.ui.ext
 
 import android.os.Handler
 import android.os.Looper
