@@ -62,7 +62,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
 
-            implementation(project(":helper:utils"))
+            implementation(project(":helpers:utils"))
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

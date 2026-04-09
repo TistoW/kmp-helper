@@ -61,9 +61,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
 
-            implementation(project(":helper:network"))
-            implementation(project(":helper:utils"))
-
+            implementation(project(":helpers:network"))
+            implementation(project(":helpers:utils"))
 
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)

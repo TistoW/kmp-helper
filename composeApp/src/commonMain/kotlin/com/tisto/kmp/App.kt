@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.painterResource
 
-import kmp_helper.composeapp.generated.resources.Res
-import kmp_helper.composeapp.generated.resources.compose_multiplatform
+import helper.composeapp.generated.resources.Res
+import helper.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview
