@@ -10,13 +10,7 @@ val AvatarColors = listOf(
     Color(0xFFFFF3E0), // orange
     Color(0xFFF3E5F5), // purple
     Color(0xFFE1F5FE), // light blue
-    Color(0xFFFCE4EC), // pink
-    Color(0xFFF1F8E9), // lime
-    Color(0xFFEDE7F6), // deep purple
-    Color(0xFFE0F7FA), // cyan
-    Color(0xFFFFFDE7), // yellow
 )
-
 
 fun colorFromText(text: String): Color {
     if (text.isEmpty()) return AvatarColors.first()

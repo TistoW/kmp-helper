@@ -8,10 +8,12 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,29 +52,33 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tisto.kmp.helper.utils.ext.ifZero
+import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.TabletPreview
+import com.tisto.kmp.helper.ui.icon.MyIcon
+import com.tisto.kmp.helper.ui.icon.myicon.IcSearch
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.network.expect.getPlatform
-import com.tisto.kmp.helper.ui.ext.MobilePreview
 import com.tisto.kmp.helper.utils.ext.def
-import com.tisto.kmp.helper.ui.icon.MyIcon
-import com.tisto.kmp.helper.ui.icon.myicon.IcSearch
+import com.tisto.kmp.helper.utils.getPlatform
+import org.jetbrains.compose.resources.vectorResource
 import kotlin.collections.isNotEmpty
 import kotlin.let
 import kotlin.ranges.coerceAtMost
@@ -104,8 +111,9 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
 
     @Composable
     fun CustomTextField(
+        value: String = "",
+        onValueChange: (String) -> Unit = {},
         modifier: Modifier = Modifier,
-        value: String? = "",
         textStyle: TextStyle = TextAppearance.body1(),
         hint: String = "",
         hintStyle: TextStyle = TextAppearance.body2(),
@@ -124,13 +132,12 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         leadingIcon: ImageVector? = null,
         leadingIconSize: Dp = 20.dp,
         leadingIconOnClick: () -> Unit = {},
-        inputType: KeyboardOptions = KeyboardOptions.Default, // KeyboardOptions(keyboardType = KeyboardType.Email)
+        inputType: KeyboardOptions = KeyboardOptions.Default,
         onClick: () -> Unit = {},
         enabled: Boolean = true,
         isError: Boolean = false,
         singleLine: Boolean = false,
         onFocused: () -> Unit = {},
-        onValueChange: (String) -> Unit = {},
         maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
         minLines: Int = 1,
         maxLength: Int? = null,
@@ -143,7 +150,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         style: TextFieldStyle = TextFieldStyle.OUTLINED,
         backgroundColor: Color = Color.Transparent,
         focusedBackgroundColor: Color? = null,
-        strokeWidth: Dp = 0.5.dp,
+        strokeWidth: Dp = 1.dp,
         focusedStrokeWidth: Dp? = null,
         strokeColor: Color = Colors.Gray2,
         strokeColorOnFocused: Color = Colors.Gray2,
@@ -167,6 +174,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         CustomTextField(
             modifier = modifier,
             value = value,
+            onValueChange = onValueChange,
             textStyle = textStyle,
             hint = hint,
             hintStyle = hintStyle,
@@ -191,7 +199,6 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             isError = isError,
             singleLine = singleLine,
             onFocused = onFocused,
-            onValueChange = onValueChange,
             maxLines = maxLines,
             minLines = minLines,
             maxLength = maxLength,
@@ -208,20 +215,25 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             focusedStrokeWidth = focusedStrokeWidth,
             strokeColor = strokeColor,
             strokeColorOnFocused = strokeColorOnFocused,
-            autoHandlePassword = autoHandlePassword,
-
             focusRequester = if (editable) focusRequesters.getOrNull(myIndex) else null,
             nextFocusRequester = if (editable) focusRequesters.getOrNull(myIndex + 1) else null,
             previousFocusRequester = if (editable) focusRequesters.getOrNull(myIndex - 1) else null,
-
+            autoHandlePassword = autoHandlePassword,
             onEnter = onEnter,
-            onItemSelected = onItemSelected,
+            onItemSelected = onItemSelected
         )
     }
 
     fun reset() {
         currentIndex = 0
     }
+}
+
+enum class TextTransform {
+    NONE,
+    UPPERCASE,
+    LOWERCASE,
+    CAPITALIZE
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,13 +281,13 @@ fun CustomTextField(
     strokeWidth: Dp = 0.5.dp,
     focusedStrokeWidth: Dp? = null,
     strokeColor: Color = Colors.Gray2,
-    strokeColorOnFocused: Color = Colors.Gray2,
-    autoHandlePassword: Boolean = true,
-
+    strokeColorOnFocused: Color = Color.Black,
     focusRequester: FocusRequester? = null,
     nextFocusRequester: FocusRequester? = null,
     previousFocusRequester: FocusRequester? = null,
-
+    autoHandlePassword: Boolean = true,
+    allCaps: Boolean = false,
+    textTransform: TextTransform = TextTransform.NONE,
     onEnter: (() -> Unit)? = null,
     onItemSelected: ((Int) -> Unit)? = null,
 ) {
@@ -283,14 +295,16 @@ fun CustomTextField(
     var expanded by remember { mutableStateOf(false) }
     val isFocused = interactionSource.collectIsFocusedAsState().value
     val focusManager = LocalFocusManager.current
-    val isWeb = remember { getPlatform().name.contains("WebJs") }
+    val isWeb = remember { getPlatform().platform.contains("web") }
+    val transform: TextTransform = if (allCaps) TextTransform.UPPERCASE else textTransform
 
     // ✅ Password visibility state
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     // ✅ Detect if this is a password field
     val isPasswordField = remember(inputType) {
-        inputType.keyboardType == KeyboardType.Password || inputType.keyboardType == KeyboardType.NumberPassword
+        inputType.keyboardType == KeyboardType.Password ||
+                inputType.keyboardType == KeyboardType.NumberPassword
     }
 
     val currentBgColor = if (isFocused && focusedBackgroundColor != null) {
@@ -305,29 +319,25 @@ fun CustomTextField(
         strokeWidth
     }
 
-
     var tfv by remember {
-        val mValue = if (formatCurrency) value.ifZero() else value
         mutableStateOf(
             TextFieldValue(
-                text = mValue.def(),
-                selection = TextRange(mValue.def().length)
+                text = value.def(),
+                selection = TextRange(value.def().length)
             )
         )
     }
 
-
     LaunchedEffect(value, formatCurrency) {
-        val mValue = if (formatCurrency) value.ifZero() else value
         if (formatCurrency) {
-            val formatted = formatCurrencyValue(mValue.def())
+            val formatted = formatCurrencyValue(value.def())
             if (tfv.text != formatted) {
                 tfv = TextFieldValue(formatted, TextRange(formatted.length))
             }
         } else {
-            if (tfv.text != mValue) {
-                val cur = tfv.selection.start.coerceAtMost(mValue.def().length)
-                tfv = tfv.copy(text = mValue.def(), selection = TextRange(cur))
+            if (tfv.text != value) {
+                val cur = tfv.selection.start.coerceAtMost(value.def().length)
+                tfv = tfv.copy(text = value.def(), selection = TextRange(cur))
             }
         }
     }
@@ -347,11 +357,37 @@ fun CustomTextField(
     val finalEndIcon = endIcon ?: passwordToggleIcon
 
     // ✅ Determine visual transformation
+//    val finalVisualTransformation = when {
+//        visualTransformation != null -> visualTransformation
+//        isPasswordField && autoHandlePassword && !isPasswordVisible -> PasswordVisualTransformation()
+//        else -> VisualTransformation.None
+//    }
+
     val finalVisualTransformation = when {
         visualTransformation != null -> visualTransformation
-        isPasswordField && autoHandlePassword && !isPasswordVisible -> PasswordVisualTransformation()
+
+        isPasswordField && autoHandlePassword && !isPasswordVisible ->
+            PasswordVisualTransformation()
+
+        transform == TextTransform.UPPERCASE ->
+            VisualTransformation { text ->
+                TransformedText(
+                    AnnotatedString(text.text.uppercase()),
+                    OffsetMapping.Identity
+                )
+            }
+
+        transform == TextTransform.LOWERCASE ->
+            VisualTransformation { text ->
+                TransformedText(
+                    AnnotatedString(text.text.lowercase()),
+                    OffsetMapping.Identity
+                )
+            }
+
         else -> VisualTransformation.None
     }
+
 
     // ✅ Determine end icon click handler
     val finalEndIconOnClick: () -> Unit = {
@@ -361,17 +397,6 @@ fun CustomTextField(
             endIconOnClick()
         }
     }
-
-    // Added KeyboardActions
-    val keyboardActions = KeyboardActions(
-        onNext = {
-            focusManager.moveFocus(FocusDirection.Down) // ← THE FIX!
-        },
-        onDone = {
-            if (onEnter != null) onEnter()
-            else focusManager.clearFocus()
-        }
-    )
 
     Box(
         modifier = modifier
@@ -388,50 +413,46 @@ fun CustomTextField(
                 }
 
                 // ✅ TAMBAH: Handle Enter key
-                when (keyEvent.key) {
-                    Key.Enter if keyEvent.type == KeyEventType.KeyDown -> {
-                        onEnter?.let {
-                            it.invoke()
-                            return@onPreviewKeyEvent true
-                        }
-                        // Jika onEnter null dan singleLine, pindah ke next field
-                        if (singleLine) {
-                            if (isWeb) {
-                                nextFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Next)
-                            } else {
-                                nextFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Next)
-                            }
-                            return@onPreviewKeyEvent true
-                        }
-                        false
+                if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
+                    onEnter?.let {
+                        it.invoke()
+                        return@onPreviewKeyEvent true
                     }
-                    // Tab handling (existing)
-                    Key.Tab if keyEvent.type == KeyEventType.KeyDown -> {
-                        if (keyEvent.isShiftPressed) {
-                            if (isWeb) {
-                                previousFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Previous)
-                            } else {
-                                previousFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Previous)
-                            }
+                    // Jika onEnter null dan singleLine, pindah ke next field
+                    if (singleLine) {
+                        if (isWeb) {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
                         } else {
-                            if (isWeb) {
-                                nextFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Next)
-                            } else {
-                                nextFocusRequester?.requestFocus()
-                                    ?: focusManager.moveFocus(FocusDirection.Next)
-                            }
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
                         }
-                        true
+                        return@onPreviewKeyEvent true
                     }
-
-                    else -> {
-                        false
+                    false
+                }
+                // Tab handling (existing)
+                else if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                    if (keyEvent.isShiftPressed) {
+                        if (isWeb) {
+                            previousFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Previous)
+                        } else {
+                            previousFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Previous)
+                        }
+                    } else {
+                        if (isWeb) {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        } else {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        }
                     }
+                    true
+                } else {
+                    false
                 }
             }
             .then(
@@ -494,8 +515,31 @@ fun CustomTextField(
                             composition = null
                         )
                     } else newV
-                    onValueChange(next.text)
-                    tfv = next
+
+
+//                    onValueChange(next.text)
+//                    tfv = next
+
+                    val transformedText = when (transform) {
+                        TextTransform.UPPERCASE -> next.text.uppercase()
+                        TextTransform.LOWERCASE -> next.text.lowercase()
+                        TextTransform.CAPITALIZE ->
+                            next.text.split(" ")
+                                .joinToString(" ") {
+                                    it.replaceFirstChar { c ->
+                                        if (c.isLowerCase()) c.titlecase() else c.toString()
+                                    }
+                                }
+
+                        else -> next.text
+                    }
+
+                    onValueChange(transformedText)
+
+                    tfv = next.copy(
+                        text = transformedText,
+                        selection = TextRange(transformedText.length)
+                    )
                 }
             },
             enabled = enabled,
@@ -526,7 +570,6 @@ fun CustomTextField(
                     onEnter?.invoke()
                 }
             ),
-//            keyboardActions = keyboardActions,
             interactionSource = interactionSource,
             singleLine = singleLine,
             maxLines = maxLines,
@@ -542,12 +585,17 @@ fun CustomTextField(
                 singleLine = singleLine,
                 visualTransformation = finalVisualTransformation,
                 label = if (floatingLabel && hint.isNotEmpty()) {
-                    { Text(text = hint, style = hintStyle) }
+                    {
+                        Text(
+                            text = hint,
+                            style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray)
+                        )
+                    }
                 } else null,
                 placeholder = {
                     Text(
                         text = if (!floatingLabel && hint.isNotEmpty()) hint else placeholder,
-                        style = if (!floatingLabel && hint.isNotEmpty()) hintStyle else placeholderStyle,
+                        style = if (!floatingLabel && hint.isNotEmpty()) hintStyle else placeholderStyle
                     )
                 },
                 prefix = {
@@ -679,7 +727,17 @@ fun CustomTextField(
                         onClick()
                         if (itemOptions.isNotEmpty()) expanded = !expanded
                     }
-            )
+            ) {
+                IconButton(
+                    onClick = { endIconOnClick() },
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(end = 4.dp)
+                        .width(50.dp)
+                        .padding(7.dp)
+                        .align(Alignment.CenterEnd)
+                ) {}
+            }
         }
 
         if (itemOptions.isNotEmpty()) {
@@ -723,7 +781,6 @@ private fun formatCurrencyValue(value: String): String {
         formattedInteger
     }
 }
-
 
 enum class TextFieldStyle {
     OUTLINED,
@@ -872,6 +929,10 @@ fun EditTextCustomExamples() {
                 strokeWidth = 0.dp,
                 cornerRadius = 24.dp,
                 floatingLabel = false,
+                onClick = {
+
+                },
+                editable = false,
                 leadingIcon = Icons.Default.Search,
                 endIcon = Icons.Default.Close,
                 modifier = Modifier.fillMaxWidth()
@@ -959,14 +1020,20 @@ fun EditTextCustomExamples() {
                 strokeWidth = 0.5.dp,
                 strokeColor = Colors.Gray4,
                 strokeColorOnFocused = Color(0xFF0ABAB5),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
             )
         }
     }
 }
 
+@TabletPreview
+@Composable
+fun TabletPreviews() {
+    HelperTheme {
+        EditTextCustomExamples()
+    }
+
+}
 
 @MobilePreview
 @Composable

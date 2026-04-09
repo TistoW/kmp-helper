@@ -8,6 +8,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.tisto.kmp.helper.utils.ext.isMobilePhone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,23 +19,22 @@ fun RefreshContainer(
     onRefresh: () -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
-//    if (isMobile()) {
-//        PullToRefreshBox(
-//            isRefreshing = isRefreshing,
-//            onRefresh = onRefresh,
-//            contentAlignment = contentAlignment,
-//            modifier = modifier.fillMaxSize()
-//        ) {
-//            content()
-//        }
-//    } else {
-//        Box(
-//            modifier.fillMaxSize(),
-//            contentAlignment = contentAlignment
-//        ) {
-//            content()
-//        }
-//    }
+    if (isMobilePhone()) {
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            contentAlignment = contentAlignment,
+            modifier = modifier.fillMaxSize(),
+            content = content
+        )
+    } else {
+        Box(
+            modifier.fillMaxSize(),
+            contentAlignment = contentAlignment
+        ) {
+            content()
+        }
+    }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,

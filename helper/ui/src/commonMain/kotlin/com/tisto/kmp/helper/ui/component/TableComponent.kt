@@ -1,6 +1,5 @@
 package com.tisto.kmp.helper.ui.component
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -103,7 +102,6 @@ fun <T> tableActions(
 }
 
 
-
 @Composable
 fun <T> TableHeader(
     spec: TableSpec<T>,
@@ -153,21 +151,24 @@ fun <T> TableHeader(
 fun <T> TableRow(
     contentPaddingVertical: Dp = Spacing.small,
     contentPaddingHorizontal: Dp = Spacing.normal,
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier.padding(
+    modifier: Modifier = Modifier.padding(
         horizontal = contentPaddingHorizontal,
         vertical = contentPaddingVertical
     ),
     item: T,
     spec: TableSpec<T>,
     showActions: Boolean = true,
+    onClick: (() -> Unit)? = null,
     actions: (@Composable RowScope.(T) -> Unit)? = null
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+        ).fillMaxWidth()
     ) {
 
         Row(
-            modifier = modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             spec.columns.forEach { col ->

@@ -1,9 +1,6 @@
 package com.tisto.kmp.helper.network.utils
 
 import com.tisto.kmp.helper.utils.model.PickedImage
-import com.tisto.kmp.helper.network.model.SearchRequest
-import com.tisto.kmp.helper.network.model.convertToQuery
-import com.tisto.kmp.helper.utils.ext.logs
 import io.github.vinceglb.filekit.readBytes
 import io.ktor.client.*
 import io.ktor.client.call.body
@@ -20,20 +17,20 @@ import kotlinx.serialization.serializer
 suspend inline fun <reified T> HttpClient.getMethod(
     url: String,
     query: Map<String, String>? = null,
-    searchRequest: SearchRequest? = null,
     headers: Map<String, String>? = null
 ): T {
     return get(url) {
         contentType(ContentType.Application.Json)
-        headers?.forEach { (key, value) -> header(key, value) }
+        headers?.forEach { (key, value) ->
+            header(key, value)
+        }
         query?.forEach { (k, v) -> parameter(k, v) }
-        searchRequest?.convertToQuery()?.forEach { (k, v) -> parameter(k, v) }
     }.body()
 }
 
 suspend inline fun <reified Req : Any, reified Res> HttpClient.postMethod(
     url: String,
-    body: Req? = null,
+    body: Req?,
     headers: Map<String, String>? = null,
     pickedImage: PickedImage? = null,
     fileFieldName: String = "image",
@@ -59,7 +56,7 @@ suspend inline fun <reified Req : Any, reified Res> HttpClient.postMethod(
 
 suspend inline fun <reified Req : Any, reified Res> HttpClient.putMethod(
     url: String,
-    body: Req? = null,
+    body: Req?,
     headers: Map<String, String>? = null,
     pickedImage: PickedImage? = null,
     fileFieldName: String = "image",
@@ -116,9 +113,6 @@ suspend inline fun <reified Req : Any, reified Res : Any> HttpClient.requestMult
 
     // ✅ form fields
     fields.forEach { (k, v) ->
-
-        logs("vals : $v")
-
         parts += PartData.FormItem(
             value = v,
             dispose = {},

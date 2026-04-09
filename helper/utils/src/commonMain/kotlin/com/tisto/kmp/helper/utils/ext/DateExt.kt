@@ -1,10 +1,11 @@
 package com.tisto.kmp.helper.utils.ext
 
-import kotlin.time.Clock // ✅ GANTI INI - bukan kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.*
 import kotlin.time.ExperimentalTime
+
 
 const val defaultDateFormat = "yyyy-MM-dd HH:mm:ss"
 const val defaultDateFormatMillisecond = "yyyy-MM-dd HH:mm:ss.SSS"
@@ -77,6 +78,7 @@ fun String.convertDate(
         // Format ke output
         formatDateTime(localDateTime, toFormat)
     } catch (e: Exception) {
+        logs("Error Time Format: ${e.message}")
         // Fallback ke dummy date
         dummyResult(toFormat)
     }

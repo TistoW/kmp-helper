@@ -33,14 +33,12 @@ data class ScreenConfig(
         else if (isDesktopOnly) 0.7f
         else 1f
     }
-
     fun getHorizontalPaddingFormWeight(weight: Float? = null): Float {
         return weight ?: if (isMobileOnly) 1f
         else if (isTabletOnly) 0.6f
         else if (isDesktopOnly) 0.5f
         else 1f
     }
-
     fun getVerticalPadding(weight: Float? = null): Float {
         return weight ?: if (isMobileOnly) 1f
         else if (isTabletOnly) 0.8f

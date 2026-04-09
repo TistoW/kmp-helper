@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -6,9 +5,11 @@ import kotlin.apply
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.composeHotReload)
 }
 
 // ============================================
@@ -60,18 +61,52 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+            implementation(libs.compose.material.icons.extended)
 
-            implementation(libs.filekit.core)
+            // Ktor
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.serialization.kotlinx.json)
+
+            // ktor socket
+            implementation(libs.ktor.client.websockets)
+
+            // Kotlinx
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+
+            // Koin
+            implementation(libs.koin.core)
+
+            // Helper
+            implementation(libs.uuid)
             implementation(libs.kotlinx.datetime)
+
+            implementation(libs.filekit.dialogs.compose)
+            implementation(libs.filekit.core)
         }
 
         androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.okhttp)
+            implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.appcompat)
             implementation(libs.material)
 
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.view)
+            implementation(libs.barcode.scanning)
             implementation(libs.converter.gson)
             implementation(libs.gson)
 
@@ -80,21 +115,29 @@ kotlin {
         }
 
         iosMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.darwin)
         }
 
         jvmMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.cio)
         }
 
         jsMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.js)
         }
 
         wasmJsMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.js)
         }
     }
+}
+
+dependencies {
+    debugImplementation(libs.compose.uiTooling)
 }
 
 android {

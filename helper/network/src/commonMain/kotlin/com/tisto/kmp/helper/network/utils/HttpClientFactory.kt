@@ -1,7 +1,7 @@
 package com.tisto.kmp.helper.network.utils
 
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
@@ -28,7 +28,7 @@ object HttpClientFactory {
     fun create(
         config: HttpClientConfig
     ): HttpClient {
-        return HttpClient(OkHttp) {
+        return HttpClient(getPlatformEngine()) {
             // Base URL
             defaultRequest {
                 url(config.baseUrl)
@@ -68,11 +68,11 @@ object HttpClientFactory {
                     prettyPrint = true
                     isLenient = true
                     ignoreUnknownKeys = true
-                    encodeDefaults = true
-                    explicitNulls = false
+                    encodeDefaults = true // 🔥 INI KUNCINYA
                 })
             }
 
+            // Logging
             if (config.enableLogging) {
                 install(Logging) {
                     logger = object : Logger {
@@ -108,3 +108,4 @@ suspend fun <T> retryOnContentLengthMismatch(
     }
     throw Exception("Max retries exceeded")
 }
+

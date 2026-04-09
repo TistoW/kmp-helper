@@ -1,0 +1,20 @@
+<resources>
+
+    <string name="hasil_pencarian_tidak_ditemukan">Hasil pencarian \"%1$s\" tidak ditemukan</string>
+    <string name="s_kosong">%1$s kosong</string>
+    <string name="filter">Filter</string>
+    <string name="bergabung_terbaru">Bergabung Terbaru</string>
+    <string name="bergabung_terlama">Bergabung Terlama</string>
+    <string name="nama_a_z">Nama: A-Z</string>
+    <string name="nama_z_a">Nama: Z-A</string>
+    <string name="terbaru">Terbaru</string>
+    <string name="terlama">Terlama</string>
+    <string name="termurah">Termurah</string>
+    <string name="termahal">Termahal</string>
+    <string name="terakhir_diubah">Terakhir Diubah</string>
+    <string name="reset">Reset</string>
+    <string name="urutkan">Urutkan</string>
+    <string name="tambah">Tambah</string>
+    <string name="detail">Detail</string>
+
+</resources>

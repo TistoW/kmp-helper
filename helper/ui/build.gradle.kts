@@ -1,15 +1,13 @@
-import org.gradle.kotlin.dsl.implementation
-import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
 }
 
@@ -66,55 +64,78 @@ kotlin {
             implementation(project(":helper:network"))
             implementation(project(":helper:utils"))
 
+
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
-
-            implementation(libs.compose.material3)
-            implementation(libs.compose.material.icons.core)
-            implementation(libs.compose.material.icons.extended)
-
-            implementation(libs.compose.navigation)
-
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+            implementation(libs.compose.material.icons.extended)
 
-            implementation(libs.coil) // Core Coil
-            implementation(libs.coil3.coil.compose) // AsyncImage composable
-            implementation(libs.coil.network.ktor3)
+            // Ktor
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.client.logging)
+            implementation(libs.ktor.serialization.kotlinx.json)
+
+            // ktor socket
+            implementation(libs.ktor.client.websockets)
+
+            // Kotlinx
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
 
             // Koin
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
 
+            // Helper
+            implementation(libs.uuid)
+            implementation(libs.kotlinx.datetime)
+
+
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.filekit.core)
+
+            implementation(libs.coil) // Core Coil
+            implementation(libs.coil3.coil.compose) // AsyncImage composable
+            implementation(libs.coil.network.ktor3)
         }
 
         androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose)
 
-            // ✅ WAJIB untuk preview
-            implementation(libs.compose.ui.tooling.preview)
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.view)
+            implementation(libs.barcode.scanning)
         }
 
         iosMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.darwin)
         }
 
         jvmMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.cio)
         }
 
         jsMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.js)
         }
 
         wasmJsMain.dependencies {
-
+            implementation(project.dependencies.platform(libs.ktor.bom))
+            implementation(libs.ktor.client.js)
         }
     }
 }
@@ -123,7 +144,6 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
-
 
 android {
     namespace = "com.tisto.kmp.helper.ui"

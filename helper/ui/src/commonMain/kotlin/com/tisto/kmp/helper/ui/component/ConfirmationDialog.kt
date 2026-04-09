@@ -23,8 +23,8 @@ import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 
 // ========================================
 // 1. BASIC CONFIRMATION DIALOG
@@ -287,16 +287,20 @@ fun DeleteConfirmationDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
-    itemName: String = "item ini"
+    itemName: String = "item",
+    title: String = "Hapus Data?",
+    message: String = "Apakah Anda yakin ingin menghapus $itemName? Tindakan ini tidak dapat dibatalkan.",
+    confirmText: String = "Hapus Data?",
+    cancelText: String = "Batal",
 ) {
     CustomConfirmationDialog(
         showDialog = showDialog,
         onDismiss = onDismiss,
         onConfirm = onConfirm,
-        title = "Hapus Data?",
-        message = "Apakah Anda yakin ingin menghapus $itemName? Tindakan ini tidak dapat dibatalkan.",
-        confirmText = "Ya, Hapus",
-        cancelText = "Batal",
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        cancelText = cancelText,
         icon = Icons.Default.Delete,
         iconBackgroundColor = Color(0xFFFFEBEE),
         iconTint = Color(0xFFF44336),

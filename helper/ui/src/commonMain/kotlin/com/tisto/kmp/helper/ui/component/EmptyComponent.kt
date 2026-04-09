@@ -1,6 +1,5 @@
 package com.tisto.kmp.helper.ui.component
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +27,7 @@ fun EmptyState(
     search: String = "",
     actionText: String? = null,
     onAction: () -> Unit = {},
-    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
 
     val displaySearch = if (search.length > 10) {

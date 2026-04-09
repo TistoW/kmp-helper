@@ -2,6 +2,7 @@ package com.tisto.kmp.helper.network.model
 
 import kotlin.collections.toMutableList
 import kotlin.text.isNullOrEmpty
+import kotlin.toString
 
 
 data class SearchRequest(
