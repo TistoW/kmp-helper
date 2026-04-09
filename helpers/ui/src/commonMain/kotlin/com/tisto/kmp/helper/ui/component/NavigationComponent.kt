@@ -169,7 +169,7 @@ fun NavigationViewSimple(
                             Spacer(Modifier.width(Spacing.box))
 
                             Icon(
-                                imageVector = MyIcon.IcMenuSolar,
+                                imageVector = main.icon ?: MyIcon.IcMenuSolar,
                                 contentDescription = "Icon",
                                 tint = if (isSelectedMain) Colors.ColorPrimary else Colors.Gray3,
                                 modifier = Modifier.size(25.dp)
