@@ -425,7 +425,7 @@ androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "
 # ============================================
 # ANDROID PLUGINS
 # ============================================
-android-application = { id = "com.android.application", version.ref = "agp" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 
 # ============================================
