@@ -19,22 +19,22 @@ fun RefreshContainer(
     onRefresh: () -> Unit,
     content: @Composable BoxScope.() -> Unit
 ) {
-    if (isMobilePhone()) {
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            contentAlignment = contentAlignment,
-            modifier = modifier.fillMaxSize(),
-            content = content
-        )
-    } else {
-        Box(
-            modifier.fillMaxSize(),
-            contentAlignment = contentAlignment
-        ) {
-            content()
-        }
-    }
+//    if (isMobilePhone()) {
+//        PullToRefreshBox(
+//            isRefreshing = isRefreshing,
+//            onRefresh = onRefresh,
+//            contentAlignment = contentAlignment,
+//            modifier = modifier.fillMaxSize(),
+//            content = content
+//        )
+//    } else {
+//        Box(
+//            modifier.fillMaxSize(),
+//            contentAlignment = contentAlignment
+//        ) {
+//            content()
+//        }
+//    }
 
     PullToRefreshBox(
         isRefreshing = isRefreshing,
