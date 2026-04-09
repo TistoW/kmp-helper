@@ -17,5 +17,9 @@ actual class AppExitHandler(private val activity: Activity?) {
 actual fun rememberAppExitHandler(): AppExitHandler {
     val context = LocalContext.current
     val activity = context as? Activity
-    return remember(activity) { AppExitHandler(activity) }
+    return remember(activity) {
+        AppExitHandler(
+            activity
+        )
+    }
 }

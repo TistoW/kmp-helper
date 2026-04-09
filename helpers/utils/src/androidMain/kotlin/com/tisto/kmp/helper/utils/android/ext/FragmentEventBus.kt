@@ -1,4 +1,4 @@
-package com.tisto.kmp.helper.utils.ext
+package com.tisto.kmp.helper.utils.android.ext
 
 import androidx.fragment.app.Fragment
 import kotlinx.coroutines.flow.MutableSharedFlow

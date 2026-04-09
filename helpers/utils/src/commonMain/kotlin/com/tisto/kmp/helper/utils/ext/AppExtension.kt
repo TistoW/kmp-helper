@@ -143,3 +143,7 @@ object JsonHelper {
         encodeDefaults = true
     }
 }
+
+inline fun <reified T> T.toJson(): String {
+    return JsonHelper.json.encodeToString(this)
+}
