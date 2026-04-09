@@ -9,7 +9,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.decodeToImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.ext.MobilePreview
 import com.tisto.kmp.helper.utils.model.PickedImage
 import io.github.vinceglb.filekit.FileKit
@@ -138,7 +138,7 @@ fun ImagePickerScreen() {
 @MobilePreview
 @Composable
 fun ImagePickerScreenPreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         ImagePickerScreen()
     }
 }

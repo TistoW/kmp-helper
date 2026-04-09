@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -38,15 +37,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.icon.MyIcon
 import com.tisto.kmp.helper.ui.icon.myicon.IcFilterSolar
 import com.tisto.kmp.helper.ui.theme.Colors
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.model.FilterGroup
@@ -351,7 +348,7 @@ fun RefreshButton(
 @Preview(showBackground = true)
 @Composable
 fun FilterButtonPreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         FilterButton()
     }
 }
@@ -359,7 +356,7 @@ fun FilterButtonPreview() {
 @Preview(showBackground = true)
 @Composable
 fun FilterButtonActivePreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         FilterButton(
             count = 3
         )
@@ -369,7 +366,7 @@ fun FilterButtonActivePreview() {
 @Preview(showBackground = true)
 @Composable
 fun GeneralFilterPreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         GeneralFilterBottomSheet(
             onClose = {}
         )

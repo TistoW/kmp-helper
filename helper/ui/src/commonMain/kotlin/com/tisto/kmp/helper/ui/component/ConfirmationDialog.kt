@@ -23,7 +23,7 @@ import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.ext.MobilePreview
 
 // ========================================
@@ -1034,7 +1034,7 @@ fun QuickUsageExample() {
 @MobilePreview
 @Composable
 fun DeleteDialogExamplePreviews() {
-    ComposeHelperTheme {
+    HelperTheme {
         DeleteConfirmationDialog(
             showDialog = true,
             onDismiss = { },

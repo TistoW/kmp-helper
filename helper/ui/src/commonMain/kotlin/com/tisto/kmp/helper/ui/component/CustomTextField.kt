@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tisto.kmp.helper.utils.ext.ifZero
 import com.tisto.kmp.helper.ui.theme.Colors
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
@@ -971,7 +971,7 @@ fun EditTextCustomExamples() {
 @MobilePreview
 @Composable
 fun MobilePreviews() {
-    ComposeHelperTheme {
+    HelperTheme {
         EditTextCustomExamples()
     }
 }

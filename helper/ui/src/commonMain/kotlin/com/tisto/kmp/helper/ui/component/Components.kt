@@ -23,8 +23,3 @@ fun SimpleHorizontalDivider(
         color = color
     )
 }
-
-@Composable
-fun vectorResource(@DrawableRes id: Int): ImageVector {
-    return ImageVector.vectorResource(id)
-}

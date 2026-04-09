@@ -16,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 
 /**
@@ -254,7 +254,7 @@ fun Example5_DangerZones() {
 @Preview(showBackground = true)
 @Composable
 fun PaymentCompletionPreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         Example1_SimpleCountdown()
     }
 }

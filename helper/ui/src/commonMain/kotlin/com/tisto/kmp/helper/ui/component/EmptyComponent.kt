@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tisto.kmp.helper.ui.theme.ComposeHelperTheme
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 
 @Composable
@@ -65,7 +65,7 @@ fun EmptyState(
 @Preview(showBackground = true)
 @Composable
 fun EmptyStatePreview() {
-    ComposeHelperTheme {
+    HelperTheme {
         EmptyState(
             title = "No Data",
             subtitle = "There is no data available at the moment.",
