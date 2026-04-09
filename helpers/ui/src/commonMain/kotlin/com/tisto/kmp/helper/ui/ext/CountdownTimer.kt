@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
-import java.util.concurrent.TimeUnit
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -18,6 +17,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.TextAppearance
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Countdown timer that counts down from specified minutes
@@ -31,9 +34,9 @@ fun rememberCountdownTimer(
     initialMinutes: Int = 45,
     onFinish: () -> Unit = {}
 ): String {
-    // Convert minutes to milliseconds
+    // Convert minutes to milliseconds using Kotlin Duration
     val initialTimeMillis = remember(initialMinutes) {
-        TimeUnit.MINUTES.toMillis(initialMinutes.toLong())
+        initialMinutes.minutes.inWholeMilliseconds
     }
 
     var timeLeftMillis by remember { mutableLongStateOf(initialTimeMillis) }
@@ -56,15 +59,22 @@ fun rememberCountdownTimer(
 }
 
 /**
- * Format milliseconds to HH:MM:SS string
+ * Format milliseconds to HH:MM:SS string using Kotlin Duration
  */
 private fun formatTime(millis: Long): String {
-    val hours = TimeUnit.MILLISECONDS.toHours(millis)
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
+    val duration = millis.milliseconds
 
-    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    val hours = duration.inWholeHours
+    val minutes = (duration.inWholeMinutes % 60)
+    val seconds = (duration.inWholeSeconds % 60)
+
+    return "${hours.padZero()}:${minutes.padZero()}:${seconds.padZero()}"
 }
+
+/**
+ * Pad number with leading zero if single digit
+ */
+private fun Long.padZero(): String = this.toString().padStart(2, '0')
 
 /**
  * Alternative: Countdown timer with custom start time
@@ -82,7 +92,7 @@ fun rememberCustomCountdown(
     onFinish: () -> Unit = {}
 ): CountdownState {
     val totalMillis = remember(hours, minutes, seconds) {
-        (hours * 3600 + minutes * 60 + seconds) * 1000L
+        (hours.hours + minutes.minutes + seconds.seconds).inWholeMilliseconds
     }
 
     var timeLeftMillis by remember { mutableLongStateOf(totalMillis) }
@@ -101,15 +111,16 @@ fun rememberCustomCountdown(
         }
     }
 
-    val currentHours = TimeUnit.MILLISECONDS.toHours(timeLeftMillis)
-    val currentMinutes = TimeUnit.MILLISECONDS.toMinutes(timeLeftMillis) % 60
-    val currentSeconds = TimeUnit.MILLISECONDS.toSeconds(timeLeftMillis) % 60
+    val duration = timeLeftMillis.milliseconds
+    val currentHours = duration.inWholeHours
+    val currentMinutes = (duration.inWholeMinutes % 60)
+    val currentSeconds = (duration.inWholeSeconds % 60)
 
     return CountdownState(
         hours = currentHours.toInt(),
         minutes = currentMinutes.toInt(),
         seconds = currentSeconds.toInt(),
-        formattedTime = String.format("%02d:%02d:%02d", currentHours, currentMinutes, currentSeconds),
+        formattedTime = "${currentHours.padZero()}:${currentMinutes.padZero()}:${currentSeconds.padZero()}",
         isFinished = timeLeftMillis <= 0,
         totalMillis = totalMillis,
         remainingMillis = timeLeftMillis
