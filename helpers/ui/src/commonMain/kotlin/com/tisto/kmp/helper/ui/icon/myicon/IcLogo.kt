@@ -14,7 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.icon.MyIcon
 
-val MyIcon.IcComplex: ImageVector
+val MyIcon.IcLogo: ImageVector
     get() {
         if (_IcComplex != null) {
             return _IcComplex!!
@@ -111,3 +111,11 @@ val MyIcon.IcComplex: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _IcComplex: ImageVector? = null
+
+@Preview
+@Composable
+private fun Preview(): Unit {
+    Box(modifier = Modifier.padding(12.dp)) {
+        Image(imageVector = MyIcon.IcLogo, contentDescription = "")
+    }
+}

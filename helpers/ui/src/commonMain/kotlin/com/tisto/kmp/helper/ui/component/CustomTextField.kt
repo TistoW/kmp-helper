@@ -503,8 +503,7 @@ fun CustomTextField(
                     tfv = TextFieldValue(formatted, TextRange(formatted.length))
                 } else {
                     val composing = newV.composition
-                    val over =
-                        maxLength != null && newV.text.length > maxLength && composing == null
+                    val over = maxLength != null && newV.text.length > maxLength && composing == null
                     val clippedText = if (over) newV.text.take(maxLength) else newV.text
                     val selStart = minOf(newV.selection.start, clippedText.length)
                     val selEnd = minOf(newV.selection.end, clippedText.length)
@@ -516,30 +515,31 @@ fun CustomTextField(
                         )
                     } else newV
 
-
-//                    onValueChange(next.text)
-//                    tfv = next
-
+                    val needsTransform = transform != TextTransform.NONE
                     val transformedText = when (transform) {
                         TextTransform.UPPERCASE -> next.text.uppercase()
                         TextTransform.LOWERCASE -> next.text.lowercase()
-                        TextTransform.CAPITALIZE ->
-                            next.text.split(" ")
-                                .joinToString(" ") {
-                                    it.replaceFirstChar { c ->
-                                        if (c.isLowerCase()) c.titlecase() else c.toString()
-                                    }
+                        TextTransform.CAPITALIZE -> next.text.split(" ")
+                            .joinToString(" ") {
+                                it.replaceFirstChar { c ->
+                                    if (c.isLowerCase()) c.titlecase() else c.toString()
                                 }
-
+                            }
                         else -> next.text
                     }
 
                     onValueChange(transformedText)
 
-                    tfv = next.copy(
-                        text = transformedText,
-                        selection = TextRange(transformedText.length)
-                    )
+                    // Hanya reset selection ke akhir kalau ada transform
+                    // Kalau normal, pakai selection asli supaya bisa di-select di web
+                    tfv = if (needsTransform) {
+                        next.copy(
+                            text = transformedText,
+                            selection = TextRange(transformedText.length)
+                        )
+                    } else {
+                        next.copy(text = transformedText) // selection ikut dari next
+                    }
                 }
             },
             enabled = enabled,
