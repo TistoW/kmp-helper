@@ -14,18 +14,30 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 
+class UnauthorizedException : Exception("Unauthorized")
+
 suspend inline fun <reified T> HttpClient.getMethod(
     url: String,
     query: Map<String, String>? = null,
     headers: Map<String, String>? = null
 ): T {
-    return get(url) {
+
+//    return get(url) {
+//        contentType(ContentType.Application.Json)
+//        headers?.forEach { (key, value) ->
+//            header(key, value)
+//        }
+//        query?.forEach { (k, v) -> parameter(k, v) }
+//    }.body()
+
+    val response = get(url) {
         contentType(ContentType.Application.Json)
-        headers?.forEach { (key, value) ->
-            header(key, value)
-        }
+        headers?.forEach { (key, value) -> header(key, value) }
         query?.forEach { (k, v) -> parameter(k, v) }
-    }.body()
+    }
+    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
+    return response.body()
+
 }
 
 suspend inline fun <reified Req : Any, reified Res> HttpClient.postMethod(
