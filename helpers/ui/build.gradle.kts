@@ -72,6 +72,7 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+            implementation(libs.compose.material.icons.core)
             implementation(libs.compose.material.icons.extended)
 
             // Ktor
