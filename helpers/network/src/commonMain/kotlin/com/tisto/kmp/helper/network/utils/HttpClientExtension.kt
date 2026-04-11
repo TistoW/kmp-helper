@@ -59,11 +59,13 @@ suspend inline fun <reified Req : Any, reified Res> HttpClient.postMethod(
         )
     }
 
-    return post(url) {
+    val response = post(url) {
         contentType(ContentType.Application.Json)
         headers?.forEach { (key, value) -> header(key, value) }
         setBody(body, typeInfo<Req>()) // 🔥 INI KUNCINYA
-    }.body()
+    }
+    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
+    return response.body()
 }
 
 suspend inline fun <reified Req : Any, reified Res> HttpClient.putMethod(
