@@ -122,7 +122,7 @@ private fun parseDateTime(dateStr: String, format: String): LocalDateTime {
     return when {
         // ISO format standard
         format.contains("'T'") || dateStr.contains("T") -> {
-            Instant.parse(dateStr).toLocalDateTime(TimeZone.currentSystemDefault())
+            kotlin.time.Instant.parse(dateStr).toLocalDateTime(TimeZone.currentSystemDefault())
         }
 
         // Custom format - manual parsing

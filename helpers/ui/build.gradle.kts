@@ -72,6 +72,7 @@ kotlin {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.lifecycle.viewmodelCompose)
             implementation(libs.lifecycle.runtimeCompose)
+            implementation(libs.compose.material.icons.core)
             implementation(libs.compose.material.icons.extended)
 
             // Ktor
@@ -140,8 +141,9 @@ kotlin {
 }
 
 dependencies {
+    // Fix: Using only the Jetbrains version of ui-tooling to avoid ClassNotFoundException in Previews
+    // as the project primarily uses Compose Multiplatform dependencies.
     debugImplementation(libs.compose.uiTooling)
-    debugImplementation(libs.androidx.compose.ui.tooling)
 }
 
 android {

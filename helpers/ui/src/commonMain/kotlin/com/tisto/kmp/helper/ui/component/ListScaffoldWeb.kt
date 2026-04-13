@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -501,7 +500,8 @@ fun <STATE, ITEMS> ListScaffoldWeb(
         .fillMaxWidth(screenConfig.getHorizontalPaddingListWeight(horizontalPadding))
         .then(
             if (screenConfig.isMobile)
-                Modifier.padding(horizontal = Spacing.normal)
+                Modifier
+                    .padding(horizontal = Spacing.normal)
             else Modifier
         ),
 
@@ -528,7 +528,7 @@ fun <STATE, ITEMS> ListScaffoldWeb(
     minListHeight: Dp = 350.dp,
     estimatedRowHeight: Dp = 56.dp,
 ) {
-    val listState = LazyListState()
+    val listState = uiState.listScrollState
     val isLoading = uiState.isLoading
     val isRefreshing = uiState.isRefreshing
 
