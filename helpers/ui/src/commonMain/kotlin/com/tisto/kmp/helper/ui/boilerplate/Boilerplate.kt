@@ -103,6 +103,12 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
+// SECTION 0: SHARED — MessageType enum (used by all Effect.ShowMessage)
+// ══════════════════════════════════════════════════════════════════════════════════════════
+
+enum class MessageType { Success, Error, Warning, Info }
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 1: DOMAIN MODEL
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
@@ -257,7 +263,7 @@ sealed interface ExampleListEvent {
 }
 
 sealed interface ExampleListEffect {
-    data class ShowMessage(val message: String) : ExampleListEffect
+    data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleListEffect
     data class NavigateToForm(val itemId: String?) : ExampleListEffect
 }
 
@@ -277,6 +283,12 @@ sealed interface ExampleListEffect {
 //
 //     private val effectChannel = Channel<ExampleListEffect>(Channel.BUFFERED)
 //     val effect: Flow<ExampleListEffect> = effectChannel.receiveAsFlow()
+//
+//     // ── message shortcuts ──
+//     private fun showMessage(msg: String) = effectChannel.trySend(ExampleListEffect.ShowMessage(msg))
+//     private fun showSuccess(msg: String) = effectChannel.trySend(ExampleListEffect.ShowMessage(msg, MessageType.Success))
+//     private fun showError(msg: String) = effectChannel.trySend(ExampleListEffect.ShowMessage(msg, MessageType.Error))
+//     private fun showWarning(msg: String) = effectChannel.trySend(ExampleListEffect.ShowMessage(msg, MessageType.Warning))
 //
 //     private var query = ""
 //
@@ -314,10 +326,10 @@ sealed interface ExampleListEffect {
 //         viewModelScope.launch {
 //             try {
 //                 repo.delete(id)
-//                 effectChannel.trySend(ExampleListEffect.ShowMessage("Data dihapus"))
+//                 showSuccess("Data dihapus")
 //                 refresh()
 //             } catch (t: Throwable) {
-//                 effectChannel.trySend(ExampleListEffect.ShowMessage(t.message ?: "Gagal menghapus"))
+//                 showError(t.message ?: "Gagal menghapus")
 //             }
 //         }
 //     }
@@ -446,7 +458,7 @@ sealed interface ExampleFormEvent {
 }
 
 sealed interface ExampleFormEffect {
-    data class ShowMessage(val message: String) : ExampleFormEffect
+    data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleFormEffect
     data object NavigateBack : ExampleFormEffect
 }
 
@@ -486,6 +498,12 @@ sealed interface ExampleFormEffect {
 //     private val effectChannel = Channel<ExampleFormEffect>(Channel.BUFFERED)
 //     val effect: Flow<ExampleFormEffect> = effectChannel.receiveAsFlow()
 //
+//     // ── message shortcuts ──
+//     private fun showMessage(msg: String) = effectChannel.trySend(ExampleFormEffect.ShowMessage(msg))
+//     private fun showSuccess(msg: String) = effectChannel.trySend(ExampleFormEffect.ShowMessage(msg, MessageType.Success))
+//     private fun showError(msg: String) = effectChannel.trySend(ExampleFormEffect.ShowMessage(msg, MessageType.Error))
+//     private fun showWarning(msg: String) = effectChannel.trySend(ExampleFormEffect.ShowMessage(msg, MessageType.Warning))
+//
 //     init { if (itemId != null) loadExisting(itemId) }
 //
 //     fun onEvent(event: ExampleFormEvent) {
@@ -506,7 +524,7 @@ sealed interface ExampleFormEffect {
 //                 fieldsFlow.value = FormFields(name = item.name)
 //                 // TODO: populate all fields
 //             } catch (t: Throwable) {
-//                 effectChannel.trySend(ExampleFormEffect.ShowMessage(t.message ?: "Gagal memuat data"))
+//                 showError(t.message ?: "Gagal memuat data")
 //             } finally {
 //                 isLoadingFlow.value = false
 //             }
@@ -528,7 +546,7 @@ sealed interface ExampleFormEffect {
 //                 // TODO: map all fields
 //             )
 //             repo.save(draft)
-//             effectChannel.trySend(ExampleFormEffect.ShowMessage("Data tersimpan"))
+//             showSuccess("Data tersimpan")
 //             effectChannel.trySend(ExampleFormEffect.NavigateBack)
 //         }
 //     }
@@ -537,7 +555,7 @@ sealed interface ExampleFormEffect {
 //         val editMode = mode as? ExampleFormMode.Edit ?: return
 //         performSubmission(fallbackError = "Gagal menghapus") {
 //             repo.delete(editMode.itemId)
-//             effectChannel.trySend(ExampleFormEffect.ShowMessage("Data dihapus"))
+//             showSuccess("Data dihapus")
 //             effectChannel.trySend(ExampleFormEffect.NavigateBack)
 //         }
 //     }
@@ -548,7 +566,7 @@ sealed interface ExampleFormEffect {
 //         viewModelScope.launch {
 //             isSubmittingFlow.value = true
 //             try { action() }
-//             catch (t: Throwable) { effectChannel.trySend(ExampleFormEffect.ShowMessage(t.message ?: fallbackError)) }
+//             catch (t: Throwable) { showError(t.message ?: fallbackError) }
 //             finally { isSubmittingFlow.value = false }
 //         }
 //     }
