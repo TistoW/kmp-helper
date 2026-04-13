@@ -51,11 +51,12 @@ fun String?.reformatDate(
     return this?.convertDate(toFormat, fromFormat).def(dummyResult(toFormat))
 }
 
-fun String.formatDate(
+fun String?.formatDate(
     toFormat: String = "dd MMM yyyy HH:mm:ss",
     fromFormat: String = "yyyy-MM-dd HH:mm:ss"
 ): String {
-    return convertDate(toFormat, fromFormat)
+    val date  = this?:dateExample
+    return date.convertDate(toFormat, fromFormat)
 }
 
 /**
