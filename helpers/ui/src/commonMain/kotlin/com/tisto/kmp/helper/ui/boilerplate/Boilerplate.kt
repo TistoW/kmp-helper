@@ -47,6 +47,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   - Repository exposes suspend funs, not Flows. No internal reactive cache.
 // ======================================================================================
 
+import com.tisto.kmp.helper.ui.MessageType
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,12 +102,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-
-// ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 0: SHARED — MessageType enum (used by all Effect.ShowMessage)
-// ══════════════════════════════════════════════════════════════════════════════════════════
-
-enum class MessageType { Success, Error, Warning, Info }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 1: DOMAIN MODEL
@@ -186,10 +181,27 @@ data class ExampleRequest(
 // }
 
 // ─── REPOSITORY ─────────────────────────────────────────────────────────────────────────
-// Plain suspend functions. No reactive cache, no Flow. ViewModel calls these directly
-// and sets its own MutableStateFlow. Simple to read, simple to debug.
-// No interface. Presentation imports this concrete class directly.
-// Error handling: this layer THROWS on failure. Upper layers catch.
+// Two valid styles — choose based on what consumes the repo:
+//
+// STYLE A — Pure suspend (preferred for new features):
+//   Plain suspend functions. ViewModel calls directly inside try/catch.
+//   No interface. Presentation imports this concrete class directly.
+//   Error handling: throws on failure. Upper layers catch.
+//
+// STYLE B — apiCall / Flow<Resource<T>> (use when the repo is shared with legacy XML
+//   ViewModels that call .asLiveData() on the result):
+//
+//   fun getAll(search: SearchRequest? = null) = apiCall(
+//       apiCall = { api.getList(search?.convertToQuery()) },
+//       mapper  = { it }
+//   )
+//
+//   Note: apiCall wraps the suspend call in Flow<Resource<T>> (Loading / Success / Error).
+//   In a plain ViewModel (not BaseViewModel), await it with:
+//       .first { it !is Resource.Loading }
+//   In a BaseViewModel, use .collectResource { ... }.
+//
+// ─── STYLE A skeleton ───────────────────────────────────────────────────────────────────
 //
 // class ExampleRepository(private val api: ExampleApi) {
 //
