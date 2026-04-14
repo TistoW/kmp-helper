@@ -10,11 +10,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -67,6 +70,7 @@ enum class ButtonStyle {
  * The individual color/stroke params are legacy overrides and only take effect
  * when [style] == [ButtonStyle.Primary]. Use [style] for all new code.
  */
+
 @Composable
 fun ButtonNormal(
     modifier: Modifier = Modifier,
@@ -76,21 +80,24 @@ fun ButtonNormal(
     enabled: Boolean = true,
     isLoading: Boolean = false,
     horizontalContentPadding: Dp = Spacing.box,
+    verticalContentPadding: Dp = 0.dp,
     imageVector: ImageVector? = null,
     // ── Legacy override params ───────────────────────────────────────────
     // Only applied when style == Primary. Use `style` for all new callers.
-    backgroundColor: Color = Colors.ColorPrimary,
+    backgroundColor: Color? = null,                    // null = ambil dari theme
     contentColor: Color = Color.White,
     disabledBackgroundColor: Color = Colors.Gray4,
     strokeWidth: Dp = 0.dp,
     elevation: Dp = 0.dp,
     cornerRadius: Dp = Radius.normal,
-    strokeColor: Color = Colors.ColorPrimary,
+    strokeColor: Color? = null,                        // null = ambil dari theme
     textColor: Color = Colors.White,
     imageTint: Color = Colors.White,
+    contentPadding: PaddingValues? = null,
     onClick: () -> Unit,
 ) {
-    // Resolve appearance from style; Primary delegates to legacy override params.
+    val primaryColor = MaterialTheme.colorScheme.primary  // ambil dari theme
+
     val resolvedBg: Color
     val resolvedText: Color
     val resolvedStrokeWidth: Dp
@@ -99,19 +106,21 @@ fun ButtonNormal(
 
     when (style) {
         ButtonStyle.Primary -> {
-            resolvedBg = backgroundColor
+            resolvedBg = backgroundColor ?: primaryColor       // fallback ke theme
             resolvedText = textColor
             resolvedStrokeWidth = strokeWidth
-            resolvedStroke = strokeColor
+            resolvedStroke = strokeColor ?: primaryColor       // fallback ke theme
             resolvedContent = contentColor
         }
+
         ButtonStyle.Outlined -> {
             resolvedBg = Color.Transparent
-            resolvedText = Colors.ColorPrimary
+            resolvedText = strokeColor ?: primaryColor
             resolvedStrokeWidth = 1.dp
-            resolvedStroke = Colors.ColorPrimary
-            resolvedContent = Colors.ColorPrimary
+            resolvedStroke = strokeColor ?: primaryColor
+            resolvedContent = strokeColor ?: primaryColor
         }
+
         ButtonStyle.Destructive -> {
             resolvedBg = Colors.Delete
             resolvedText = Colors.White
@@ -119,6 +128,7 @@ fun ButtonNormal(
             resolvedStroke = Colors.Delete
             resolvedContent = Colors.White
         }
+
         ButtonStyle.OutlinedDestructive -> {
             resolvedBg = Color.Transparent
             resolvedText = Colors.Delete
@@ -126,6 +136,7 @@ fun ButtonNormal(
             resolvedStroke = Colors.Delete
             resolvedContent = Colors.Delete
         }
+
         ButtonStyle.Ghost -> {
             resolvedBg = Color.Transparent
             resolvedText = Colors.ColorPrimary
@@ -133,6 +144,7 @@ fun ButtonNormal(
             resolvedStroke = Color.Transparent
             resolvedContent = Colors.ColorPrimary
         }
+
         ButtonStyle.Secondary -> {
             resolvedBg = Colors.Secondary
             resolvedText = Colors.White
@@ -140,6 +152,7 @@ fun ButtonNormal(
             resolvedStroke = Colors.Secondary
             resolvedContent = Colors.White
         }
+
         ButtonStyle.Success -> {
             resolvedBg = Colors.Success
             resolvedText = Colors.White
@@ -166,7 +179,10 @@ fun ButtonNormal(
             BorderStroke(resolvedStrokeWidth, if (enabled) resolvedStroke else Colors.Gray4)
         } else null,
         enabled = enabled && !isLoading,
-        contentPadding = PaddingValues(horizontal = horizontalContentPadding, vertical = 0.dp),
+        contentPadding = contentPadding ?: PaddingValues(
+            horizontal = horizontalContentPadding,
+            vertical = verticalContentPadding
+        ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = elevation,
             pressedElevation = 0.dp,
