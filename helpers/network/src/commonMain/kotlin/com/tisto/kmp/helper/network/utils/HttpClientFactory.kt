@@ -28,7 +28,7 @@ object HttpClientFactory {
     fun create(
         config: HttpClientConfig
     ): HttpClient {
-        return HttpClient(getPlatformEngine()) {
+        return HttpClient(getPlatformEngine()) { // kalau error di android studi IDE selama tidak error pas build biarkan
             // Base URL
             defaultRequest {
                 url(config.baseUrl)
@@ -68,8 +68,9 @@ object HttpClientFactory {
                     prettyPrint = true
                     isLenient = true
                     ignoreUnknownKeys = true
-                    encodeDefaults = true // 🔥 INI KUNCINYA
-                    coerceInputValues = true // null untuk non-nullable field → pakai default value
+                    encodeDefaults = true
+                    explicitNulls = false // jangan kirim field yang nilainya null
+                    coerceInputValues = true
                 })
             }
 
