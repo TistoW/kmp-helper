@@ -191,7 +191,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.tisto.kmp.helper.ui.MessageType
+import com.tisto.kmp.helper.network.MessageType
 import kotlinx.serialization.Serializable
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -385,7 +385,7 @@ sealed interface ExampleListEffect {
 // import com.tisto.kmp.helper.network.base.FeatureViewModel
 // import com.tisto.kmp.helper.network.model.Search
 // import com.tisto.kmp.helper.network.model.SearchRequest
-// import com.tisto.kmp.helper.ui.MessageType
+// import com.tisto.kmp.helper.network.MessageType
 // import kotlinx.coroutines.flow.MutableStateFlow
 // import kotlinx.coroutines.flow.StateFlow
 // import kotlinx.coroutines.flow.asStateFlow
@@ -610,7 +610,7 @@ sealed interface ExampleListEffect {
 // Flat data-class UiState (not sealed). Forms have many small independent
 // fields — a sealed hierarchy would explode into near-identical states.
 //
-// import com.tisto.kmp.helper.ui.MessageType
+// import com.tisto.kmp.helper.network.MessageType
 // import com.tisto.kmp.helper.utils.model.PickedImage
 //
 // sealed interface ExampleFormMode {
@@ -658,7 +658,7 @@ sealed interface ExampleListEffect {
 // import androidx.lifecycle.viewModelScope
 // import com.tisto.kmp.helper.network.base.FeatureViewModel
 // import com.tisto.kmp.helper.network.utils.onResource
-// import com.tisto.kmp.helper.ui.MessageType
+// import com.tisto.kmp.helper.network.MessageType
 // import com.tisto.kmp.helper.utils.ext.def
 // import com.tisto.kmp.helper.utils.model.PickedImage
 // import kotlinx.coroutines.flow.MutableStateFlow

@@ -2,9 +2,9 @@ package com.tisto.kmp.helper.network.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tisto.kmp.helper.network.MessageType
 import com.tisto.kmp.helper.network.utils.Resource
 import com.tisto.kmp.helper.network.utils.onResource
-import com.tisto.kmp.helper.ui.MessageType
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
