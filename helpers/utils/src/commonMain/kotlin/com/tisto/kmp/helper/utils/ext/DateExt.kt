@@ -188,24 +188,31 @@ private fun parseUTCInstant(dateStr: String, format: String): Instant {
  */
 private fun formatDateTime(dateTime: LocalDateTime, format: String): String {
     var result = format
+    val monthHandled: Boolean
 
     // Month names (harus sebelum MM!)
     if (result.contains("MMMM")) {
         // Full month name
         val monthName = monthNamesFullEnglish[dateTime.monthNumber - 1]
         result = result.replace("MMMM", monthName)
+        monthHandled = true
     } else if (result.contains("MMM")) {
         // Short month name
         val monthName = monthNamesEnglish[dateTime.monthNumber - 1]
         result = result.replace("MMM", monthName)
+        monthHandled = true
+    } else {
+        monthHandled = false
     }
 
     // Year
     result = result.replace("yyyy", dateTime.year.toString().padStart(4, '0'))
 
-    // Month number (setelah month names!)
-    result = result.replace("MM", dateTime.monthNumber.toString().padStart(2, '0'))
-    result = result.replace("M", dateTime.monthNumber.toString())
+    // Month number (setelah month names!, skip jika sudah pakai MMM/MMMM)
+    if (!monthHandled) {
+        result = result.replace("MM", dateTime.monthNumber.toString().padStart(2, '0'))
+        result = result.replace("M", dateTime.monthNumber.toString())
+    }
 
     // Day
     result = result.replace("dd", dateTime.dayOfMonth.toString().padStart(2, '0'))
