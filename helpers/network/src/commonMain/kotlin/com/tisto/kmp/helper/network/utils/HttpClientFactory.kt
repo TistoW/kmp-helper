@@ -69,6 +69,7 @@ object HttpClientFactory {
                     isLenient = true
                     ignoreUnknownKeys = true
                     encodeDefaults = true // 🔥 INI KUNCINYA
+                    coerceInputValues = true // null untuk non-nullable field → pakai default value
                 })
             }
 
