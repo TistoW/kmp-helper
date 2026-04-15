@@ -8,19 +8,20 @@ package com.tisto.kmp.helper.ui.boilerplate
 // READ THIS FIRST. This single file holds everything: the non-negotiable rules,
 // then 12 copy-ready sections mirroring the canonical Category feature shipped at:
 //
-//   data → compose/feature/product/.../data/
-//     ├── model/Category.kt
-//     ├── request/CategoryRequest.kt
-//     ├── service/CategoryApi.kt               ← Ktor HttpClient
-//     ├── repository/CategoryRepository.kt     ← apiCall() → Flow<Resource<T>>
-//     └── di/composeProductModule.kt
-//   ui   → compose/feature/product/.../presentation/categoryNew/
-//     ├── CategoryRoute.kt                     ← Crossfade wrapper
+//   data → kmp/feature/transaction/.../categoryFinance/data/
+//     ├── model/CategoryFinance.kt
+//     ├── request/CategoryFinanceRequest.kt
+//     ├── CategoryFinanceApi.kt                ← Ktor HttpClient
+//     ├── CategoryFinanceRepository.kt         ← apiCall() → Flow<Resource<T>>
+//     └── categoryFinanceModule.kt
+//   ui   → kmp/feature/transaction/.../categoryFinance/presentation/
+//     ├── CategoryFinanceRoute.kt              ← Crossfade wrapper
+//     ├── CategoryFinanceStrings.kt            ← Indonesian strings (no R.string)
 //     ├── list/{Contract,ViewModel,Screen}.kt
 //     └── form/{Contract,ViewModel,Screen}.kt
 //
 // When the user asks for a new feature, produce something indistinguishable from
-// Category in shape. Any deviation from the rules below is a bug.
+// CategoryFinance in shape. Any deviation from the rules below is a bug.
 //
 // ──────────────────────────────────────────────────────────────────────────────────────────
 // HOW TO USE
@@ -41,11 +42,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ├── data/
 //   │   ├── model/<Name>.kt                   ← @Serializable domain model (doubles as DTO)
 //   │   ├── request/<Name>Request.kt          ← outbound DTO, @Transient PickedImage
-//   │   ├── service/<Name>Api.kt              ← Ktor HttpClient, BaseResponse<T>
-//   │   ├── repository/<Name>Repository.kt    ← apiCall() wrappers, Flow<Resource<T>>
-//   │   └── di/<name>Module.kt                ← Koin module: Api + Repo + both VMs
-//   └── presentation/<name>/
+//   │   ├── <Name>Api.kt                      ← Ktor HttpClient, BaseResponse<T>
+//   │   ├── <Name>Repository.kt               ← apiCall() wrappers, Flow<Resource<T>>
+//   │   └── <name>Module.kt                   ← Koin module: Api + Repo + both VMs
+//   └── presentation/
 //       ├── <Name>Route.kt                    ← Crossfade wrapper (List ↔ Form)
+//       ├── <Name>Strings.kt                  ← Indonesian strings (KMP-ready; no R.string)
 //       ├── list/
 //       │   ├── <Name>ListContract.kt         ← UiState / Event / Effect (sealed)
 //       │   ├── <Name>ListViewModel.kt        ← plain ViewModel, single MutableStateFlow
@@ -54,6 +56,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //           ├── <Name>FormContract.kt
 //           ├── <Name>FormViewModel.kt        ← combine(fields, isLoading, isSubmitting)
 //           └── <Name>FormScreen.kt
+//
+// Folder convention: subfolders only when ≥2 files will realistically live there.
+//   model/, request/, list/, form/ → folders (grow over time).
+//   Api, Repository, Module, Route, Strings → flat files at the parent level
+//   (one-file-per-feature by design; subfolder = ceremony).
 //
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // NON-NEGOTIABLE RULES
@@ -259,7 +266,7 @@ object ExampleTypeTypes {
 // )
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 3 — API SERVICE  (data/service/ExampleApi.kt)
+// SECTION 3 — API SERVICE  (data/ExampleApi.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import com.tisto.kmp.helper.network.model.BaseResponse
@@ -301,7 +308,7 @@ object ExampleTypeTypes {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 4 — REPOSITORY  (data/repository/ExampleRepository.kt)
+// SECTION 4 — REPOSITORY  (data/ExampleRepository.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import com.tisto.kmp.helper.network.model.SearchRequest
@@ -336,7 +343,7 @@ object ExampleTypeTypes {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 5 — KOIN MODULE  (data/di/exampleModule.kt)
+// SECTION 5 — KOIN MODULE  (data/exampleModule.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import org.koin.core.module.dsl.singleOf
@@ -351,7 +358,7 @@ object ExampleTypeTypes {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 6 — LIST CONTRACT  (presentation/example/list/ExampleListContract.kt)
+// SECTION 6 — LIST CONTRACT  (presentation/list/ExampleListContract.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 sealed interface ExampleListUiState {
@@ -379,7 +386,7 @@ sealed interface ExampleListEffect {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 7 — LIST VIEWMODEL  (presentation/example/list/ExampleListViewModel.kt)
+// SECTION 7 — LIST VIEWMODEL  (presentation/list/ExampleListViewModel.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import com.tisto.kmp.helper.network.base.FeatureViewModel
@@ -445,7 +452,7 @@ sealed interface ExampleListEffect {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 8 — LIST SCREEN  (presentation/example/list/ExampleListScreen.kt)
+// SECTION 8 — LIST SCREEN  (presentation/list/ExampleListScreen.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.foundation.clickable
@@ -605,7 +612,7 @@ sealed interface ExampleListEffect {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 9 — FORM CONTRACT  (presentation/example/form/ExampleFormContract.kt)
+// SECTION 9 — FORM CONTRACT  (presentation/form/ExampleFormContract.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // Flat data-class UiState (not sealed). Forms have many small independent
 // fields — a sealed hierarchy would explode into near-identical states.
@@ -648,7 +655,7 @@ sealed interface ExampleListEffect {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 10 — FORM VIEWMODEL  (presentation/example/form/ExampleFormViewModel.kt)
+// SECTION 10 — FORM VIEWMODEL  (presentation/form/ExampleFormViewModel.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // Single MutableStateFlow<UiState> — same pattern as List VM. `performSubmission`
 // and `loadExisting` use raw `viewModelScope.launch` because they need try/finally
@@ -768,7 +775,7 @@ sealed interface ExampleListEffect {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 11 — FORM SCREEN  (presentation/example/form/ExampleFormScreen.kt)
+// SECTION 11 — FORM SCREEN  (presentation/form/ExampleFormScreen.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.foundation.layout.*
@@ -893,7 +900,7 @@ sealed interface ExampleListEffect {
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// SECTION 12 — WRAPPER ROUTE  (presentation/example/ExampleRoute.kt)
+// SECTION 12 — WRAPPER ROUTE  (presentation/ExampleRoute.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.animation.Crossfade
