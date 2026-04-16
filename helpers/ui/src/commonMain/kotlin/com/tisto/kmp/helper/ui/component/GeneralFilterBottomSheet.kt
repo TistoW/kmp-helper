@@ -253,9 +253,6 @@ fun FilterButton(
 ) {
     Card(
         modifier = modifier
-            .clickable(onClick = {
-                onClick()
-            })
             .wrapContentSize(),
         shape = RoundedCornerShape(Spacing.box),
         colors = CardDefaults.cardColors(containerColor = Colors.Gray5),
@@ -263,6 +260,9 @@ fun FilterButton(
     ) {
         Row(
             modifier = Modifier
+                .clickable(onClick = {
+                    onClick()
+                })
                 .padding(
                     horizontal = Spacing.box,
                     vertical = Spacing.small
