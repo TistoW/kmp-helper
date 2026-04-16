@@ -109,7 +109,8 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ Single `MutableStateFlow<UiState>`. Direct `.value =` assignment. No `combine()`.
 //     No `flatMapLatest`. No derived LoadPhase.
 //   ▸ `query` is a plain `private var` — only user events mutate it; reload is explicit.
-//   ▸ On refresh: if current state is Success, set `isRefreshing = true`; else Loading.
+//   ▸ On refresh: if current state is Success, set `isRefreshing = true`;
+//     if Empty, keep Empty (so the search bar stays visible); else Loading.
 //   ▸ Initial load: `init { refresh() }`.
 //   ▸ Search payload: `SearchRequest(page = 1, perpage = 100, simpleQuery = buildList { ... })`
 //     — always `add(Search("isActive", "true"))`; add `Search("name", query)` when non-blank.
@@ -490,8 +491,11 @@ sealed interface ExampleListEffect {
 //
 //     private fun refresh() {
 //         val current = _uiState.value
-//         _uiState.value = if (current is ExampleListUiState.Success) current.copy(isRefreshing = true)
-//             else ExampleListUiState.Loading
+//         _uiState.value = when (current) {
+//             is ExampleListUiState.Success -> current.copy(isRefreshing = true)
+//             is ExampleListUiState.Empty -> current  // keep search bar visible while loading
+//             else -> ExampleListUiState.Loading
+//         }
 //
 //         val search = SearchRequest(
 //             page = 1,
