@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.tisto.kmp.helper.network.MessageType
 import com.tisto.kmp.helper.network.utils.Resource
 import com.tisto.kmp.helper.network.utils.onResource
+import com.tisto.kmp.helper.network.utils.onResourcePaged
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -61,5 +62,17 @@ abstract class FeatureViewModel<EFFECT> : ViewModel() {
         onSuccess: (T) -> Unit,
     ): Job = viewModelScope.launch {
         onResource(fallbackError, onError, onSuccess)
+    }
+
+    /**
+     * Like [launchResource] but exposes the full [Resource.Success] so callers
+     * can read pagination metadata (total, currentPage, lastPage, perPage).
+     */
+    protected fun <T> Flow<Resource<T>>.launchResourcePaged(
+        fallbackError: String = "Terjadi kesalahan",
+        onError: (String) -> Unit = ::showError,
+        onSuccess: (Resource.Success<T>) -> Unit,
+    ): Job = viewModelScope.launch {
+        onResourcePaged(fallbackError, onError, onSuccess)
     }
 }

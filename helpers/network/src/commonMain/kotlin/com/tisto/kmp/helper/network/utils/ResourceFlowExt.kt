@@ -52,3 +52,25 @@ suspend inline fun <T> Flow<Resource<T>>.onResource(
         onError(t.message ?: fallbackError)
     }
 }
+
+/**
+ * Like [onResource] but exposes the full [Resource.Success] so callers can
+ * read pagination metadata (total, currentPage, lastPage, perPage).
+ */
+suspend inline fun <T> Flow<Resource<T>>.onResourcePaged(
+    fallbackError: String = "Terjadi kesalahan",
+    crossinline onError: (String) -> Unit = {},
+    crossinline onSuccess: (Resource.Success<T>) -> Unit,
+) {
+    try {
+        collect { r ->
+            when (r) {
+                is Resource.Success -> onSuccess(r)
+                is Resource.Error -> onError(r.message ?: fallbackError)
+                is Resource.Loading -> Unit
+            }
+        }
+    } catch (t: Throwable) {
+        onError(t.message ?: fallbackError)
+    }
+}
