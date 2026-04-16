@@ -1,14 +1,18 @@
 package com.tisto.kmp.helper.ui.component
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -151,8 +156,8 @@ class CurrencyVisualTransformation : VisualTransformation {
 // ─── Composable ───────────────────────────────────────────────────────────────
 
 /**
- * A currency-aware [OutlinedTextField] that:
- * - Stores raw input as "10000,9" (comma/period as decimal separator)
+ * A currency-aware outlined text field that:
+ * - Stores raw input as "10000,9" (comma or period as decimal separator)
  * - Displays formatted output as "10.000,9" (dot as thousands separator)
  * - Prefixes with "Rp "
  * - Only allows valid numeric/decimal input via [filterPriceInput]
@@ -160,9 +165,14 @@ class CurrencyVisualTransformation : VisualTransformation {
  * [value] and [onValueChange] operate on the **raw** string.
  * Use [toRawDouble] / [toRawPriceString] to convert between raw and Double.
  *
- * Uses Material3 [OutlinedTextField] directly (not BasicTextField + DecorationBox)
- * because the latter breaks IME composition for comma/period input on Android.
+ * Uses BasicTextField + DecorationBox so [contentPadding] can be controlled,
+ * keeping height consistent with PasswordTextField / SearchTextField / CustomTextField.
+ *
+ * IMPORTANT: keyboardType must be [KeyboardType.Number] (NOT Decimal).
+ * [KeyboardType.Decimal] changes the keyboard layout and can break comma input
+ * on Indonesian-locale devices.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyTextField(
     value: String,
@@ -177,42 +187,75 @@ fun CurrencyTextField(
     prefix: String? = "Rp ",
     suffix: String? = null,
     strokeColor: Color = Colors.Gray2,
+    strokeWidth: Dp = 0.5.dp,
+    focusedStrokeWidth: Dp? = null,
     strokeColorOnFocused: Color = Color.Black,
     maxLength: Int = Int.MAX_VALUE,
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused = interactionSource.collectIsFocusedAsState().value
 
-    OutlinedTextField(
-        value = value,
-        onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
-        modifier = modifier.fillMaxWidth(),
-        singleLine = true,
-        textStyle = textStyle,
-        visualTransformation = transformation,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Number,
-            imeAction = imeAction,
-        ),
-        isError = isError,
-        label = { Text(label) },
-        prefix = prefix?.let { { Text(it) } },
-        suffix = suffix?.let { { Text(it) } },
-        supportingText = supportingText?.let {
-            {
-                Text(
-                    text = it,
-                    color = if (isError) MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
+    Column(modifier = modifier) {
+        BasicTextField(
+            value = value,
+            onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            textStyle = textStyle,
+            visualTransformation = transformation,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = imeAction,
+            ),
+            cursorBrush = SolidColor(strokeColorOnFocused),
+            interactionSource = interactionSource,
+            decorationBox = { innerTextField ->
+                OutlinedTextFieldDefaults.DecorationBox(
+                    value = value,
+                    innerTextField = innerTextField,
+                    enabled = true,
+                    singleLine = true,
+                    visualTransformation = transformation,
+                    interactionSource = interactionSource,
+                    isError = isError,
+                    label = { Text(label) },
+                    prefix = prefix?.let { { Text(it) } },
+                    suffix = suffix?.let { { Text(it) } },
+                    contentPadding = PaddingValues(
+                        top = Spacing.box,
+                        bottom = Spacing.box,
+                        start = Spacing.box,
+                        end = Spacing.box,
+                    ),
+                    container = {
+                        val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
+                        OutlinedTextFieldDefaults.Container(
+                            enabled = true,
+                            isError = isError,
+                            interactionSource = interactionSource,
+                            shape = RoundedCornerShape(cornerRadius),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = strokeColorOnFocused,
+                                unfocusedBorderColor = strokeColor,
+                            ),
+                            focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
+                            unfocusedBorderThickness = currentStrokeWidth,
+                        )
+                    },
                 )
-            }
-        },
-        shape = RoundedCornerShape(cornerRadius),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = strokeColorOnFocused,
-            unfocusedBorderColor = strokeColor,
-        ),
-    )
+            },
+        )
+        if (supportingText != null) {
+            Text(
+                text = supportingText,
+                color = if (isError) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = Spacing.box, top = 4.dp),
+            )
+        }
+    }
 }
 
 // ── Example / Preview ────────────────────────────────────────────────────────
