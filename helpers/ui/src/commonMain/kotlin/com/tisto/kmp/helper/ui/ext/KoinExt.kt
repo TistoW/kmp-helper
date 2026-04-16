@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinInternalApi
+import org.koin.core.parameter.ParametersDefinition
 import org.koin.mp.KoinPlatformTools
 
 /**
@@ -15,12 +16,16 @@ import org.koin.mp.KoinPlatformTools
  * Usage:
  * ```
  * val viewModel: MyViewModel = safeKoinViewModel() ?: return
+ * val viewModel: MyViewModel = safeKoinViewModel(key = id) { parametersOf(id) } ?: return
  * ```
  */
 @OptIn(KoinInternalApi::class)
 @Composable
-inline fun <reified T : ViewModel> safeKoinViewModel(key: String? = null): T? {
+inline fun <reified T : ViewModel> safeKoinViewModel(
+    key: String? = null,
+    noinline parameters: ParametersDefinition? = null,
+): T? {
     val koin = KoinPlatformTools.defaultContext().getOrNull() ?: return null
     if (koin.scopeRegistry.rootScope.closed) return null
-    return koinViewModel<T>(key = key)
+    return koinViewModel<T>(key = key, parameters = parameters)
 }
