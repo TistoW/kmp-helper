@@ -930,19 +930,29 @@ sealed interface ExampleListEffect {
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.foundation.layout.*
-// import androidx.compose.foundation.rememberScrollState
-// import androidx.compose.foundation.verticalScroll
-// import androidx.compose.material.icons.Icons
-// import androidx.compose.material.icons.automirrored.filled.ArrowBack
-// import androidx.compose.material.icons.filled.Delete
-// import androidx.compose.material3.*
+// import androidx.compose.material3.CircularProgressIndicator
+// import androidx.compose.material3.SnackbarHostState
 // import androidx.compose.runtime.*
 // import androidx.compose.ui.Alignment
 // import androidx.compose.ui.Modifier
 // import androidx.compose.ui.unit.dp
 // import androidx.lifecycle.compose.collectAsStateWithLifecycle
+// import com.tisto.kmp.helper.network.MessageType
+// import com.tisto.kmp.helper.ui.component.AppSnackbarVisuals
+// import com.tisto.kmp.helper.ui.component.BackHandler
 // import com.tisto.kmp.helper.ui.component.CardImagePicker
+// import com.tisto.kmp.helper.ui.component.CustomTextField
+// import com.tisto.kmp.helper.ui.component.FormContainer
+// import com.tisto.kmp.helper.ui.component.ScaffoldBox
+// import com.tisto.kmp.helper.ui.component.SwitchCard
+// import com.tisto.kmp.helper.ui.component.TextFieldStyle
+// import com.tisto.kmp.helper.ui.ext.MobilePreview
+// import com.tisto.kmp.helper.ui.ext.ScreenConfig
+// import com.tisto.kmp.helper.ui.ext.TabletPreview
 // import com.tisto.kmp.helper.ui.ext.safeKoinViewModel
+// import com.tisto.kmp.helper.ui.theme.Spacing
+// import com.tisto.kmp.helper.utils.SnackbarType
+// import com.zenenta.pos.core.ui.ui.theme.ZenentaTheme
 // import kotlinx.coroutines.flow.Flow
 //
 // @Composable
@@ -955,7 +965,16 @@ sealed interface ExampleListEffect {
 //     val snackbar = remember { SnackbarHostState() }
 //
 //     ExampleFormEffectHandler(viewModel.effect, snackbar, onDone)
-//     ExampleFormScreen(state = state, snackbar = snackbar, onEvent = viewModel::onEvent, onBack = onDone)
+//
+//     ZenentaTheme { screenConfig ->
+//         ExampleFormScreen(
+//             state = state,
+//             snackbar = snackbar,
+//             screenConfig = screenConfig,
+//             onEvent = viewModel::onEvent,
+//             onBack = onDone,
+//         )
+//     }
 // }
 //
 // @Composable
@@ -967,84 +986,93 @@ sealed interface ExampleListEffect {
 //     LaunchedEffect(Unit) {
 //         effects.collect { effect ->
 //             when (effect) {
-//                 is ExampleFormEffect.ShowMessage -> snackbar.showSnackbar(effect.message)
+//                 is ExampleFormEffect.ShowMessage -> snackbar.showSnackbar(
+//                     AppSnackbarVisuals(
+//                         message = effect.message,
+//                         type = when (effect.type) {
+//                             MessageType.Success -> SnackbarType.SUCCESS
+//                             MessageType.Error   -> SnackbarType.ERROR
+//                             MessageType.Warning -> SnackbarType.WARNING
+//                             MessageType.Info    -> SnackbarType.INFO
+//                         }
+//                     )
+//                 )
 //                 ExampleFormEffect.NavigateBack -> onDone()
 //             }
 //         }
 //     }
 // }
 //
-// @OptIn(ExperimentalMaterial3Api::class)
 // @Composable
 // fun ExampleFormScreen(
 //     state: ExampleFormUiState,
 //     snackbar: SnackbarHostState,
+//     screenConfig: ScreenConfig = ScreenConfig(),
 //     onEvent: (ExampleFormEvent) -> Unit,
 //     onBack: () -> Unit,
 // ) {
-//     Scaffold(
-//         topBar = {
-//             TopAppBar(
-//                 title = { Text(if (state.mode is ExampleFormMode.Edit) "Edit Example" else "Tambah Example") },
-//                 navigationIcon = {
-//                     IconButton(onClick = onBack) {
-//                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-//                     }
-//                 },
-//                 actions = {
-//                     if (state.mode is ExampleFormMode.Edit) {
-//                         IconButton(onClick = { onEvent(ExampleFormEvent.Delete) }) {
-//                             Icon(Icons.Default.Delete, contentDescription = "Hapus")
-//                         }
-//                     }
-//                 },
-//             )
-//         },
-//         snackbarHost = { SnackbarHost(snackbar) },
-//     ) { padding ->
-//         if (state.isLoading) {
-//             CenteredLoader(padding)
-//         } else {
-//             Column(
-//                 modifier = Modifier
-//                     .fillMaxSize()
-//                     .padding(padding)
-//                     .padding(16.dp)
-//                     .verticalScroll(rememberScrollState()),
-//                 horizontalAlignment = Alignment.CenterHorizontally,
-//                 verticalArrangement = Arrangement.spacedBy(12.dp),
-//             ) {
+//     BackHandler { onBack() }
+//
+//     ScaffoldBox(
+//         snackbarHostState = snackbar,
+//         isLoadingProcess = state.isSubmitting,
+//     ) { _ ->
+//         FormContainer(
+//             forceTitle = if (state.mode is ExampleFormMode.Edit) "Edit Example" else "Tambah Example",
+//             screenConfig = screenConfig,
+//             item = (state.mode as? ExampleFormMode.Edit)?.itemId,
+//             selectedItemName = state.name,
+//             isFormValid = state.canSubmit,
+//             isLoadingProcess = state.isSubmitting,
+//             onBack = onBack,
+//             onSave = { onEvent(ExampleFormEvent.Submit) },
+//             onDelete = { onEvent(ExampleFormEvent.Delete) },
+//             horizontalAlignment = Alignment.CenterHorizontally,
+//         ) {
+//             if (state.isLoading) {
+//                 Spacer(Modifier.height(Spacing.large))
+//                 CircularProgressIndicator()
+//             } else {
+//                 Spacer(Modifier.height(if (screenConfig.isMobile) Spacing.normal else Spacing.large))
+//
 //                 CardImagePicker(
 //                     modifier = Modifier.width(120.dp).height(120.dp),
-//                     imageUrl = state.image,
+//                     imageUrl = state.imageUrl,
 //                     onPicker = { onEvent(ExampleFormEvent.ImagePicked(it)) },
 //                 )
 //
-//                 OutlinedTextField(
+//                 Spacer(Modifier.height(Spacing.large))
+//
+//                 CustomTextField(
 //                     value = state.name,
 //                     onValueChange = { onEvent(ExampleFormEvent.NameChanged(it)) },
-//                     label = { Text("Nama") },
+//                     hint = "Nama",
+//                     style = TextFieldStyle.OUTLINED,
+//                     strokeWidth = 1.dp,
 //                     isError = state.nameError != null,
-//                     supportingText = state.nameError?.let { { Text(it) } },
+//                     supportingText = state.nameError,
 //                     modifier = Modifier.fillMaxWidth(),
 //                     singleLine = true,
 //                 )
 //
-//                 OutlinedTextField(
+//                 Spacer(Modifier.height(Spacing.normal))
+//
+//                 CustomTextField(
 //                     value = state.description,
 //                     onValueChange = { onEvent(ExampleFormEvent.DescriptionChanged(it)) },
-//                     label = { Text("Deskripsi") },
-//                     minLines = 3,
+//                     hint = "Deskripsi",
+//                     style = TextFieldStyle.OUTLINED,
+//                     strokeWidth = 1.dp,
 //                     modifier = Modifier.fillMaxWidth(),
 //                 )
 //
-//                 Button(
-//                     onClick = { onEvent(ExampleFormEvent.Submit) },
-//                     enabled = state.canSubmit,
-//                     modifier = Modifier.fillMaxWidth(),
-//                 ) {
-//                     Text(if (state.isSubmitting) "Menyimpan..." else "Simpan")
-//                 }
+//                 Spacer(Modifier.height(Spacing.normal))
+//
+//                 SwitchCard(
+//                     checked = state.isActive,
+//                     onCheckedChange = { onEvent(ExampleFormEvent.ActiveChanged(it)) },
+//                     text = "Aktif",
+//                 )
 //             }
 //         }
 //     }
@@ -1052,22 +1080,31 @@ sealed interface ExampleListEffect {
 //
 // // ── Previews ──────────────────────────────────────────────────────────────
 //
-// @Preview(name = "Form – Phone", showBackground = true, widthDp = 360, heightDp = 800)
-// @Preview(name = "Form – Tablet", showBackground = true, widthDp = 840, heightDp = 1080)
 // @Composable
-// private fun PreviewExampleForm() {
-//     ExampleFormScreen(
-//         state = ExampleFormUiState(
-//             mode = ExampleFormMode.Edit("1"),
-//             name = "Contoh Item",
-//             description = "Deskripsi contoh item",
-//             isActive = true,
-//         ),
-//         snackbar = SnackbarHostState(),
-//         onEvent = {},
-//         onBack = {},
-//     )
+// private fun ExampleFormScreenPreview(screenConfig: ScreenConfig = ScreenConfig()) {
+//     ZenentaTheme {
+//         ExampleFormScreen(
+//             state = ExampleFormUiState(
+//                 mode = ExampleFormMode.Edit("1"),
+//                 name = "Contoh Item",
+//                 description = "Deskripsi contoh item",
+//                 isActive = true,
+//             ),
+//             snackbar = SnackbarHostState(),
+//             screenConfig = screenConfig,
+//             onEvent = {},
+//             onBack = {},
+//         )
+//     }
 // }
+//
+// @MobilePreview
+// @Composable
+// private fun PreviewExampleForm() { ExampleFormScreenPreview() }
+//
+// @TabletPreview
+// @Composable
+// private fun TabletPreviewExampleForm() { ExampleFormScreenPreview(ScreenConfig(840.dp)) }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 12 — WRAPPER ROUTE  (presentation/ExampleRoute.kt)
