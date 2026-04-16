@@ -113,7 +113,14 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ Initial load: `init { refresh() }`.
 //   ▸ Search payload: `SearchRequest(page = 1, perpage = 100, simpleQuery = buildList { ... })`
 //     — always `add(Search("isActive", "true"))`; add `Search("name", query)` when non-blank.
-//   ▸ Empty result list → `UiState.Empty` (not `Success(items = emptyList())`).
+//   ▸ Empty result list → `UiState.Empty(query = query)` (not `Success(items = emptyList())`).
+//     `Empty` carries the current query so the UI can keep the search bar visible.
+//   ▸ Search debounce: `QueryChanged` must NOT call `refresh()` directly.
+//     Instead: update state.query immediately (so the text field never flickers),
+//     cancel any pending `searchJob`, then schedule `refresh()` after 500 ms:
+//         searchJob?.cancel()
+//         searchJob = viewModelScope.launch { delay(500); refresh() }
+//   ▸ `Refresh` (pull-to-refresh / back from form) calls `refresh()` directly — no debounce.
 //
 // VIEWMODEL — FORM
 //   ▸ Takes constructor param `itemId: String?`. Null = Create, non-null = Edit.
@@ -375,7 +382,7 @@ object ExampleTypeTypes {
 
 sealed interface ExampleListUiState {
     data object Loading : ExampleListUiState
-    data object Empty : ExampleListUiState
+    data class Empty(val query: String = "") : ExampleListUiState  // carries query so the search bar stays visible
     data class Success(
         val items: List<Example>,
         val query: String = "",
@@ -401,13 +408,17 @@ sealed interface ExampleListEffect {
 // SECTION 7 — LIST VIEWMODEL  (presentation/list/ExampleListViewModel.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
+// import androidx.lifecycle.viewModelScope
 // import com.tisto.kmp.helper.network.base.FeatureViewModel
 // import com.tisto.kmp.helper.network.model.Search
 // import com.tisto.kmp.helper.network.model.SearchRequest
 // import com.tisto.kmp.helper.network.MessageType
+// import kotlinx.coroutines.Job
+// import kotlinx.coroutines.delay
 // import kotlinx.coroutines.flow.MutableStateFlow
 // import kotlinx.coroutines.flow.StateFlow
 // import kotlinx.coroutines.flow.asStateFlow
+// import kotlinx.coroutines.launch
 //
 // class ExampleListViewModel(
 //     private val repo: ExampleRepository,
@@ -421,13 +432,24 @@ sealed interface ExampleListEffect {
 //     }
 //
 //     private var query = ""
+//     private var searchJob: Job? = null
 //
 //     init { refresh() }
 //
 //     fun onEvent(event: ExampleListEvent) {
 //         when (event) {
 //             ExampleListEvent.Refresh -> refresh()
-//             is ExampleListEvent.QueryChanged -> { query = event.query; refresh() }
+//             is ExampleListEvent.QueryChanged -> {
+//                 query = event.query
+//                 // Reflect new query in state immediately so the text field never flickers
+//                 val current = _uiState.value
+//                 if (current is ExampleListUiState.Success) {
+//                     _uiState.value = current.copy(query = event.query)
+//                 }
+//                 // Debounce: cancel the previous pending search and wait 500 ms
+//                 searchJob?.cancel()
+//                 searchJob = viewModelScope.launch { delay(500); refresh() }
+//             }
 //             ExampleListEvent.CreateClicked -> sendEffect(ExampleListEffect.NavigateToForm(null))
 //             is ExampleListEvent.EditClicked -> sendEffect(ExampleListEffect.NavigateToForm(event.id))
 //             is ExampleListEvent.DeleteConfirmed -> delete(event.id)
@@ -451,7 +473,8 @@ sealed interface ExampleListEffect {
 //             fallbackError = "Gagal memuat data",
 //             onError = { _uiState.value = ExampleListUiState.Error(it) }, // override to set UiState.Error
 //         ) { items ->
-//             _uiState.value = if (items.isEmpty()) ExampleListUiState.Empty
+//             // Pass query into Empty so the UI can keep the search bar visible
+//             _uiState.value = if (items.isEmpty()) ExampleListUiState.Empty(query = query)
 //                 else ExampleListUiState.Success(items = items, query = query)
 //         }
 //     }
@@ -552,8 +575,33 @@ sealed interface ExampleListEffect {
 //         when (state) {
 //             ExampleListUiState.Loading -> CenteredLoader(padding)
 //             is ExampleListUiState.Error -> CenteredMessage(padding, state.message)
-//             ExampleListUiState.Empty -> CenteredMessage(padding, "Belum ada data")
+//             // Empty keeps the search bar so the user can change their query
+//             is ExampleListUiState.Empty -> ExampleEmptyBody(padding, state.query, onEvent)
 //             is ExampleListUiState.Success -> ExampleListBody(padding, state, onEvent)
+//         }
+//     }
+// }
+//
+// // Shows the search bar even when the list is empty, so the user can edit their query.
+// @Composable
+// private fun ExampleEmptyBody(
+//     padding: PaddingValues,
+//     query: String,
+//     onEvent: (ExampleListEvent) -> Unit,
+// ) {
+//     Column(
+//         modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
+//         verticalArrangement = Arrangement.spacedBy(12.dp),
+//     ) {
+//         OutlinedTextField(
+//             value = query,
+//             onValueChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
+//             label = { Text("Cari...") },
+//             modifier = Modifier.fillMaxWidth(),
+//             singleLine = true,
+//         )
+//         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//             Text("Belum ada data")
 //         }
 //     }
 // }
