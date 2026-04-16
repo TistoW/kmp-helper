@@ -15,10 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,7 +51,7 @@ fun SearchTextField(
     hint: String = "Cari...",
     leadingIcon: ImageVector = MyIcon.IcSearch,
     strokeColor: Color = Colors.Gray4,
-    focusedStrokeColor: Color = Colors.Primary,
+    focusedStrokeColor: Color = Colors.Gray3,
     strokeWidth: Dp = 0.5.dp,
     cornerRadius: Dp = Radius.normal,
     onClear: (() -> Unit)? = null,
@@ -97,17 +97,27 @@ fun SearchTextField(
                     }
                     innerTextField()
                 }
-                if (value.isNotEmpty() && onClear != null) {
-                    IconButton(
-                        onClick = onClear,
-                        modifier = Modifier.size(18.dp),
+                if (onClear != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .then(
+                                if (value.isNotEmpty()) Modifier.clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = onClear,
+                                ) else Modifier
+                            ),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Clear",
-                            modifier = Modifier.size(14.dp),
-                            tint = Colors.Gray3,
-                        )
+                        if (value.isNotEmpty()) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                modifier = Modifier.size(18.dp),
+                                tint = Colors.Gray3,
+                            )
+                        }
                     }
                 }
             }
@@ -119,7 +129,7 @@ fun SearchTextField(
 
 @Composable
 private fun SearchTextFieldExample() {
-    var query by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf("Budi") }
     var queryNoClose by remember { mutableStateOf("") }
     var queryFilled by remember { mutableStateOf("") }
 

@@ -61,7 +61,7 @@ fun <ITEM> FormContainer(
             .fillMaxSize()
             .background(Colors.White)
     ) {
-        Toolbars(
+        Toolbar(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
             onBack = if (!isMobile) null else onBack,
         )

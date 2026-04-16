@@ -2,6 +2,7 @@ package com.tisto.kmp.helper.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -9,10 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.More
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -29,7 +34,98 @@ import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.ext.MobilePreview
+import com.tisto.kmp.helper.ui.ext.ScreenConfig
 import com.tisto.kmp.helper.ui.ext.TabletPreview
+
+@Composable
+fun Toolbar(
+    title: String,
+    screenConfig: ScreenConfig = ScreenConfig(),
+    backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
+    onDelete: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null,
+    onAdd: (() -> Unit)? = null,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Colors.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (onBack != null) {
+                        Modifier
+                            .padding(end = if (screenConfig.isMobile) Spacing.normal else Spacing.large)
+                            .padding(start = if (screenConfig.isMobile) Spacing.tiny else Spacing.normal)
+                    } else {
+                        Modifier.padding(horizontal = if (screenConfig.isMobile) Spacing.normal else Spacing.large)
+                    }
+                )
+                .padding(vertical = Spacing.small),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (onBack != null) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = backIcon,
+                        contentDescription = "Back"
+                    )
+                }
+                Spacer(modifier = Modifier.width(Spacing.tiny))
+            } else {
+                Spacer(modifier = Modifier
+                    .width(Spacing.box)
+                    .height(40.dp))
+            }
+
+            Text(
+                text = title,
+                style = TextAppearance.title2Bold(),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically)
+            )
+
+            if (onDelete != null) {
+                ButtonNormal(
+                    style = ButtonStyle.Outlined,
+                    text = "Tambah",
+                    strokeColor = Colors.Black,
+                    horizontalContentPadding = Spacing.normal,
+                    imageVector = Icons.Default.DeleteOutline,
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .height(Heights.normal)
+                        .defaultMinSize(minWidth = 90.dp)
+                )
+
+                if (onAdd != null) Spacer(modifier = Modifier.width(Spacing.box))
+            }
+
+            if (onAdd != null) {
+                ButtonNormal(
+                    text = "Tambah",
+                    backgroundColor = Colors.Black,
+                    horizontalContentPadding = Spacing.normal,
+                    imageVector = Icons.Default.Add,
+                    onClick = onAdd,
+                    modifier = Modifier
+                        .height(Heights.normal)
+                        .defaultMinSize(minWidth = 90.dp)
+                )
+            }
+        }
+
+        SimpleHorizontalDivider(modifier = Modifier)
+    }
+}
 
 @Composable
 fun Toolbars(
@@ -90,7 +186,8 @@ fun Toolbars(
                     onClick = onDelete,
                     isLoading = isLoadingDelete,
                     enabled = isEnabledDelete,
-                    modifier = Modifier.height(Heights.normal)
+                    modifier = Modifier
+                        .height(Heights.normal)
                         .padding(end = Padding.box)
                         .defaultMinSize(minWidth = 90.dp),
                     strokeWidth = 1.dp,
@@ -104,7 +201,8 @@ fun Toolbars(
                     onClick = onSave,
                     isLoading = isLoadingSave,
                     enabled = isEnabledSave,
-                    modifier = Modifier.height(Heights.normal)
+                    modifier = Modifier
+                        .height(Heights.normal)
                         .defaultMinSize(minWidth = 90.dp)
                 )
             }
@@ -128,7 +226,24 @@ fun Toolbars(
 @Composable
 fun MobileToolbarPreviews() {
     HelperTheme {
-        Toolbars()
+        Column {
+            Toolbars()
+            HorizontalDivider()
+            Toolbar("Title")
+            HorizontalDivider()
+            Toolbar("Title", onBack = {
+
+            })
+            HorizontalDivider()
+            Toolbar("Title", onAdd = {
+
+            })
+            HorizontalDivider()
+            Toolbar("Title", onAdd = {
+
+            }, onBack = {})
+        }
+
     }
 }
 
@@ -136,10 +251,25 @@ fun MobileToolbarPreviews() {
 @Composable
 fun TabletToolbarPreviews() {
     HelperTheme {
-        Toolbars(
-            onSave = {},
-            onDelete = {},
-        )
+        Column() {
+            Toolbars(
+                onSave = {},
+                onDelete = {},
+            )
+            HorizontalDivider()
+            Toolbar("Title", onAdd = {
+
+            }, onBack = {})
+            HorizontalDivider()
+            Toolbar("Title", onAdd = {
+
+            }, onBack = {})
+            HorizontalDivider()
+            Toolbar("Title", onAdd = {
+
+            }, onBack = {}, onDelete = {})
+        }
+
     }
 
 }
