@@ -76,6 +76,7 @@ import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
+import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.ext.def
 import com.tisto.kmp.helper.utils.getPlatform
 import org.jetbrains.compose.resources.vectorResource
@@ -295,7 +296,7 @@ fun CustomTextField(
     var expanded by remember { mutableStateOf(false) }
     val isFocused = interactionSource.collectIsFocusedAsState().value
     val focusManager = LocalFocusManager.current
-    val isWeb = remember { getPlatform().platform.contains("web") }
+    val isWeb = remember { PlatformType.isWeb }
     val transform: TextTransform = if (allCaps) TextTransform.UPPERCASE else textTransform
 
     // ✅ Password visibility state
@@ -793,12 +794,15 @@ fun SearchTextField(
     modifier: Modifier = Modifier,
     value: String = "",
     onValueChange: (String) -> Unit = {},
-    hint: String = "Cari",
+    hint: String = "Cari...",
     style: TextFieldStyle = TextFieldStyle.OUTLINED,
     leadingIcon: ImageVector = MyIcon.IcSearch,
     strokeWidth: Dp = 0.5.dp,
     strokeColor: Color = Colors.Gray2,
-    onEnter: () -> Unit = {}
+    strokeColorOnFocused: Color = Colors.Gray2,
+    cornerRadius: Dp = Radius.box,
+    onClear: (() -> Unit)? = null,
+    onEnter: () -> Unit = {},
 ) {
     CustomTextField(
         value = value,
@@ -808,10 +812,14 @@ fun SearchTextField(
         leadingIcon = leadingIcon,
         strokeWidth = strokeWidth,
         strokeColor = strokeColor,
+        strokeColorOnFocused = strokeColorOnFocused,
+        cornerRadius = cornerRadius,
+        endIcon = if (value.isNotEmpty() && onClear != null) Icons.Default.Close else null,
+        endIconOnClick = { onClear?.invoke() },
         floatingLabel = false,
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
-        onEnter = onEnter
+        onEnter = onEnter,
     )
 }
 
