@@ -208,6 +208,7 @@ fun CurrencyTextField(
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
     val interactionSource = remember { MutableInteractionSource() }
+    val isFocused = interactionSource.collectIsFocusedAsState().value
 
     OutlinedTextFields(
         value = value,
@@ -223,7 +224,7 @@ fun CurrencyTextField(
             imeAction = imeAction,
         ),
         isError = isError,
-        label = { Text(label) },
+        label = { Text(label, color = if (isFocused) strokeColorOnFocused else Colors.Gray3) },
         prefix = prefix?.let { { Text(it) } },
         suffix = suffix?.let { { Text(it) } },
         supportingText = supportingText?.let {
