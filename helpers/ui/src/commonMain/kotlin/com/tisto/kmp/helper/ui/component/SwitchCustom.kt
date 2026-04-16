@@ -26,7 +26,7 @@ import com.tisto.kmp.helper.ui.theme.TextAppearance
 fun SwitchCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    text: String,
+    text: String = "",
     modifier: Modifier = Modifier,
     backgroundColor: Color = Colors.Gray5,
     checkedColor: Color = Color.Black,

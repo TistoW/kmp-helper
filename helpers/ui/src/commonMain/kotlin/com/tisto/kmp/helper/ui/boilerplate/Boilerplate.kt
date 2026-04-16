@@ -304,6 +304,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tisto.kmp.helper.network.MessageType
+import com.tisto.kmp.helper.utils.model.FilterItem
 import kotlinx.serialization.Serializable
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
