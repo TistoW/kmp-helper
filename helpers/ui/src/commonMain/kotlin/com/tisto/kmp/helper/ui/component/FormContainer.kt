@@ -130,7 +130,10 @@ fun <ITEM> FormContainer(
         DeleteConfirmationDialog(
             showDialog = showDeleteDialog,
             onDismiss = { showDeleteDialog = false },
-            onConfirm = onDelete,
+            onConfirm = {
+                onDelete()
+                showDeleteDialog = false
+            },
             itemName = selectedItemName.shorten(),
         )
     }
@@ -161,6 +164,7 @@ private fun FormButtonBar(
                 isLoading = isLoadingProcess,
                 backgroundColor = Color.Black,
                 horizontalContentPadding = Spacing.normal,
+                modifier = Modifier.widthIn(min = 100.dp)
             )
         }
 
@@ -178,7 +182,7 @@ private fun FormButtonBar(
                     strokeColor = Color.Black,
                     textColor = Colors.Black,
                     horizontalContentPadding = Spacing.normal,
-                    modifier = if (isMobile) Modifier.weight(1f) else Modifier,
+                    modifier = if (isMobile) Modifier.weight(1f) else Modifier.widthIn(min = 100.dp),
                 )
             }
 
@@ -189,7 +193,7 @@ private fun FormButtonBar(
                 horizontalContentPadding = Spacing.normal,
                 isLoading = isLoadingProcess,
                 enabled = isFormValid,
-                modifier = if (isMobile) Modifier.weight(1f) else Modifier,
+                modifier = if (isMobile) Modifier.weight(1f) else Modifier.widthIn(min = 100.dp),
             )
         }
     }

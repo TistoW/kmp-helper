@@ -30,6 +30,7 @@ fun SwitchCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = Colors.Gray5,
     checkedColor: Color = Color.Black,
+    uncheckedColor: Color = Colors.Gray4,
     styleText: TextStyle = TextAppearance.body2Bold(),
     enabled: Boolean = true,
 ) {
@@ -57,7 +58,8 @@ fun SwitchCard(
                 onCheckedChange = onCheckedChange,
                 enabled = enabled,
                 size = 0.8f,
-                checkedColor = checkedColor
+                checkedColor = checkedColor,
+                uncheckedColor = uncheckedColor
             )
         }
     }
@@ -70,9 +72,9 @@ fun SwitchCustom(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     size: Float = 1f, // 1f = default, 0.8f = smaller, 1.2f = bigger
-    checkedColor: Color = MaterialTheme.colorScheme.primary,
+    checkedColor: Color = Color.Black,
     checkedThumbColor: Color = MaterialTheme.colorScheme.onPrimary,
-    uncheckedTrackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    uncheckedColor: Color = Colors.Gray4,
     uncheckedThumbColor: Color = MaterialTheme.colorScheme.outline,
 ) {
     Switch(
@@ -84,11 +86,11 @@ fun SwitchCustom(
             checkedTrackColor = checkedColor,
             checkedThumbColor = checkedThumbColor,
             checkedBorderColor = Color.Transparent,
-            uncheckedTrackColor = uncheckedTrackColor,
+            uncheckedTrackColor = uncheckedColor,
             uncheckedThumbColor = uncheckedThumbColor,
             uncheckedBorderColor = Color.Transparent,
             disabledCheckedTrackColor = checkedColor.copy(alpha = 0.5f),
-            disabledUncheckedTrackColor = uncheckedTrackColor.copy(alpha = 0.5f),
+            disabledUncheckedTrackColor = uncheckedColor.copy(alpha = 0.5f),
         )
     )
 }
