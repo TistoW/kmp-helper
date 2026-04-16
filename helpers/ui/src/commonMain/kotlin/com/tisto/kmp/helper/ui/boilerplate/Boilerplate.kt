@@ -137,24 +137,49 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     `isLoading` in try/finally around the call.
 //
 // ROUTE / SCREEN SPLIT
-//   ▸ Every screen has both. Route = stateful; Screen = pure `(state, snackbar, onEvent, onBack) -> Unit`.
+//   ▸ Every screen has both. Route = stateful; Screen = pure
+//     `(screenConfig, state, snackbar, onEvent, onBack) -> Unit`.
 //   ▸ Route responsibilities:
 //       – resolve VM via `safeKoinViewModel()` — NOT `koinViewModel()`. Always `?: return`.
 //       – own `SnackbarHostState`.
 //       – collect effects in a private `@Composable EffectHandler(...)`.
-//       – pass `viewModel::onEvent` to Screen.
+//       – wrap with `ZenentaTheme { screenConfig -> ... }` to receive the responsive config.
+//       – pass `viewModel::onEvent` and `screenConfig` to Screen.
+//   ▸ `ZenentaTheme` is a project-level Composable that resolves the current `ScreenConfig`
+//     (mobile/tablet/desktop breakpoints) and injects it via its lambda parameter.
+//     Never derive ScreenConfig inside Screen from `LocalConfiguration` — always receive it.
+//   ▸ `Screen` always declares `screenConfig: ScreenConfig = ScreenConfig()` as first param
+//     so it can be called in previews without a real theme wrapper.
 //   ▸ List Route also takes `refreshToken: Int = 0` and does
 //       `LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.onEvent(Refresh) }`.
 //   ▸ Form Route passes `itemId.toString()` into `safeKoinViewModel(itemId.toString())`
 //     as the VM key, so Create ("null") and Edit ("<id>") get distinct instances.
 //
+// UI COMPONENTS (use these — never raw Material3 equivalents in feature screens)
+//   ▸ `ToolbarRow(title, screenConfig, onBack, onAdd)` — toolbar with "Tambah" ButtonNormal.
+//   ▸ `SearchFilterRow(screenConfig, searchQuery, onSearchChange)` — search + filter bar.
+//   ▸ `ListColumn<T>(key, title, weight, cell)` — column descriptor for list/tablet tables.
+//   ▸ `ListHeader(columns)` — tablet column header row.
+//   ▸ `ListRow(item, columns, onClick)` — tablet data row with divider.
+//   ▸ `ListMobileRow(imageUrl, text, secondary, onClick)` — mobile compact row.
+//   ▸ `ListActions(onEdit, onDelete)` — standardized edit/delete icon buttons.
+//   ▸ `DeleteConfirmationDialog(showDialog, onDismiss, onConfirm, itemName)` — delete confirm.
+//   ▸ `FormContainer(forceTitle, screenConfig, item, onBack, onSave, onDelete)` — form wrapper
+//     with back/save/delete wired; drop field composables into its trailing lambda.
+//   ▸ `ScaffoldBox(snackbarHostState, isLoadingProcess)` — Scaffold + loading overlay.
+//   ▸ `CustomTextField(value, onValueChange, hint, style, isError, supportingText)` — text input.
+//   ▸ `SwitchCard(checked, onCheckedChange, text)` — labeled switch row.
+//   ▸ `CardImagePicker(imageUrl, onPicker)` — image picker tile.
+//   ▸ `BackHandler { onBack() }` — hardware back support; place at top of Screen.
+//
 // PREVIEWS
-//   ▸ Every stateless Screen composable must end with private `@Preview` functions.
-//   ▸ Required targets: Phone (widthDp=360, heightDp=800) and Tablet (widthDp=840, heightDp=1080).
-//   ▸ List Screen: one preview showing Success state with 2-3 sample items (phone + tablet).
-//   ▸ Form Screen: one preview showing fully filled state with Edit mode (phone + tablet).
+//   ▸ Use `@MobilePreview` and `@TabletPreview` (from `com.tisto.kmp.helper.ui.ext`).
+//     Never use raw `@Preview(widthDp=..., heightDp=...)` in feature screens.
+//   ▸ Wrap preview content in a private `ScreenContentPreview(screenConfig)` helper,
+//     then call it from `@MobilePreview` and `@TabletPreview` functions.
+//   ▸ List: one preview per target showing Success state with 2-3 sample items.
+//   ▸ Form: one preview per target showing fully filled Edit mode state.
 //   ▸ Place all @Preview functions at the bottom of the Screen file, `private`.
-//   ▸ Never wrap previews in the app theme — Material3 defaults are sufficient.
 //
 // EFFECT HANDLING
 //   ▸ `ShowMessage` → `snackbar.showSnackbar(effect.message)`.
@@ -206,6 +231,13 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ✗ Do not extend the legacy `BaseViewModel<STATE>` — use `FeatureViewModel<EFFECT>`.
 //   ✗ Do not re-declare `effectChannel`, `effect`, `showMessage/Success/Error` in
 //     the feature VM — all are provided by `FeatureViewModel`.
+//   ✗ Do not use raw `OutlinedTextField` in forms — use `CustomTextField`.
+//   ✗ Do not use raw `Switch` in a `Row` — use `SwitchCard`.
+//   ✗ Do not use `Scaffold` + `TopAppBar` + `FloatingActionButton` in list/form screens —
+//     use `ToolbarRow` + `ScaffoldBox` + `FormContainer`.
+//   ✗ Do not derive `ScreenConfig` from `LocalConfiguration` inside Screen —
+//     always receive it as a parameter from `ZenentaTheme { screenConfig -> }` in Route.
+//   ✗ Do not use raw `@Preview(widthDp=..., heightDp=...)` — use `@MobilePreview` / `@TabletPreview`.
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 import androidx.compose.foundation.layout.Box
@@ -490,25 +522,32 @@ sealed interface ExampleListEffect {
 // SECTION 8 — LIST SCREEN  (presentation/list/ExampleListScreen.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
-// import androidx.compose.foundation.clickable
 // import androidx.compose.foundation.layout.*
 // import androidx.compose.foundation.lazy.LazyColumn
 // import androidx.compose.foundation.lazy.items
-// import androidx.compose.material.icons.Icons
-// import androidx.compose.material.icons.automirrored.filled.ArrowBack
-// import androidx.compose.material.icons.filled.Add
-// import androidx.compose.material.icons.filled.Delete
-// import androidx.compose.material.icons.filled.Edit
-// import androidx.compose.material3.*
+// import androidx.compose.material3.SnackbarHostState
 // import androidx.compose.runtime.*
 // import androidx.compose.ui.Alignment
 // import androidx.compose.ui.Modifier
 // import androidx.compose.ui.unit.dp
 // import androidx.lifecycle.compose.collectAsStateWithLifecycle
 // import com.tisto.kmp.helper.ui.component.CustomImageView
+// import com.tisto.kmp.helper.ui.component.DeleteConfirmationDialog
+// import com.tisto.kmp.helper.ui.component.ListActions
+// import com.tisto.kmp.helper.ui.component.ListColumn
+// import com.tisto.kmp.helper.ui.component.ListHeader
+// import com.tisto.kmp.helper.ui.component.ListMobileRow
+// import com.tisto.kmp.helper.ui.component.ListRow
+// import com.tisto.kmp.helper.ui.component.RowText
+// import com.tisto.kmp.helper.ui.component.SearchFilterRow
+// import com.tisto.kmp.helper.ui.component.ToolbarRow
+// import com.tisto.kmp.helper.ui.ext.MobilePreview
+// import com.tisto.kmp.helper.ui.ext.ScreenConfig
+// import com.tisto.kmp.helper.ui.ext.TabletPreview
 // import com.tisto.kmp.helper.ui.ext.safeKoinViewModel
 // import com.tisto.kmp.helper.utils.ext.def
 // import com.tisto.kmp.helper.utils.ext.formatDate
+// import com.zenenta.pos.core.ui.ui.theme.ZenentaTheme
 // import kotlinx.coroutines.flow.Flow
 //
 // @Composable
@@ -527,7 +566,15 @@ sealed interface ExampleListEffect {
 //         if (refreshToken > 0) viewModel.onEvent(ExampleListEvent.Refresh)
 //     }
 //
-//     ExampleListScreen(state = state, snackbar = snackbar, onEvent = viewModel::onEvent, onBack = onBack)
+//     ZenentaTheme { screenConfig ->
+//         ExampleListScreen(
+//             screenConfig = screenConfig,
+//             state = state,
+//             snackbar = snackbar,
+//             onEvent = viewModel::onEvent,
+//             onBack = onBack,
+//         )
+//     }
 // }
 //
 // @Composable
@@ -546,59 +593,66 @@ sealed interface ExampleListEffect {
 //     }
 // }
 //
-// @OptIn(ExperimentalMaterial3Api::class)
 // @Composable
 // fun ExampleListScreen(
+//     screenConfig: ScreenConfig = ScreenConfig(),
 //     state: ExampleListUiState,
 //     snackbar: SnackbarHostState,
 //     onEvent: (ExampleListEvent) -> Unit,
 //     onBack: () -> Unit,
 // ) {
-//     Scaffold(
+//     var pendingDeleteItem by remember { mutableStateOf<Example?>(null) }
+//
+//     ScaffoldBox(
 //         topBar = {
-//             TopAppBar(
-//                 title = { Text("Example") },
-//                 navigationIcon = {
-//                     IconButton(onClick = onBack) {
-//                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
-//                     }
-//                 },
+//             ToolbarRow(
+//                 screenConfig = screenConfig,
+//                 title = "Example",
+//                 onBack = onBack,
+//                 onAdd = { onEvent(ExampleListEvent.CreateClicked) },
 //             )
 //         },
-//         snackbarHost = { SnackbarHost(snackbar) },
-//         floatingActionButton = {
-//             FloatingActionButton(onClick = { onEvent(ExampleListEvent.CreateClicked) }) {
-//                 Icon(Icons.Default.Add, contentDescription = "Tambah")
-//             }
-//         },
+//         snackbarHostState = snackbar,
 //     ) { padding ->
 //         when (state) {
 //             ExampleListUiState.Loading -> CenteredLoader(padding)
 //             is ExampleListUiState.Error -> CenteredMessage(padding, state.message)
-//             // Empty keeps the search bar so the user can change their query
-//             is ExampleListUiState.Empty -> ExampleEmptyBody(padding, state.query, onEvent)
-//             is ExampleListUiState.Success -> ExampleListBody(padding, state, onEvent)
+//             is ExampleListUiState.Empty -> ExampleEmptyBody(padding, state.query, screenConfig, onEvent)
+//             is ExampleListUiState.Success -> ExampleListBody(
+//                 padding = padding,
+//                 state = state,
+//                 screenConfig = screenConfig,
+//                 onEvent = onEvent,
+//                 onRequestDelete = { item -> pendingDeleteItem = item },
+//             )
 //         }
 //     }
+//
+//     DeleteConfirmationDialog(
+//         showDialog = pendingDeleteItem != null,
+//         onDismiss = { pendingDeleteItem = null },
+//         onConfirm = {
+//             pendingDeleteItem?.let { onEvent(ExampleListEvent.DeleteConfirmed(it.id)) }
+//             pendingDeleteItem = null
+//         },
+//         itemName = pendingDeleteItem?.name.orEmpty(),
+//     )
 // }
 //
-// // Shows the search bar even when the list is empty, so the user can edit their query.
 // @Composable
 // private fun ExampleEmptyBody(
 //     padding: PaddingValues,
 //     query: String,
+//     screenConfig: ScreenConfig,
 //     onEvent: (ExampleListEvent) -> Unit,
 // ) {
-//     Column(
-//         modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-//         verticalArrangement = Arrangement.spacedBy(12.dp),
-//     ) {
-//         OutlinedTextField(
-//             value = query,
-//             onValueChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
-//             label = { Text("Cari...") },
-//             modifier = Modifier.fillMaxWidth(),
-//             singleLine = true,
+//     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+//         Spacer(Modifier.height(Spacing.small))
+//         SearchFilterRow(
+//             modifier = Modifier.padding(horizontal = Spacing.normal, Spacing.box),
+//             screenConfig = screenConfig,
+//             searchQuery = query,
+//             onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
 //         )
 //         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 //             Text("Belum ada data")
@@ -610,86 +664,103 @@ sealed interface ExampleListEffect {
 // private fun ExampleListBody(
 //     padding: PaddingValues,
 //     state: ExampleListUiState.Success,
+//     screenConfig: ScreenConfig,
 //     onEvent: (ExampleListEvent) -> Unit,
+//     onRequestDelete: (Example) -> Unit,
 // ) {
-//     Column(
-//         modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-//         verticalArrangement = Arrangement.spacedBy(12.dp),
-//     ) {
-//         OutlinedTextField(
-//             value = state.query,
-//             onValueChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
-//             label = { Text("Cari...") },
-//             modifier = Modifier.fillMaxWidth(),
-//             singleLine = true,
+//     val columns = remember(screenConfig.isTablet) {
+//         exampleColumns(
+//             onEdit = { item -> onEvent(ExampleListEvent.EditClicked(item.id)) },
+//             onDelete = onRequestDelete,
 //         )
-//         LazyColumn(
-//             modifier = Modifier.fillMaxSize(),
-//             verticalArrangement = Arrangement.spacedBy(8.dp),
-//         ) {
-//             items(state.items, key = { it.id.def() }) { item ->
-//                 ExampleCard(
-//                     item = item,
-//                     onEdit = { onEvent(ExampleListEvent.EditClicked(item.id)) },
-//                     onDelete = { onEvent(ExampleListEvent.DeleteConfirmed(item.id)) },
-//                 )
+//     }
+//
+//     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+//         Spacer(Modifier.height(Spacing.small))
+//         SearchFilterRow(
+//             modifier = Modifier.padding(horizontal = Spacing.normal, Spacing.box),
+//             screenConfig = screenConfig,
+//             searchQuery = state.query,
+//             onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
+//         )
+//         if (screenConfig.isTablet) {
+//             ListHeader(columns = columns, modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.normal))
+//         }
+//         LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.normal)) {
+//             items(state.items, key = { it.id }) { item ->
+//                 if (screenConfig.isMobile) {
+//                     ListMobileRow(
+//                         imageUrl = item.image,
+//                         text = item.name.def(),
+//                         secondary = item.description?.takeIf { it.isNotBlank() },
+//                         onClick = { onEvent(ExampleListEvent.EditClicked(item.id)) },
+//                     )
+//                 } else {
+//                     ListRow(item = item, columns = columns, onClick = { onEvent(ExampleListEvent.EditClicked(item.id)) })
+//                 }
 //             }
 //         }
 //     }
 // }
 //
-// @Composable
-// private fun ExampleCard(
-//     item: Example,
-//     onEdit: () -> Unit,
-//     onDelete: () -> Unit,
-// ) {
-//     Card(modifier = Modifier.fillMaxWidth().clickable { onEdit() }) {
-//         Row(
-//             modifier = Modifier.fillMaxWidth().padding(12.dp),
-//             verticalAlignment = Alignment.CenterVertically,
-//         ) {
-//             CustomImageView(imageUrl = item.image, size = 50.dp)
-//             Spacer(Modifier.width(12.dp))
-//             Column(modifier = Modifier.weight(1f)) {
-//                 Text(item.name.def(), style = MaterialTheme.typography.bodyLarge)
-//                 item.updatedAt?.formatDate("dd MMM yyyy")?.let {
-//                     Text(
-//                         it,
-//                         style = MaterialTheme.typography.bodySmall,
-//                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                     )
-//                 }
+// private fun exampleColumns(
+//     onEdit: (Example) -> Unit,
+//     onDelete: (Example) -> Unit,
+// ): List<ListColumn<Example>> = buildList {
+//     add(ListColumn(
+//         key = "name", title = "Nama", weight = 3f,
+//         cell = { item ->
+//             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+//                 CustomImageView(imageUrl = item.image, size = 50.dp)
+//                 Spacer(Modifier.width(12.dp))
+//                 RowText(modifier = Modifier.weight(1f), text = item.name.def(), secondary = item.description?.takeIf { it.isNotBlank() })
 //             }
-//             IconButton(onClick = onEdit) {
-//                 Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(20.dp))
-//             }
-//             IconButton(onClick = onDelete) {
-//                 Icon(Icons.Default.Delete, contentDescription = "Hapus", modifier = Modifier.size(20.dp))
-//             }
-//         }
-//     }
+//         },
+//     ))
+//     add(ListColumn(
+//         key = "updated", title = "Update", weight = 1f,
+//         cell = { item ->
+//             RowText(
+//                 modifier = Modifier.fillMaxWidth(),
+//                 text = item.updatedAt?.formatDate("dd MMM yyyy").def("-"),
+//                 secondary = item.updatedAt?.formatDate("HH:mm"),
+//             )
+//         },
+//     ))
+//     add(ListColumn(
+//         key = "action", title = "", weight = 0.3f,
+//         cell = { item -> ListActions(onEdit = { onEdit(item) }, onDelete = { onDelete(item) }) },
+//     ))
 // }
 //
 // // ── Previews ──────────────────────────────────────────────────────────────
 //
-// @Preview(name = "List – Phone", showBackground = true, widthDp = 360, heightDp = 800)
-// @Preview(name = "List – Tablet", showBackground = true, widthDp = 840, heightDp = 1080)
 // @Composable
-// private fun PreviewExampleList() {
-//     ExampleListScreen(
-//         state = ExampleListUiState.Success(
-//             items = listOf(
-//                 Example(id = "1", name = "Item Satu"),
-//                 Example(id = "2", name = "Item Dua"),
-//                 Example(id = "3", name = "Item Tiga"),
+// private fun ExampleListScreenPreview(screenConfig: ScreenConfig = ScreenConfig()) {
+//     ZenentaTheme {
+//         ExampleListScreen(
+//             screenConfig = screenConfig,
+//             state = ExampleListUiState.Success(
+//                 items = listOf(
+//                     Example(id = "1", name = "Item Satu", updatedAt = "2025-12-22T04:12:09.000Z"),
+//                     Example(id = "2", name = "Item Dua", updatedAt = "2025-12-22T04:12:09.000Z"),
+//                     Example(id = "3", name = "Item Tiga", updatedAt = "2025-12-22T04:12:09.000Z"),
+//                 ),
 //             ),
-//         ),
-//         snackbar = SnackbarHostState(),
-//         onEvent = {},
-//         onBack = {},
-//     )
+//             snackbar = SnackbarHostState(),
+//             onEvent = {},
+//             onBack = {},
+//         )
+//     }
 // }
+//
+// @MobilePreview
+// @Composable
+// private fun PreviewExampleList() { ExampleListScreenPreview() }
+//
+// @TabletPreview
+// @Composable
+// private fun TabletPreviewExampleList() { ExampleListScreenPreview(ScreenConfig(700.dp)) }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 9 — FORM CONTRACT  (presentation/form/ExampleFormContract.kt)

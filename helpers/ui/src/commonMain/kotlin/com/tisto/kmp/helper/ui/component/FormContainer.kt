@@ -44,6 +44,9 @@ fun <ITEM> FormContainer(
     onBack: () -> Unit = {},
     onSave: () -> Unit = {},
     onDelete: () -> Unit = {},
+    saveText: String = "Simpan",
+    deleteText: String = "Hapus",
+    backText: String = "Kembali",
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     formScope: (@Composable FormScopeImpl.() -> Unit)? = null,
@@ -51,161 +54,75 @@ fun <ITEM> FormContainer(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isMobile = screenConfig.isMobile
-
     val scrollState = rememberScrollState()
-
-    fun onDeleteClick() {
-        showDeleteDialog = true
-    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Colors.White)
     ) {
-
-        // ✅ Toolbar fixed (not inside scroll)
         Toolbars(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
-            onBack = if (!isMobile) null else onBack
+            onBack = if (!isMobile) null else onBack,
         )
 
-        // ✅ Scroll container that makes the Surface move
         Box(
             modifier = Modifier
-                .weight(1f)                   // take remaining space
+                .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(scrollState)  // <— surface moves when scrolling
-                .imePadding()                 // helps when keyboard appears
+                .verticalScroll(scrollState)
+                .imePadding()
         ) {
-
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth(screenConfig.getHorizontalPaddingFormWeight(horizontalPadding))
                     .padding(bottom = Spacing.normal)
                     .then(
-                        if (isMobile)
-                            Modifier.padding(horizontal = Spacing.normal)
-                        else
-                            Modifier
-                                .padding(top = Spacing.huge)
-                                .shadow(
-                                    elevation = 5.dp,
-                                    shape = RoundedCornerShape(Radius.medium),
-                                    ambientColor = Color.Black.copy(alpha = 0.10f),
-                                    clip = false
-                                )
-
+                        if (isMobile) Modifier.padding(horizontal = Spacing.normal)
+                        else Modifier
+                            .padding(top = Spacing.huge)
+                            .shadow(
+                                elevation = 5.dp,
+                                shape = RoundedCornerShape(Radius.medium),
+                                ambientColor = Color.Black.copy(alpha = 0.10f),
+                                clip = false,
+                            )
                     ),
                 shape = RoundedCornerShape(Radius.medium),
-                color = Color.White
+                color = Color.White,
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(
-                            if (isMobile)
-                                Modifier
-                            else
-                                Modifier.padding(horizontal = Spacing.medium)
-                        ),
-                    verticalArrangement = Arrangement.Top
+                        .then(if (!isMobile) Modifier.padding(horizontal = Spacing.medium) else Modifier),
                 ) {
-                    // ✅ all form fields
-                    if (formScope != null) {
-                        FormScope {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .then(if (isMobile) Modifier else Modifier),
-                                verticalArrangement = verticalArrangement,
-                                horizontalAlignment = horizontalAlignment,
-                            ) {
-                                formScope()
-                            }
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .then(
-                                    if (isMobile)
-                                        Modifier
-                                    else
-                                        Modifier
-                                ),
-                            verticalArrangement = verticalArrangement,
-                            horizontalAlignment = horizontalAlignment,
-                            content = content
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .then(
-                                if (isMobile)
-                                    Modifier.padding(vertical = Spacing.normal)
-                                else
-                                    Modifier.padding(vertical = Spacing.medium)
-                            ),
+                    // Form fields
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = verticalArrangement,
+                        horizontalAlignment = horizontalAlignment,
                     ) {
-
-                        if (!isMobile) {
-                            ButtonNormal(
-                                text = "Kembali",
-                                onClick = onBack,
-                                isLoading = isLoadingProcess,
-                                backgroundColor = Color.Black,
-                                horizontalContentPadding = Spacing.normal
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .then(
-                                    if (isMobile)
-                                        Modifier.fillMaxWidth()
-                                    else
-                                        Modifier.align(Alignment.CenterEnd)
-                                ),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            if (item != null) {
-                                ButtonNormal(
-                                    text = "Hapus",
-                                    onClick = ::onDeleteClick,
-                                    isLoading = isLoadingProcess,
-                                    strokeWidth = 1.dp,
-                                    strokeColor = Color.Black,
-                                    textColor = Colors.Black,
-                                    horizontalContentPadding = Spacing.normal,
-                                    modifier = Modifier.then(
-                                        if (isMobile)
-                                            Modifier.weight(1f)
-                                        else
-                                            Modifier
-                                    )
-                                )
-                            }
-
-                            ButtonNormal(
-                                text = "Simpan",
-                                onClick = onSave,
-                                backgroundColor = Color.Black,
-                                horizontalContentPadding = Spacing.normal,
-                                isLoading = isLoadingProcess,
-                                enabled = isFormValid,
-                                modifier = Modifier.then(
-                                    if (isMobile)
-                                        Modifier.weight(1f)
-                                    else
-                                        Modifier
-                                )
-                            )
+                        if (formScope != null) {
+                            FormScope { formScope() }
+                        } else {
+                            content()
                         }
                     }
 
+                    // Bottom buttons
+                    FormButtonBar(
+                        isMobile = isMobile,
+                        isEdit = item != null,
+                        isFormValid = isFormValid,
+                        isLoadingProcess = isLoadingProcess,
+                        saveText = saveText,
+                        deleteText = deleteText,
+                        backText = backText,
+                        onBack = onBack,
+                        onSave = onSave,
+                        onDelete = { showDeleteDialog = true },
+                    )
                 }
             }
         }
@@ -214,53 +131,106 @@ fun <ITEM> FormContainer(
             showDialog = showDeleteDialog,
             onDismiss = { showDeleteDialog = false },
             onConfirm = onDelete,
-            itemName = selectedItemName.shorten()
+            itemName = selectedItemName.shorten(),
         )
+    }
+}
+
+@Composable
+private fun FormButtonBar(
+    isMobile: Boolean,
+    isEdit: Boolean,
+    isFormValid: Boolean,
+    isLoadingProcess: Boolean,
+    saveText: String,
+    deleteText: String,
+    backText: String,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = if (isMobile) Spacing.normal else Spacing.medium),
+    ) {
+        if (!isMobile) {
+            ButtonNormal(
+                text = backText,
+                onClick = onBack,
+                isLoading = isLoadingProcess,
+                backgroundColor = Color.Black,
+                horizontalContentPadding = Spacing.normal,
+            )
+        }
+
+        Row(
+            modifier = if (isMobile) Modifier.fillMaxWidth()
+            else Modifier.align(Alignment.CenterEnd),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (isEdit) {
+                ButtonNormal(
+                    text = deleteText,
+                    onClick = onDelete,
+                    isLoading = isLoadingProcess,
+                    strokeWidth = 1.dp,
+                    strokeColor = Color.Black,
+                    textColor = Colors.Black,
+                    horizontalContentPadding = Spacing.normal,
+                    modifier = if (isMobile) Modifier.weight(1f) else Modifier,
+                )
+            }
+
+            ButtonNormal(
+                text = saveText,
+                onClick = onSave,
+                backgroundColor = Color.Black,
+                horizontalContentPadding = Spacing.normal,
+                isLoading = isLoadingProcess,
+                enabled = isFormValid,
+                modifier = if (isMobile) Modifier.weight(1f) else Modifier,
+            )
+        }
     }
 }
 
 
 @Composable
-fun FromScreenContentPreview(
+private fun FormScreenContentPreview(
     screenConfig: ScreenConfig = ScreenConfig(),
 ) {
     FormContainer(
         screenConfig = screenConfig,
         item = ExampleModel(),
         content = {
-
             Column {
-
                 Spacer(modifier = Modifier.height(Spacing.large))
-
                 CustomTextField(
                     value = "",
                     onValueChange = { },
                     hint = "Nama",
                     style = TextFieldStyle.OUTLINED,
                     strokeWidth = 1.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
-
             }
-
-        }
+        },
     )
 }
 
 @TabletPreview
 @Composable
-fun TabletPreviewsForm() {
+private fun TabletPreviewsForm() {
     HelperTheme {
-        FromScreenContentPreview(ScreenConfig(700.dp))
+        FormScreenContentPreview(ScreenConfig(700.dp))
     }
-
 }
 
 @MobilePreview
 @Composable
-fun MobilePreviewsForm() {
+private fun MobilePreviewsForm() {
     HelperTheme {
-        FromScreenContentPreview()
+        FormScreenContentPreview()
     }
 }
