@@ -271,7 +271,7 @@ fun FilterButton(
             if (count > 0) {
                 Card(
                     shape = RoundedCornerShape(Spacing.small),
-                    colors = CardDefaults.cardColors(containerColor = Colors.ColorPrimary),
+                    colors = CardDefaults.cardColors(containerColor = Colors.Red),
                     modifier = Modifier.size(20.dp)
                 ) {
                     Box(
