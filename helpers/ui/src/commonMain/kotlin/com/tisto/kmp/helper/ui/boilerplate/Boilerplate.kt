@@ -108,20 +108,55 @@ package com.tisto.kmp.helper.ui.boilerplate
 // VIEWMODEL — LIST
 //   ▸ Single `MutableStateFlow<UiState>`. Direct `.value =` assignment. No `combine()`.
 //     No `flatMapLatest`. No derived LoadPhase.
-//   ▸ `query` is a plain `private var` — only user events mutate it; reload is explicit.
+//   ▸ `query`, `filters`, `perPage` are plain `private var` — only events mutate them.
 //   ▸ On refresh: if current state is Success, set `isRefreshing = true`;
 //     if Empty, keep Empty (so the search bar stays visible); else Loading.
-//   ▸ Initial load: `init { refresh() }`.
-//   ▸ Search payload: `SearchRequest(page = 1, perpage = 100, simpleQuery = buildList { ... })`
-//     — always `add(Search("isActive", "true"))`; add `Search("name", query)` when non-blank.
-//   ▸ Empty result list → `UiState.Empty(query = query)` (not `Success(items = emptyList())`).
-//     `Empty` carries the current query so the UI can keep the search bar visible.
-//   ▸ Search debounce: `QueryChanged` must NOT call `refresh()` directly.
+//   ▸ Initial load: `init { loadPage(1) }`.
+//   ▸ Extract a `buildSearchRequest(page)` helper that converts `query`, `filters`,
+//     `perPage` into a `SearchRequest`. SORT-type filters → `orderBy`/`orderType`.
+//     FILTER-type filters → `simpleQuery` entries. Default `isActive = "true"` when
+//     no status filter is selected.
+//   ▸ Empty result list → `UiState.Empty(query, filters)` (not `Success(items = emptyList())`).
+//     `Empty` carries query + filters so the UI can keep search bar and filter badge visible.
+//   ▸ Search debounce: `QueryChanged` must NOT call `loadPage()` directly.
 //     Instead: update state.query immediately (so the text field never flickers),
-//     cancel any pending `searchJob`, then schedule `refresh()` after 500 ms:
+//     cancel any pending `searchJob`, then schedule `loadPage(1)` after 500 ms:
 //         searchJob?.cancel()
-//         searchJob = viewModelScope.launch { delay(500); refresh() }
-//   ▸ `Refresh` (pull-to-refresh / back from form) calls `refresh()` directly — no debounce.
+//         searchJob = viewModelScope.launch { delay(500); loadPage(1) }
+//   ▸ `Refresh` (pull-to-refresh / back from form) calls `loadPage(1)` directly — no debounce.
+//   ▸ `FiltersApplied` stores filters in the private var, updates current state's
+//     filters field, then calls `loadPage(1)`.
+//
+// PAGINATION
+//   ▸ Success state carries: `page`, `perPage`, `totalItems`, `lastPage`, `isLoadingMore`.
+//     Derived `hasMore: Boolean get() = page < lastPage`.
+//   ▸ Events: `LoadNextPage`, `PageChanged(page)`, `RowsPerPageChanged(perPage)`.
+//   ▸ `loadPage(page)` is the single entry point for fetching — used by refresh,
+//     search, filter, and manual page changes.
+//   ▸ `loadNextPage()` appends results to existing items (infinite scroll). Guards
+//     against double-loading: `if (isLoadingMore || !hasMore) return`.
+//   ▸ Mobile (Android/iOS): infinite scroll via a `load_more` sentinel item that
+//     triggers `LoadNextPage` when composed.
+//   ▸ Web/Desktop: manual pagination via `TablePaginationFooter` with next/prev/rowsPerPage.
+//
+// PULL-TO-REFRESH
+//   ▸ Wrap list body with `PullToRefreshBox` on mobile (`!PlatformType.isWeb && !PlatformType.isJvm`).
+//     On web/desktop, use a plain `Box` — pull gesture doesn't work there.
+//   ▸ Web gets a `RefreshButton` in `SearchFilterRow` instead.
+//   ▸ Extract `val content: @Composable () -> Unit` lambda and conditionally wrap it
+//     with either `PullToRefreshBox` or plain `Box` based on platform.
+//
+// FILTER
+//   ▸ `filters: List<FilterItem>` lives in both `Success` and `Empty` states.
+//   ▸ `FiltersApplied(filters: List<FilterItem>)` event.
+//   ▸ Screen holds `showFilterSheet` state. `ModalBottomSheet` + `GeneralFilterBottomSheet`
+//     overlay at the screen level (alongside `DeleteConfirmationDialog`).
+//   ▸ Define a private `featureFilterOptions()` function returning `List<FilterGroup>` —
+//     typically one SORT group + one STATUS group (Aktif/Tidak Aktif).
+//   ▸ `FilterButton(count = filters.size)` in `SearchFilterRow` shows active filter count.
+//   ▸ ViewModel converts filters in `buildSearchRequest()`:
+//     SORT filter → `orderBy` / `orderType` params.
+//     FILTER items → `simpleQuery` entries (e.g. `isActive = "false"`).
 //
 // VIEWMODEL — FORM
 //   ▸ Takes constructor param `itemId: String?`. Null = Create, non-null = Edit.
@@ -151,10 +186,13 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     Never derive ScreenConfig inside Screen from `LocalConfiguration` — always receive it.
 //   ▸ `Screen` always declares `screenConfig: ScreenConfig = ScreenConfig()` as first param
 //     so it can be called in previews without a real theme wrapper.
-//   ▸ List Route also takes `refreshToken: Int = 0` and does
+//   ▸ List Route also takes `refreshToken`, `pendingMessage`, `onMessageShown`:
 //       `LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.onEvent(Refresh) }`.
-//   ▸ Form Route passes `itemId.toString()` into `safeKoinViewModel(itemId.toString())`
-//     as the VM key, so Create ("null") and Edit ("<id>") get distinct instances.
+//       `LaunchedEffect(pendingMessage) { if (pendingMessage != null) { snackbar.showSnackbar(pendingMessage); onMessageShown() } }`.
+//     This shows form success toasts on the list screen (form navigates back instantly).
+//   ▸ Form Route takes `formKey: Int` and uses `"${itemId}_$formKey"` as the VM key.
+//     This ensures a fresh ViewModel each time the form is opened — prevents stale
+//     data when creating again or re-editing the same item after save.
 //
 // UI COMPONENTS (use these — never raw Material3 equivalents in feature screens)
 //   ▸ `ToolbarRow(title, screenConfig, onBack, onAdd)` — toolbar with "Tambah" ButtonNormal.
@@ -172,6 +210,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `SwitchCard(checked, onCheckedChange, text)` — labeled switch row.
 //   ▸ `CardImagePicker(imageUrl, onPicker)` — image picker tile.
 //   ▸ `BackHandler { onBack() }` — hardware back support; place at top of Screen.
+//   ▸ `PullToRefreshBox(isRefreshing, onRefresh)` — Material3 pull-to-refresh (mobile only).
+//   ▸ `TablePaginationFooter(rowsPerPage, totalItems, currentPage, ...)` — web/desktop pagination.
+//   ▸ `GeneralFilterBottomSheet(options, preselected, onClose, onApply)` — filter chip sheet.
+//   ▸ `FilterButton(count, onClick)` — opens filter sheet; badge shows active filter count.
+//   ▸ `RefreshButton(onClick)` — manual refresh for web (no pull gesture).
 //
 // PREVIEWS
 //   ▸ Use `@MobilePreview` and `@TabletPreview` (from `com.tisto.kmp.helper.ui.ext`).
@@ -184,9 +227,14 @@ package com.tisto.kmp.helper.ui.boilerplate
 //
 // EFFECT HANDLING
 //   ▸ `ShowMessage` → `snackbar.showSnackbar(effect.message)`.
-//   ▸ `NavigateToForm(id)` → `onNavigateToForm(effect.itemId)`.
-//   ▸ `NavigateBack` → `onDone()` or equivalent caller.
+//   ▸ `NavigateToForm(item)` → `onNavigateToForm(effect.item)`.
+//   ▸ `NavigateBack(message)` → `onDone(effect.message)`. The message (e.g. "Data tersimpan")
+//     is passed to the parent Route, then forwarded to the list screen as `pendingMessage`
+//     so the success toast shows on the list — not the form that's about to be disposed.
 //   ▸ EffectHandler is always `LaunchedEffect(Unit) { effects.collect { … } }`.
+//   ▸ Form ViewModel sends the success message through `NavigateBack(message)` —
+//     do NOT call `showSuccess()` before `NavigateBack`, the form screen is disposed
+//     before the snackbar appears.
 //
 // WRAPPER ROUTE (top-level)
 //   ▸ Crossfade over a `remember` (NOT rememberSaveable) `stage: Stage` sealed interface.
@@ -195,7 +243,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     because Bundle serialization fails on custom sealed types. `remember` is correct here:
 //     navigation stage does not need to survive process death.
 //   ▸ `refreshToken` via `remember { mutableIntStateOf(0) }` — increment on form `onDone`.
-//   ▸ `private sealed interface Stage { data object List; data class Form(val id: String?) }`.
+//   ▸ `formKey` via `remember { mutableIntStateOf(0) }` — increment each time navigating
+//     to form. Passed to Form Route to generate a unique VM key.
+//   ▸ `pendingMessage` via `remember { mutableStateOf<String?>(null) }` — captures the
+//     success message from form `onDone(message)`, forwarded to list as `pendingMessage`.
+//     Cleared via `onMessageShown = { pendingMessage = null }`.
+//   ▸ `private sealed interface Stage { data object List; data class Form(val item: <Name>?) }`.
 //   ▸ No nav library. No NavHost.
 //
 // KOIN MODULE
@@ -413,28 +466,42 @@ object ExampleTypeTypes {
 // SECTION 6 — LIST CONTRACT  (presentation/list/ExampleListContract.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
+// import com.tisto.kmp.helper.utils.model.FilterItem
+
 sealed interface ExampleListUiState {
     data object Loading : ExampleListUiState
-    data class Empty(val query: String = "") : ExampleListUiState  // carries query so the search bar stays visible
+    data class Empty(val query: String = "", val filters: List<FilterItem> = emptyList()) : ExampleListUiState
     data class Success(
         val items: List<Example>,
         val query: String = "",
+        val filters: List<FilterItem> = emptyList(),
         val isRefreshing: Boolean = false,
-    ) : ExampleListUiState
+        val page: Int = 1,
+        val perPage: Int = 10,
+        val totalItems: Int = 0,
+        val lastPage: Int = 1,
+        val isLoadingMore: Boolean = false,
+    ) : ExampleListUiState {
+        val hasMore: Boolean get() = page < lastPage
+    }
     data class Error(val message: String) : ExampleListUiState
 }
 
 sealed interface ExampleListEvent {
     data object Refresh : ExampleListEvent
     data class QueryChanged(val query: String) : ExampleListEvent
+    data class FiltersApplied(val filters: List<FilterItem>) : ExampleListEvent
     data object CreateClicked : ExampleListEvent
-    data class EditClicked(val id: String) : ExampleListEvent
+    data class EditClicked(val item: Example) : ExampleListEvent
     data class DeleteConfirmed(val id: String) : ExampleListEvent
+    data object LoadNextPage : ExampleListEvent
+    data class PageChanged(val page: Int) : ExampleListEvent
+    data class RowsPerPageChanged(val perPage: Int) : ExampleListEvent
 }
 
 sealed interface ExampleListEffect {
     data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleListEffect
-    data class NavigateToForm(val itemId: String?) : ExampleListEffect
+    data class NavigateToForm(val item: Example?) : ExampleListEffect
 }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -446,6 +513,8 @@ sealed interface ExampleListEffect {
 // import com.tisto.kmp.helper.network.model.Search
 // import com.tisto.kmp.helper.network.model.SearchRequest
 // import com.tisto.kmp.helper.network.MessageType
+// import com.tisto.kmp.helper.utils.model.FilterItem
+// import com.tisto.kmp.helper.utils.model.FilterType
 // import kotlinx.coroutines.Job
 // import kotlinx.coroutines.delay
 // import kotlinx.coroutines.flow.MutableStateFlow
@@ -465,59 +534,107 @@ sealed interface ExampleListEffect {
 //     }
 //
 //     private var query = ""
+//     private var perPage = 20
+//     private var filters: List<FilterItem> = emptyList()
 //     private var searchJob: Job? = null
 //
-//     init { refresh() }
+//     init { loadPage(1) }
 //
 //     fun onEvent(event: ExampleListEvent) {
 //         when (event) {
-//             ExampleListEvent.Refresh -> refresh()
+//             ExampleListEvent.Refresh -> loadPage(1)
 //             is ExampleListEvent.QueryChanged -> {
 //                 query = event.query
-//                 // Reflect new query in state immediately so the text field never flickers
 //                 val current = _uiState.value
 //                 if (current is ExampleListUiState.Success) {
 //                     _uiState.value = current.copy(query = event.query)
 //                 }
-//                 // Debounce: cancel the previous pending search and wait 500 ms
 //                 searchJob?.cancel()
-//                 searchJob = viewModelScope.launch { delay(500); refresh() }
+//                 searchJob = viewModelScope.launch { delay(500); loadPage(1) }
+//             }
+//             is ExampleListEvent.FiltersApplied -> {
+//                 filters = event.filters
+//                 val current = _uiState.value
+//                 if (current is ExampleListUiState.Success) {
+//                     _uiState.value = current.copy(filters = event.filters)
+//                 }
+//                 loadPage(1)
 //             }
 //             ExampleListEvent.CreateClicked -> sendEffect(ExampleListEffect.NavigateToForm(null))
-//             is ExampleListEvent.EditClicked -> sendEffect(ExampleListEffect.NavigateToForm(event.id))
+//             is ExampleListEvent.EditClicked -> sendEffect(ExampleListEffect.NavigateToForm(event.item))
 //             is ExampleListEvent.DeleteConfirmed -> delete(event.id)
+//             ExampleListEvent.LoadNextPage -> loadNextPage()
+//             is ExampleListEvent.PageChanged -> loadPage(event.page)
+//             is ExampleListEvent.RowsPerPageChanged -> { perPage = event.perPage; loadPage(1) }
 //         }
 //     }
 //
-//     private fun refresh() {
+//     private fun loadPage(page: Int) {
 //         val current = _uiState.value
 //         _uiState.value = when (current) {
 //             is ExampleListUiState.Success -> current.copy(isRefreshing = true)
-//             is ExampleListUiState.Empty -> current  // keep search bar visible while loading
+//             is ExampleListUiState.Empty -> current
 //             else -> ExampleListUiState.Loading
 //         }
+//         val search = buildSearchRequest(page)
+//         repo.get(search).launchResourcePaged(
+//             fallbackError = "Gagal memuat data",
+//             onError = { _uiState.value = ExampleListUiState.Error(it) },
+//         ) { result ->
+//             val items = result.data
+//             if (items.isEmpty() && page == 1) {
+//                 _uiState.value = ExampleListUiState.Empty(query = query, filters = filters)
+//             } else {
+//                 _uiState.value = ExampleListUiState.Success(
+//                     items = items, query = query, filters = filters,
+//                     page = result.currentPage ?: page,
+//                     perPage = result.perPage ?: perPage,
+//                     totalItems = result.total ?: items.size,
+//                     lastPage = result.lastPage,
+//                 )
+//             }
+//         }
+//     }
 //
-//         val search = SearchRequest(
-//             page = 1,
-//             perpage = 100,
+//     private fun loadNextPage() {
+//         val current = _uiState.value
+//         if (current !is ExampleListUiState.Success) return
+//         if (current.isLoadingMore || !current.hasMore) return
+//         val nextPage = current.page + 1
+//         _uiState.value = current.copy(isLoadingMore = true)
+//         val search = buildSearchRequest(nextPage)
+//         repo.get(search).launchResourcePaged(
+//             fallbackError = "Gagal memuat data",
+//             onError = { _uiState.value = current.copy(isLoadingMore = false); showError(it) },
+//         ) { result ->
+//             val prev = _uiState.value as? ExampleListUiState.Success ?: return@launchResourcePaged
+//             _uiState.value = prev.copy(
+//                 items = prev.items + result.data,
+//                 page = result.currentPage ?: nextPage,
+//                 perPage = result.perPage ?: perPage,
+//                 totalItems = result.total ?: prev.totalItems,
+//                 lastPage = result.lastPage,
+//                 isLoadingMore = false,
+//             )
+//         }
+//     }
+//
+//     private fun buildSearchRequest(page: Int): SearchRequest {
+//         val sortFilter = filters.firstOrNull { it.type == FilterType.SORT }
+//         val statusFilter = filters.firstOrNull { it.type == FilterType.FILTER && it.key == "isActive" }
+//         return SearchRequest(
+//             page = page, perpage = perPage,
+//             orderBy = sortFilter?.key, orderType = sortFilter?.value,
 //             simpleQuery = buildList {
-//                 add(Search("isActive", "true"))
+//                 add(Search("isActive", statusFilter?.value ?: "true"))
 //                 if (query.isNotBlank()) add(Search("name", query))
 //             },
 //         )
-//         repo.get(search).launchResource(
-//             fallbackError = "Gagal memuat data",
-//             onError = { _uiState.value = ExampleListUiState.Error(it) }, // override to set UiState.Error
-//         ) { items ->
-//             // Pass query into Empty so the UI can keep the search bar visible
-//             _uiState.value = if (items.isEmpty()) ExampleListUiState.Empty(query = query)
-//                 else ExampleListUiState.Success(items = items, query = query)
-//         }
 //     }
 //
 //     private fun delete(id: String) {
 //         repo.delete(id).launchResource(fallbackError = "Gagal menghapus") {
-//             showSuccess("Data berhasil dihapus"); refresh()
+//             showSuccess("Data berhasil dihapus"); loadPage(1)
 //         }
 //     }
 // }
@@ -529,36 +646,38 @@ sealed interface ExampleListEffect {
 // import androidx.compose.foundation.layout.*
 // import androidx.compose.foundation.lazy.LazyColumn
 // import androidx.compose.foundation.lazy.items
-// import androidx.compose.material3.SnackbarHostState
+// import androidx.compose.foundation.lazy.rememberLazyListState
+// import androidx.compose.foundation.shape.RoundedCornerShape
+// import androidx.compose.material3.*
+// import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 // import androidx.compose.runtime.*
 // import androidx.compose.ui.Alignment
 // import androidx.compose.ui.Modifier
+// import androidx.compose.ui.graphics.Color
 // import androidx.compose.ui.unit.dp
 // import androidx.lifecycle.compose.collectAsStateWithLifecycle
-// import com.tisto.kmp.helper.ui.component.CustomImageView
-// import com.tisto.kmp.helper.ui.component.DeleteConfirmationDialog
-// import com.tisto.kmp.helper.ui.component.ListActions
-// import com.tisto.kmp.helper.ui.component.ListColumn
-// import com.tisto.kmp.helper.ui.component.ListHeader
-// import com.tisto.kmp.helper.ui.component.ListMobileRow
-// import com.tisto.kmp.helper.ui.component.ListRow
-// import com.tisto.kmp.helper.ui.component.RowText
-// import com.tisto.kmp.helper.ui.component.SearchFilterRow
-// import com.tisto.kmp.helper.ui.component.ToolbarRow
-// import com.tisto.kmp.helper.ui.ext.MobilePreview
-// import com.tisto.kmp.helper.ui.ext.ScreenConfig
-// import com.tisto.kmp.helper.ui.ext.TabletPreview
-// import com.tisto.kmp.helper.ui.ext.safeKoinViewModel
+// import com.tisto.kmp.helper.ui.component.*
+// import com.tisto.kmp.helper.ui.ext.*
+// import com.tisto.kmp.helper.ui.theme.Spacing
+// import com.tisto.kmp.helper.utils.PlatformType
 // import com.tisto.kmp.helper.utils.ext.def
 // import com.tisto.kmp.helper.utils.ext.formatDate
+// import com.tisto.kmp.helper.utils.model.FilterGroup
+// import com.tisto.kmp.helper.utils.model.FilterItem
+// import com.tisto.kmp.helper.utils.model.FilterType
 // import com.zenenta.pos.core.ui.ui.theme.ZenentaTheme
 // import kotlinx.coroutines.flow.Flow
+// import kotlinx.coroutines.launch
+//
+// // ── Route (stateful) ─────────────────────────────────────────────────────
 //
 // @Composable
 // fun ExampleListRoute(
-//     onNavigateToForm: (itemId: String?) -> Unit,
+//     onNavigateToForm: (item: Example?) -> Unit,
 //     onBack: () -> Unit,
 //     refreshToken: Int = 0,
+//     pendingMessage: String? = null,
+//     onMessageShown: () -> Unit = {},
 // ) {
 //     val viewModel: ExampleListViewModel = safeKoinViewModel() ?: return
 //     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -568,6 +687,9 @@ sealed interface ExampleListEffect {
 //
 //     LaunchedEffect(refreshToken) {
 //         if (refreshToken > 0) viewModel.onEvent(ExampleListEvent.Refresh)
+//     }
+//     LaunchedEffect(pendingMessage) {
+//         if (pendingMessage != null) { snackbar.showSnackbar(pendingMessage); onMessageShown() }
 //     }
 //
 //     ZenentaTheme { screenConfig ->
@@ -585,18 +707,21 @@ sealed interface ExampleListEffect {
 // private fun ExampleListEffectHandler(
 //     effects: Flow<ExampleListEffect>,
 //     snackbar: SnackbarHostState,
-//     onNavigateToForm: (String?) -> Unit,
+//     onNavigateToForm: (Example?) -> Unit,
 // ) {
 //     LaunchedEffect(Unit) {
 //         effects.collect { effect ->
 //             when (effect) {
 //                 is ExampleListEffect.ShowMessage -> snackbar.showSnackbar(effect.message)
-//                 is ExampleListEffect.NavigateToForm -> onNavigateToForm(effect.itemId)
+//                 is ExampleListEffect.NavigateToForm -> onNavigateToForm(effect.item)
 //             }
 //         }
 //     }
 // }
 //
+// // ── Screen (stateless) ──────────────────────────────────────────────────
+//
+// @OptIn(ExperimentalMaterial3Api::class)
 // @Composable
 // fun ExampleListScreen(
 //     screenConfig: ScreenConfig = ScreenConfig(),
@@ -606,28 +731,40 @@ sealed interface ExampleListEffect {
 //     onBack: () -> Unit,
 // ) {
 //     var pendingDeleteItem by remember { mutableStateOf<Example?>(null) }
+//     var showFilterSheet by remember { mutableStateOf(false) }
+//     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 //
-//     ScaffoldBox(
+//     val currentFilters = when (state) {
+//         is ExampleListUiState.Success -> state.filters
+//         is ExampleListUiState.Empty -> state.filters
+//         else -> emptyList()
+//     }
+//
+//     Scaffold(
 //         topBar = {
-//             ToolbarRow(
+//             Toolbar(
 //                 screenConfig = screenConfig,
 //                 title = "Example",
-//                 onBack = onBack,
 //                 onAdd = { onEvent(ExampleListEvent.CreateClicked) },
+//                 onBack = if (screenConfig.isMobile) onBack else null,
 //             )
 //         },
-//         snackbarHostState = snackbar,
+//         snackbarHost = { SnackbarHost(snackbar) },
+//         containerColor = Color.White,
 //     ) { padding ->
 //         when (state) {
 //             ExampleListUiState.Loading -> CenteredLoader(padding)
 //             is ExampleListUiState.Error -> CenteredMessage(padding, state.message)
-//             is ExampleListUiState.Empty -> ExampleEmptyBody(padding, state.query, screenConfig, onEvent)
+//             is ExampleListUiState.Empty -> ExampleEmptyBody(
+//                 padding, state, screenConfig, onEvent,
+//                 onOpenFilter = { showFilterSheet = true },
+//                 filterCount = currentFilters.size,
+//             )
 //             is ExampleListUiState.Success -> ExampleListBody(
-//                 padding = padding,
-//                 state = state,
-//                 screenConfig = screenConfig,
+//                 padding = padding, state = state, screenConfig = screenConfig,
 //                 onEvent = onEvent,
-//                 onRequestDelete = { item -> pendingDeleteItem = item },
+//                 onRequestDelete = { pendingDeleteItem = it },
+//                 onOpenFilter = { showFilterSheet = true },
 //             )
 //         }
 //     }
@@ -641,44 +778,59 @@ sealed interface ExampleListEffect {
 //         },
 //         itemName = pendingDeleteItem?.name.orEmpty(),
 //     )
-// }
 //
-// @Composable
-// private fun ExampleEmptyBody(
-//     padding: PaddingValues,
-//     query: String,
-//     screenConfig: ScreenConfig,
-//     onEvent: (ExampleListEvent) -> Unit,
-// ) {
-//     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-//         Spacer(Modifier.height(Spacing.small))
-//         SearchFilterRow(
-//             modifier = Modifier.padding(horizontal = Spacing.normal, Spacing.box),
-//             screenConfig = screenConfig,
-//             searchQuery = query,
-//             onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
-//         )
-//         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//             Text("Belum ada data")
+//     // ── Filter sheet ──
+//     if (showFilterSheet) {
+//         ModalBottomSheet(
+//             onDismissRequest = { showFilterSheet = false },
+//             sheetState = sheetState,
+//             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+//         ) {
+//             GeneralFilterBottomSheet(
+//                 options = exampleFilterOptions(),
+//                 preselected = currentFilters,
+//                 onClose = { showFilterSheet = false },
+//                 onApply = { selected ->
+//                     onEvent(ExampleListEvent.FiltersApplied(selected))
+//                     showFilterSheet = false
+//                 },
+//             )
 //         }
 //     }
 // }
 //
+// // ── Filter options (customize per feature) ───────────────────────────────
+//
+// private fun exampleFilterOptions() = listOf(
+//     FilterGroup(
+//         title = "Urutkan", type = FilterType.SORT,
+//         options = listOf(
+//             FilterItem("Nama: A-Z", "asc", "name", FilterType.SORT),
+//             FilterItem("Nama: Z-A", "desc", "name", FilterType.SORT),
+//             FilterItem("Terbaru", "desc", "createdAt", FilterType.SORT),
+//             FilterItem("Terlama", "asc", "createdAt", FilterType.SORT),
+//         ),
+//     ),
+//     FilterGroup(
+//         title = "Status", type = FilterType.FILTER,
+//         options = listOf(
+//             FilterItem("Aktif", "true", "isActive", FilterType.FILTER),
+//             FilterItem("Tidak Aktif", "false", "isActive", FilterType.FILTER),
+//         ),
+//     ),
+// )
+//
+// // ── Empty body ───────────────────────────────────────────────────────────
+//
 // @Composable
-// private fun ExampleListBody(
+// private fun ExampleEmptyBody(
 //     padding: PaddingValues,
-//     state: ExampleListUiState.Success,
+//     state: ExampleListUiState.Empty,
 //     screenConfig: ScreenConfig,
 //     onEvent: (ExampleListEvent) -> Unit,
-//     onRequestDelete: (Example) -> Unit,
+//     onOpenFilter: () -> Unit,
+//     filterCount: Int,
 // ) {
-//     val columns = remember(screenConfig.isTablet) {
-//         exampleColumns(
-//             onEdit = { item -> onEvent(ExampleListEvent.EditClicked(item.id)) },
-//             onDelete = onRequestDelete,
-//         )
-//     }
-//
 //     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 //         Spacer(Modifier.height(Spacing.small))
 //         SearchFilterRow(
@@ -686,55 +838,132 @@ sealed interface ExampleListEffect {
 //             screenConfig = screenConfig,
 //             searchQuery = state.query,
 //             onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
+//             onClearSearch = { onEvent(ExampleListEvent.QueryChanged("")) },
+//             refreshCount = filterCount,
+//             onRefresh = { onEvent(ExampleListEvent.Refresh) },
+//             onOpenFilter = onOpenFilter,
 //         )
-//         if (screenConfig.isTablet) {
-//             ListHeader(columns = columns, modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.normal))
+//         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//             Text("Belum ada data")
 //         }
-//         LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.normal)) {
-//             items(state.items, key = { it.id }) { item ->
-//                 if (screenConfig.isMobile) {
-//                     ListMobileRow(
-//                         imageUrl = item.image,
-//                         text = item.name.def(),
-//                         secondary = item.description?.takeIf { it.isNotBlank() },
-//                         onClick = { onEvent(ExampleListEvent.EditClicked(item.id)) },
+//     }
+// }
+//
+// // ── List body with pull-to-refresh + pagination ─────────────────────────
+//
+// @OptIn(ExperimentalMaterial3Api::class)
+// @Composable
+// private fun ExampleListBody(
+//     padding: PaddingValues,
+//     state: ExampleListUiState.Success,
+//     screenConfig: ScreenConfig,
+//     onEvent: (ExampleListEvent) -> Unit,
+//     onRequestDelete: (Example) -> Unit,
+//     onOpenFilter: () -> Unit,
+// ) {
+//     val columns = remember(screenConfig.isTablet) {
+//         exampleColumns(
+//             onEdit = { item -> onEvent(ExampleListEvent.EditClicked(item)) },
+//             onDelete = onRequestDelete,
+//         )
+//     }
+//
+//     val usePullToRefresh = !PlatformType.isWeb && !PlatformType.isJvm
+//     val useInfiniteScroll = usePullToRefresh
+//     val listState = rememberLazyListState()
+//     val scope = rememberCoroutineScope()
+//
+//     // Scroll to top after refresh completes
+//     val wasRefreshing = remember { mutableStateOf(false) }
+//     LaunchedEffect(state.isRefreshing) {
+//         if (wasRefreshing.value && !state.isRefreshing) listState.animateScrollToItem(0)
+//         wasRefreshing.value = state.isRefreshing
+//     }
+//
+//     val contentPadding = if (screenConfig.isMobile) Spacing.normal else Spacing.extraLarge
+//
+//     val content: @Composable () -> Unit = {
+//         Column(modifier = Modifier.fillMaxSize()) {
+//             Spacer(Modifier.height(Spacing.small))
+//
+//             SearchFilterRow(
+//                 modifier = Modifier.padding(horizontal = contentPadding, Spacing.box),
+//                 screenConfig = screenConfig,
+//                 searchQuery = state.query,
+//                 onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
+//                 onClearSearch = { onEvent(ExampleListEvent.QueryChanged("")) },
+//                 refreshCount = state.filters.size,
+//                 onRefresh = { onEvent(ExampleListEvent.Refresh) },
+//                 onOpenFilter = onOpenFilter,
+//             )
+//
+//             if (screenConfig.isTablet) {
+//                 ListHeader(columns = columns, modifier = Modifier.fillMaxWidth().padding(horizontal = contentPadding))
+//             }
+//
+//             LazyColumn(state = listState, modifier = Modifier.weight(1f).padding(horizontal = contentPadding)) {
+//                 items(state.items, key = { it.id }) { item ->
+//                     val onClick = { onEvent(ExampleListEvent.EditClicked(item)) }
+//                     if (screenConfig.isMobile) {
+//                         ListMobileRow(imageUrl = item.image, text = item.name.def(),
+//                             secondary = item.description?.takeIf { it.isNotBlank() }, onClick = { onClick() })
+//                     } else {
+//                         ListRow(item = item, columns = columns, onClick = { onClick() })
+//                     }
+//                 }
+//                 // Infinite scroll trigger (mobile only)
+//                 if (useInfiniteScroll && state.hasMore) {
+//                     item(key = "load_more") {
+//                         LaunchedEffect(state.page) { onEvent(ExampleListEvent.LoadNextPage) }
+//                         Box(Modifier.fillMaxWidth().padding(vertical = Spacing.normal), contentAlignment = Alignment.Center) {
+//                             CircularProgressIndicator()
+//                         }
+//                     }
+//                 }
+//             }
+//
+//             // Web/Desktop: manual pagination
+//             if (PlatformType.isWeb || PlatformType.isJvm) {
+//                 Box(modifier = Modifier.padding(horizontal = contentPadding)) {
+//                     TablePaginationFooter(
+//                         rowsPerPage = state.perPage, totalItems = state.totalItems, currentPage = state.page,
+//                         onNextPage = { onEvent(ExampleListEvent.PageChanged(state.page + 1)); scope.launch { listState.scrollToItem(0) } },
+//                         onPrevPage = { onEvent(ExampleListEvent.PageChanged(state.page - 1)); scope.launch { listState.scrollToItem(0) } },
+//                         onRowsPerPageChange = { onEvent(ExampleListEvent.RowsPerPageChanged(it)); scope.launch { listState.scrollToItem(0) } },
 //                     )
-//                 } else {
-//                     ListRow(item = item, columns = columns, onClick = { onEvent(ExampleListEvent.EditClicked(item.id)) })
 //                 }
 //             }
 //         }
 //     }
+//
+//     // Conditional pull-to-refresh wrapper
+//     if (usePullToRefresh) {
+//         PullToRefreshBox(isRefreshing = state.isRefreshing, onRefresh = { onEvent(ExampleListEvent.Refresh) },
+//             modifier = Modifier.fillMaxSize().padding(padding)) { content() }
+//     } else {
+//         Box(modifier = Modifier.fillMaxSize().padding(padding)) { content() }
+//     }
 // }
+//
+// // ── Columns ──────────────────────────────────────────────────────────────
 //
 // private fun exampleColumns(
 //     onEdit: (Example) -> Unit,
 //     onDelete: (Example) -> Unit,
 // ): List<ListColumn<Example>> = buildList {
-//     add(ListColumn(
-//         key = "name", title = "Nama", weight = 3f,
-//         cell = { item ->
-//             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-//                 CustomImageView(imageUrl = item.image, size = 50.dp)
-//                 Spacer(Modifier.width(12.dp))
-//                 RowText(modifier = Modifier.weight(1f), text = item.name.def(), secondary = item.description?.takeIf { it.isNotBlank() })
-//             }
-//         },
-//     ))
-//     add(ListColumn(
-//         key = "updated", title = "Update", weight = 1f,
-//         cell = { item ->
-//             RowText(
-//                 modifier = Modifier.fillMaxWidth(),
-//                 text = item.updatedAt?.formatDate("dd MMM yyyy").def("-"),
-//                 secondary = item.updatedAt?.formatDate("HH:mm"),
-//             )
-//         },
-//     ))
-//     add(ListColumn(
-//         key = "action", title = "", weight = 0.3f,
-//         cell = { item -> ListActions(onEdit = { onEdit(item) }, onDelete = { onDelete(item) }) },
-//     ))
+//     add(ListColumn(key = "name", title = "Nama", weight = 3f, cell = { item ->
+//         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+//             CustomImageView(imageUrl = item.image, size = 50.dp)
+//             Spacer(Modifier.width(12.dp))
+//             RowText(modifier = Modifier.weight(1f), text = item.name.def(), secondary = item.description?.takeIf { it.isNotBlank() })
+//         }
+//     }))
+//     add(ListColumn(key = "updated", title = "Update", weight = 1f, cell = { item ->
+//         RowText(modifier = Modifier.fillMaxWidth(), text = item.updatedAt?.formatDate("dd MMM yyyy").def("-"), secondary = item.updatedAt?.formatDate("HH:mm"))
+//     }))
+//     add(ListColumn(key = "action", title = "", weight = 0.5f, contentArrangement = Arrangement.Center, cell = { item ->
+//         ListActions(onEdit = { onEdit(item) }, onDelete = { onDelete(item) })
+//     }))
 // }
 //
 // // ── Previews ──────────────────────────────────────────────────────────────
@@ -750,6 +979,7 @@ sealed interface ExampleListEffect {
 //                     Example(id = "2", name = "Item Dua", updatedAt = "2025-12-22T04:12:09.000Z"),
 //                     Example(id = "3", name = "Item Tiga", updatedAt = "2025-12-22T04:12:09.000Z"),
 //                 ),
+//                 totalItems = 25, lastPage = 3,
 //             ),
 //             snackbar = SnackbarHostState(),
 //             onEvent = {},
@@ -806,7 +1036,7 @@ sealed interface ExampleListEffect {
 //
 // sealed interface ExampleFormEffect {
 //     data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleFormEffect
-//     data object NavigateBack : ExampleFormEffect
+//     data class NavigateBack(val message: String? = null) : ExampleFormEffect  // message shown on list screen
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -897,8 +1127,7 @@ sealed interface ExampleListEffect {
 //         performSubmission {
 //             val flow = if (mode is ExampleFormMode.Create) repo.create(request) else repo.update(request)
 //             flow.onResource(fallbackError = "Gagal menyimpan", onError = ::showError) {
-//                 showSuccess("Data tersimpan")
-//                 sendEffect(ExampleFormEffect.NavigateBack)
+//                 sendEffect(ExampleFormEffect.NavigateBack("Data tersimpan"))
 //             }
 //         }
 //     }
@@ -907,8 +1136,7 @@ sealed interface ExampleListEffect {
 //         val editMode = mode as? ExampleFormMode.Edit ?: return
 //         performSubmission {
 //             repo.delete(editMode.itemId).onResource(fallbackError = "Gagal menghapus", onError = ::showError) {
-//                 showSuccess("Data berhasil dihapus")
-//                 sendEffect(ExampleFormEffect.NavigateBack)
+//                 sendEffect(ExampleFormEffect.NavigateBack("Data berhasil dihapus"))
 //             }
 //         }
 //     }
@@ -961,10 +1189,14 @@ sealed interface ExampleListEffect {
 //
 // @Composable
 // fun ExampleFormRoute(
-//     itemId: String?,
-//     onDone: () -> Unit,
+//     item: Example?,
+//     formKey: Int = 0,
+//     onDone: (message: String?) -> Unit,
 // ) {
-//     val viewModel: ExampleFormViewModel = safeKoinViewModel(itemId.toString()) ?: return
+//     val viewModel: ExampleFormViewModel = safeKoinViewModel(
+//         key = "${item?.id}_$formKey",
+//         parameters = { parametersOf(item) },
+//     ) ?: return
 //     val state by viewModel.uiState.collectAsStateWithLifecycle()
 //     val snackbar = remember { SnackbarHostState() }
 //
@@ -976,7 +1208,7 @@ sealed interface ExampleListEffect {
 //             snackbar = snackbar,
 //             screenConfig = screenConfig,
 //             onEvent = viewModel::onEvent,
-//             onBack = onDone,
+//             onBack = { onDone(null) },
 //         )
 //     }
 // }
@@ -985,7 +1217,7 @@ sealed interface ExampleListEffect {
 // private fun ExampleFormEffectHandler(
 //     effects: Flow<ExampleFormEffect>,
 //     snackbar: SnackbarHostState,
-//     onDone: () -> Unit,
+//     onDone: (message: String?) -> Unit,
 // ) {
 //     LaunchedEffect(Unit) {
 //         effects.collect { effect ->
@@ -1001,7 +1233,7 @@ sealed interface ExampleListEffect {
 //                         }
 //                     )
 //                 )
-//                 ExampleFormEffect.NavigateBack -> onDone()
+//                 is ExampleFormEffect.NavigateBack -> onDone(effect.message)
 //             }
 //         }
 //     }
@@ -1124,19 +1356,28 @@ sealed interface ExampleListEffect {
 //
 // @Composable
 // fun ExampleRoute(onBack: () -> Unit = {}) {
-//     var stage by remember { mutableStateOf<Stage>(Stage.List) } // NOT rememberSaveable — Stage is not Parcelable
+//     var stage by remember { mutableStateOf<Stage>(Stage.List) }
 //     var refreshToken by remember { mutableIntStateOf(0) }
+//     var formKey by remember { mutableIntStateOf(0) }
+//     var pendingMessage by remember { mutableStateOf<String?>(null) }
 //
-//     Crossfade(targetState = stage) { current ->
+//     Crossfade(targetState = stage, modifier = Modifier.fillMaxSize()) { current ->
 //         when (current) {
 //             Stage.List -> ExampleListRoute(
-//                 onNavigateToForm = { id -> stage = Stage.Form(id) },
+//                 onNavigateToForm = { item -> formKey++; stage = Stage.Form(item) },
 //                 onBack = onBack,
 //                 refreshToken = refreshToken,
+//                 pendingMessage = pendingMessage,
+//                 onMessageShown = { pendingMessage = null },
 //             )
 //             is Stage.Form -> ExampleFormRoute(
-//                 itemId = current.id,
-//                 onDone = { refreshToken++; stage = Stage.List },
+//                 item = current.item,
+//                 formKey = formKey,
+//                 onDone = { message ->
+//                     pendingMessage = message
+//                     refreshToken++
+//                     stage = Stage.List
+//                 },
 //             )
 //         }
 //     }
@@ -1144,5 +1385,5 @@ sealed interface ExampleListEffect {
 //
 // private sealed interface Stage {
 //     data object List : Stage
-//     data class Form(val id: String?) : Stage
+//     data class Form(val item: Example?) : Stage
 // }
