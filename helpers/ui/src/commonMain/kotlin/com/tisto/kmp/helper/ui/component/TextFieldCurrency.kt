@@ -56,22 +56,28 @@ import kotlin.math.roundToLong
  * digits, at most one comma, and at most [maxDecimalDigits] digits after it.
  * A comma is only accepted after at least one digit (prevents leading comma).
  */
-fun filterPriceInput(v: String, maxDecimalDigits: Int = 3): String {
+fun filterPriceInput(
+    v: String,
+    maxDecimalDigits: Int = 3,
+    maxIntegerDigits: Int = Int.MAX_VALUE,
+): String {
     var hasComma = false
+    var intCount = 0
     var decCount = 0
     return buildString {
         for (c in v) {
             when {
                 c.isDigit() -> {
-                    if (!hasComma) append(c)
-                    else if (decCount < maxDecimalDigits) {
+                    if (!hasComma) {
+                        if (intCount < maxIntegerDigits) { append(c); intCount++ }
+                    } else if (decCount < maxDecimalDigits) {
                         append(c); decCount++
                     }
                 }
 
-                c == ',' && !hasComma && isNotEmpty() -> {
+                (c == ',' || c == '.') && !hasComma && isNotEmpty() -> {
                     hasComma = true
-                    append(c)
+                    append(',')
                 }
             }
         }
@@ -182,13 +188,13 @@ fun CurrencyTextField(
     Column(modifier = modifier) {
         BasicTextField(
             value = value,
-            onValueChange = { onValueChange(filterPriceInput(it).take(maxLength)) },
+            onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             textStyle = textStyle,
             visualTransformation = transformation,
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
+                keyboardType = KeyboardType.Decimal,
                 imeAction = imeAction,
             ),
             cursorBrush = SolidColor(strokeColorOnFocused),
