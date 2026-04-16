@@ -206,7 +206,10 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `FormContainer(forceTitle, screenConfig, item, onBack, onSave, onDelete)` — form wrapper
 //     with back/save/delete wired; drop field composables into its trailing lambda.
 //   ▸ `ScaffoldBox(snackbarHostState, isLoadingProcess)` — Scaffold + loading overlay.
-//   ▸ `CustomTextField(value, onValueChange, hint, style, isError, supportingText)` — text input.
+//   ▸ `CustomTextField(value, onValueChange, hint, style, isError, supportingText)` — general text input.
+//   ▸ `CurrencyTextField(value, onValueChange, hint, prefix, suffix, maxLength)` — currency / numeric input
+//     with thousands formatting ("10.000,9"). Use for prices, discounts, amounts — anything numeric.
+//   ▸ `SearchTextField(query, onQueryChange, onClear, hint)` — search input with clear icon.
 //   ▸ `SwitchCard(checked, onCheckedChange, text)` — labeled switch row.
 //   ▸ `CardImagePicker(imageUrl, onPicker)` — image picker tile.
 //   ▸ `BackHandler { onBack() }` — hardware back support; place at top of Screen.
@@ -285,7 +288,8 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ✗ Do not extend the legacy `BaseViewModel<STATE>` — use `FeatureViewModel<EFFECT>`.
 //   ✗ Do not re-declare `effectChannel`, `effect`, `showMessage/Success/Error` in
 //     the feature VM — all are provided by `FeatureViewModel`.
-//   ✗ Do not use raw `OutlinedTextField` in forms — use `CustomTextField`.
+//   ✗ Do not use raw `OutlinedTextField` / `TextField` in forms — use `CustomTextField`
+//     for text, `CurrencyTextField` for currency/numbers, `SearchTextField` for search.
 //   ✗ Do not use raw `Switch` in a `Row` — use `SwitchCard`.
 //   ✗ Do not use `Scaffold` + `TopAppBar` + `FloatingActionButton` in list/form screens —
 //     use `ToolbarRow` + `ScaffoldBox` + `FormContainer`.
