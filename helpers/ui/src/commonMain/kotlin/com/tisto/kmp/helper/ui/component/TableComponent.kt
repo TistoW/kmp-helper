@@ -101,7 +101,6 @@ fun <T> tableActions(
     }
 }
 
-
 @Composable
 fun <T> TableHeader(
     spec: TableSpec<T>,
