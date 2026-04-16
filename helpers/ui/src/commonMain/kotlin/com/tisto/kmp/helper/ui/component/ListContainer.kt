@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 // ══════════════════════════════════════════════════════════════════════════════
 // ListContainer — reusable list scaffold for KMP features.
 //
-// Pairs with ListUiState<T> (generic list state).
+// Pairs with ListUiState<T> + ListEvent<T>.
 // Handles: Scaffold, Toolbar, search/filter, pull-to-refresh, pagination,
 // infinite scroll, loading/error/empty states, delete confirmation.
 //
@@ -57,13 +57,10 @@ import kotlinx.coroutines.launch
 //       snackbar = snackbar,
 //       title = "Diskon",
 //       filterOptions = discountFilterOptions(),
+//       onEvent = viewModel::onEvent,
 //       itemKey = { it.id.def() },
 //       columns = ::discountColumns,
 //       mobileRow = { item, onClick -> ListMobileRow(...) },
-//       onAdd = { onEvent(CreateClicked) },
-//       onEditClicked = { onEvent(EditClicked(it)) },
-//       onDeleteConfirmed = { onEvent(DeleteConfirmed(it.id)) },
-//       ...
 //   )
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -92,6 +89,20 @@ sealed interface ListUiState<out T> {
     }
 }
 
+// ── Generic list event ───────────────────────────────────────────────────────
+
+sealed interface ListEvent<out T> {
+    data object Refresh : ListEvent<Nothing>
+    data class QueryChanged(val query: String) : ListEvent<Nothing>
+    data class FiltersApplied(val filters: List<FilterItem>) : ListEvent<Nothing>
+    data object CreateClicked : ListEvent<Nothing>
+    data class EditClicked<T>(val item: T) : ListEvent<T>
+    data class DeleteConfirmed<T>(val item: T) : ListEvent<T>
+    data object LoadNextPage : ListEvent<Nothing>
+    data class PageChanged(val page: Int) : ListEvent<Nothing>
+    data class RowsPerPageChanged(val perPage: Int) : ListEvent<Nothing>
+}
+
 // ── ListContainer ────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,15 +117,8 @@ fun <T> ListContainer(
     searchHint: String = "Cari",
     filterOptions: List<FilterGroup> = emptyList(),
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
-    onAdd: (() -> Unit)? = null,
-    onEditClicked: (T) -> Unit = {},
-    onDeleteConfirmed: (T) -> Unit = {},
-    onQueryChanged: (String) -> Unit = {},
-    onRefresh: () -> Unit = {},
-    onFiltersApplied: (List<FilterItem>) -> Unit = {},
-    onLoadNextPage: () -> Unit = {},
-    onPageChanged: (Int) -> Unit = {},
-    onRowsPerPageChanged: (Int) -> Unit = {},
+    showAddButton: Boolean = true,
+    onEvent: (ListEvent<T>) -> Unit = {},
     onBack: () -> Unit = {},
     onPick: ((T) -> Unit)? = null,
     deleteItemName: (T) -> String = { "" },
@@ -134,7 +138,11 @@ fun <T> ListContainer(
     }
 
     val resolvedColumns = remember(screenConfig.isTablet, isPicker) {
-        columns(isPicker, onEditClicked, { pendingDeleteItem = it })
+        columns(
+            isPicker,
+            { item -> onEvent(ListEvent.EditClicked(item)) },
+            { item -> pendingDeleteItem = item },
+        )
     }
 
     Scaffold(
@@ -142,7 +150,9 @@ fun <T> ListContainer(
             Toolbar(
                 screenConfig = screenConfig,
                 title = if (isPicker) titlePicker else title,
-                onAdd = onAdd,
+                onAdd = if (showAddButton) {
+                    { onEvent(ListEvent.CreateClicked) }
+                } else null,
                 onBack = if (screenConfig.isMobile) onBack else null,
                 backIcon = backIcon,
             )
@@ -160,8 +170,8 @@ fun <T> ListContainer(
                 screenConfig = screenConfig,
                 emptyText = emptyText,
                 searchHint = searchHint,
-                onQueryChanged = onQueryChanged,
-                onRefresh = onRefresh,
+                onQueryChanged = { onEvent(ListEvent.QueryChanged(it)) },
+                onRefresh = { onEvent(ListEvent.Refresh) },
                 onOpenFilter = { showFilterSheet = true },
             )
 
@@ -173,14 +183,9 @@ fun <T> ListContainer(
                 columns = resolvedColumns,
                 itemKey = itemKey,
                 mobileRow = mobileRow,
-                onQueryChanged = onQueryChanged,
-                onRefresh = onRefresh,
+                onEvent = onEvent,
                 onOpenFilter = { showFilterSheet = true },
                 onPick = onPick,
-                onEditClicked = onEditClicked,
-                onLoadNextPage = onLoadNextPage,
-                onPageChanged = onPageChanged,
-                onRowsPerPageChanged = onRowsPerPageChanged,
             )
         }
     }
@@ -189,7 +194,7 @@ fun <T> ListContainer(
         showDialog = pendingDeleteItem != null,
         onDismiss = { pendingDeleteItem = null },
         onConfirm = {
-            pendingDeleteItem?.let { onDeleteConfirmed(it) }
+            pendingDeleteItem?.let { onEvent(ListEvent.DeleteConfirmed(it)) }
             pendingDeleteItem = null
         },
         itemName = pendingDeleteItem?.let { deleteItemName(it) }.orEmpty(),
@@ -206,7 +211,7 @@ fun <T> ListContainer(
                 preselected = currentFilters,
                 onClose = { showFilterSheet = false },
                 onApply = { selected ->
-                    onFiltersApplied(selected)
+                    onEvent(ListEvent.FiltersApplied(selected))
                     showFilterSheet = false
                 },
             )
@@ -226,14 +231,9 @@ private fun <T> ListContainerBody(
     columns: List<ListColumn<T>>,
     itemKey: (T) -> Any,
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
-    onQueryChanged: (String) -> Unit,
-    onRefresh: () -> Unit,
+    onEvent: (ListEvent<T>) -> Unit,
     onOpenFilter: () -> Unit,
     onPick: ((T) -> Unit)?,
-    onEditClicked: (T) -> Unit,
-    onLoadNextPage: () -> Unit,
-    onPageChanged: (Int) -> Unit,
-    onRowsPerPageChanged: (Int) -> Unit,
 ) {
     val usePullToRefresh = !PlatformType.isWeb && !PlatformType.isJvm
     val useInfiniteScroll = usePullToRefresh
@@ -259,10 +259,10 @@ private fun <T> ListContainerBody(
                 modifier = Modifier.padding(horizontal = contentHorizontalPadding, Spacing.box),
                 screenConfig = screenConfig,
                 searchQuery = state.query,
-                onSearchChange = onQueryChanged,
-                onClearSearch = { onQueryChanged("") },
+                onSearchChange = { onEvent(ListEvent.QueryChanged(it)) },
+                onClearSearch = { onEvent(ListEvent.QueryChanged("")) },
                 refreshCount = state.filters.size,
-                onRefresh = onRefresh,
+                onRefresh = { onEvent(ListEvent.Refresh) },
                 onOpenFilter = onOpenFilter,
             )
 
@@ -284,7 +284,7 @@ private fun <T> ListContainerBody(
                 items(state.items, key = itemKey) { item ->
                     val onClick = {
                         if (isPicker) onPick?.invoke(item)
-                        else onEditClicked(item)
+                        else onEvent(ListEvent.EditClicked(item))
                     }
                     if (screenConfig.isMobile) {
                         mobileRow(item) { onClick() }
@@ -296,7 +296,7 @@ private fun <T> ListContainerBody(
                 if (useInfiniteScroll && state.hasMore) {
                     item(key = "load_more") {
                         LaunchedEffect(state.page) {
-                            onLoadNextPage()
+                            onEvent(ListEvent.LoadNextPage)
                         }
                         Box(
                             modifier = Modifier
@@ -317,15 +317,15 @@ private fun <T> ListContainerBody(
                         totalItems = state.totalItems,
                         currentPage = state.page,
                         onNextPage = {
-                            onPageChanged(state.page + 1)
+                            onEvent(ListEvent.PageChanged(state.page + 1))
                             scope.launch { listState.scrollToItem(0) }
                         },
                         onPrevPage = {
-                            onPageChanged(state.page - 1)
+                            onEvent(ListEvent.PageChanged(state.page - 1))
                             scope.launch { listState.scrollToItem(0) }
                         },
                         onRowsPerPageChange = {
-                            onRowsPerPageChanged(it)
+                            onEvent(ListEvent.RowsPerPageChanged(it))
                             scope.launch { listState.scrollToItem(0) }
                         },
                     )
@@ -337,7 +337,7 @@ private fun <T> ListContainerBody(
     if (usePullToRefresh) {
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
-            onRefresh = onRefresh,
+            onRefresh = { onEvent(ListEvent.Refresh) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
