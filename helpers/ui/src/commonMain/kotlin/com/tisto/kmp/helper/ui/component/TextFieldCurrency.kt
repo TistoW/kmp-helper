@@ -1,19 +1,14 @@
 package com.tisto.kmp.helper.ui.component
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -44,47 +38,51 @@ import kotlin.math.roundToLong
 
 // ─── Raw string format ────────────────────────────────────────────────────────
 //
-// State stores:  digits + optional comma + up to 3 decimal digits
-//   e.g. "10000,9"  "75000"  "1500000,25"
+// State stores:  digits + optional decimal separator (comma OR period) + up to 3 decimal digits
+//   e.g. "10000,9"  "10000.9"  "75000"  "1500000,25"
 //
 // Display format (CurrencyVisualTransformation):
 //   dot as thousands separator, comma as decimal separator, max 3 decimal digits
 //   e.g. "10.000,9"  "75.000"  "1.500.000,25"
+//
+// The raw text preserves whatever the keyboard sends ('.' or ',') so the IME
+// stays in sync. The VisualTransformation always displays comma for decimal.
 
 /**
  * Filters user input to only allow a valid price string:
- * digits, at most one comma, and at most [maxDecimalDigits] digits after it.
- * A comma is only accepted after at least one digit (prevents leading comma).
+ * digits, at most one decimal separator (',' or '.'), and at most [maxDecimalDigits]
+ * digits after it.  The separator character the user typed is preserved as-is so the
+ * IME stays in sync with the raw text (avoids the IME reverting the edit).
  */
 fun filterPriceInput(
     v: String,
     maxDecimalDigits: Int = 3,
     maxIntegerDigits: Int = Int.MAX_VALUE,
 ): String {
-    var hasComma = false
+    var hasDec = false
     var intCount = 0
     var decCount = 0
     return buildString {
         for (c in v) {
             when {
                 c.isDigit() -> {
-                    if (!hasComma) {
+                    if (!hasDec) {
                         if (intCount < maxIntegerDigits) { append(c); intCount++ }
                     } else if (decCount < maxDecimalDigits) {
                         append(c); decCount++
                     }
                 }
 
-                (c == ',' || c == '.') && !hasComma && isNotEmpty() -> {
-                    hasComma = true
-                    append(',')
+                (c == ',' || c == '.') && !hasDec && isNotEmpty() -> {
+                    hasDec = true
+                    append(c) // keep original char so IME doesn't detect a mismatch
                 }
             }
         }
     }
 }
 
-/** Parses a raw price string to Double. "10000,9" → 10000.9 */
+/** Parses a raw price string to Double. "10000,9" → 10000.9, "10000.9" → 10000.9 */
 fun String.toRawDouble(): Double = replace(',', '.').toDoubleOrNull() ?: 0.0
 
 /**
@@ -104,9 +102,10 @@ fun Double.toRawPriceString(): String {
 
 // ─── VisualTransformation ─────────────────────────────────────────────────────
 //
-// State stores raw string ("10000,9"); display shows "10.000,9".
-// Only dots are added as thousands separators — comma is passed through as-is.
-// OffsetMapping treats inserted dots as zero-width to the cursor.
+// State stores raw string ("10000,9" or "10000.9"); display shows "10.000,9".
+// Raw may contain ',' or '.' as decimal — both are displayed as ','.
+// Dots in the formatted output are ONLY thousands separators.
+// OffsetMapping treats those inserted dots as zero-width to the cursor.
 
 class CurrencyVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -132,10 +131,10 @@ class CurrencyVisualTransformation : VisualTransformation {
 
     private fun format(raw: String): String {
         if (raw.isEmpty()) return ""
-        val commaIdx = raw.indexOf(',')
-        return if (commaIdx >= 0) {
-            val intPart = raw.substring(0, commaIdx).ifEmpty { "0" }
-            val decPart = raw.substring(commaIdx + 1)
+        val decIdx = raw.indexOfFirst { it == ',' || it == '.' }
+        return if (decIdx >= 0) {
+            val intPart = raw.substring(0, decIdx).ifEmpty { "0" }
+            val decPart = raw.substring(decIdx + 1)
             "${formatIntPart(intPart)},${decPart}"
         } else {
             formatIntPart(raw)
@@ -153,15 +152,17 @@ class CurrencyVisualTransformation : VisualTransformation {
 
 /**
  * A currency-aware [OutlinedTextField] that:
- * - Stores raw input as "10000,9" (comma as decimal separator)
+ * - Stores raw input as "10000,9" (comma/period as decimal separator)
  * - Displays formatted output as "10.000,9" (dot as thousands separator)
  * - Prefixes with "Rp "
  * - Only allows valid numeric/decimal input via [filterPriceInput]
  *
  * [value] and [onValueChange] operate on the **raw** string.
  * Use [toRawDouble] / [toRawPriceString] to convert between raw and Double.
+ *
+ * Uses Material3 [OutlinedTextField] directly (not BasicTextField + DecorationBox)
+ * because the latter breaks IME composition for comma/period input on Android.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyTextField(
     value: String,
@@ -176,75 +177,42 @@ fun CurrencyTextField(
     prefix: String? = "Rp ",
     suffix: String? = null,
     strokeColor: Color = Colors.Gray2,
-    strokeWidth: Dp = 0.5.dp,
-    focusedStrokeWidth: Dp? = null,
     strokeColorOnFocused: Color = Color.Black,
     maxLength: Int = Int.MAX_VALUE,
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused = interactionSource.collectIsFocusedAsState().value
 
-    Column(modifier = modifier) {
-        BasicTextField(
-            value = value,
-            onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            textStyle = textStyle,
-            visualTransformation = transformation,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal,
-                imeAction = imeAction,
-            ),
-            cursorBrush = SolidColor(strokeColorOnFocused),
-            interactionSource = interactionSource,
-            decorationBox = { innerTextField ->
-                OutlinedTextFieldDefaults.DecorationBox(
-                    value = value,
-                    innerTextField = innerTextField,
-                    enabled = true,
-                    singleLine = true,
-                    visualTransformation = transformation,
-                    interactionSource = interactionSource,
-                    isError = isError,
-                    label = { Text(label, color = strokeColorOnFocused) },
-                    prefix = prefix?.let { { Text(it) } },
-                    suffix = suffix?.let { { Text(it) } },
-                    contentPadding = PaddingValues(
-                        top = Spacing.box,
-                        bottom = Spacing.box,
-                        start = Spacing.box,
-                        end = Spacing.box,
-                    ),
-                    container = {
-                        val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
-                        OutlinedTextFieldDefaults.Container(
-                            enabled = true,
-                            isError = isError,
-                            interactionSource = interactionSource,
-                            shape = RoundedCornerShape(cornerRadius),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = strokeColorOnFocused,
-                                unfocusedBorderColor = strokeColor,
-                            ),
-                            focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
-                            unfocusedBorderThickness = currentStrokeWidth,
-                        )
-                    },
+    OutlinedTextField(
+        value = value,
+        onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        textStyle = textStyle,
+        visualTransformation = transformation,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = imeAction,
+        ),
+        isError = isError,
+        label = { Text(label) },
+        prefix = prefix?.let { { Text(it) } },
+        suffix = suffix?.let { { Text(it) } },
+        supportingText = supportingText?.let {
+            {
+                Text(
+                    text = it,
+                    color = if (isError) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
                 )
-            },
-        )
-        if (supportingText != null) {
-            Text(
-                text = supportingText,
-                color = if (isError) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = Spacing.box, top = 4.dp),
-            )
-        }
-    }
+            }
+        },
+        shape = RoundedCornerShape(cornerRadius),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = strokeColorOnFocused,
+            unfocusedBorderColor = strokeColor,
+        ),
+    )
 }
 
 // ── Example / Preview ────────────────────────────────────────────────────────
