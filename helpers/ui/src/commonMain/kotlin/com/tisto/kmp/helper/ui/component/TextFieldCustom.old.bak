@@ -20,6 +20,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,11 +63,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tisto.kmp.helper.ui.ext.MobilePreview
 import com.tisto.kmp.helper.ui.ext.TabletPreview
+import com.tisto.kmp.helper.ui.icon.MyIcon
+import com.tisto.kmp.helper.ui.icon.myicon.IcSearch
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
@@ -73,28 +78,29 @@ import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.ext.def
-
-// ══════════════════════════════════════════════════════════════════════════════
-// CustomTextField — general-purpose text input.
-//
-// For specialized inputs use the dedicated components:
-//   - Password  → PasswordTextField  (TextFieldPassword.kt)
-//   - Currency  → CurrencyTextField   (TextFieldCurrency.kt)
-//   - Search    → SearchTextField     (TextFieldSearch.kt)
-//
-// Legacy: the old version with formatCurrency/autoHandlePassword is preserved
-// in TextFieldCustom.old.kt for reference.
-// ══════════════════════════════════════════════════════════════════════════════
-
-// ── FormScope (focus-chain helper) ───────────────────────────────────────────
+import kotlin.collections.isNotEmpty
+import kotlin.let
+import kotlin.ranges.coerceAtMost
+import kotlin.text.count
+import kotlin.text.filter
+import kotlin.text.isDigit
+import kotlin.text.isEmpty
+import kotlin.text.isNotEmpty
+import kotlin.text.take
 
 @Composable
 fun FormScope(
     maxFields: Int = 50,
-    content: @Composable FormScopeImpl.() -> Unit,
+    content: @Composable FormScopeImpl.() -> Unit
 ) {
     val focusRequesters = remember { List(maxFields) { FocusRequester() } }
-    val scope = remember(focusRequesters) { FormScopeImpl(focusRequesters) }
+
+    // ✅ PERBAIKAN: Buat scope baru yang selalu reset
+    val scope = remember(focusRequesters) {
+        FormScopeImpl(focusRequesters)
+    }
+
+    // ✅ PERBAIKAN: Reset SEBELUM content dipanggil
     scope.reset()
     scope.content()
 }
@@ -135,8 +141,8 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         minLines: Int = 1,
         maxLength: Int? = null,
         cornerRadius: Dp = Radius.box,
-        formatCurrency: Boolean = false,          // legacy — use CurrencyTextField instead
-        maxDecimalDigits: Int = 3,                // legacy — use CurrencyTextField instead
+        formatCurrency: Boolean = false,
+        maxDecimalDigits: Int = 3,
         visualTransformation: VisualTransformation? = null,
         itemOptions: List<String> = listOf(),
         floatingLabel: Boolean = true,
@@ -147,15 +153,22 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         focusedStrokeWidth: Dp? = null,
         strokeColor: Color = Colors.Gray2,
         strokeColorOnFocused: Color = Colors.Gray2,
-        autoHandlePassword: Boolean = true,       // legacy — use PasswordTextField instead
-        textTransform: TextTransform = TextTransform.NONE,
+        autoHandlePassword: Boolean = true,
         onEnter: (() -> Unit)? = null,
         onItemSelected: ((Int) -> Unit)? = null,
     ) {
         val myIndex = currentIndex
-        if (editable) currentIndex++
+        // ✅ Increment index
+        if (editable) {
+            currentIndex++
+        }
 
-        DisposableEffect(Unit) { onDispose { } }
+        // ✅ TAMBAHAN: Reset index setelah composable ini selesai
+        DisposableEffect(Unit) {
+            onDispose {
+                // Tidak perlu reset di sini
+            }
+        }
 
         CustomTextField(
             modifier = modifier,
@@ -205,9 +218,8 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             nextFocusRequester = if (editable) focusRequesters.getOrNull(myIndex + 1) else null,
             previousFocusRequester = if (editable) focusRequesters.getOrNull(myIndex - 1) else null,
             autoHandlePassword = autoHandlePassword,
-            textTransform = textTransform,
             onEnter = onEnter,
-            onItemSelected = onItemSelected,
+            onItemSelected = onItemSelected
         )
     }
 
@@ -216,13 +228,12 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
     }
 }
 
-// ── Enums ────────────────────────────────────────────────────────────────────
-
-enum class TextTransform { NONE, UPPERCASE, LOWERCASE, CAPITALIZE }
-
-enum class TextFieldStyle { OUTLINED, FILLED, CLEAR }
-
-// ── CustomTextField ──────────────────────────────────────────────────────────
+enum class TextTransform {
+    NONE,
+    UPPERCASE,
+    LOWERCASE,
+    CAPITALIZE
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -247,7 +258,7 @@ fun CustomTextField(
     leadingIcon: ImageVector? = null,
     leadingIconSize: Dp = 20.dp,
     leadingIconOnClick: () -> Unit = {},
-    inputType: KeyboardOptions = KeyboardOptions.Default,
+    inputType: KeyboardOptions = KeyboardOptions.Default, // KeyboardOptions(keyboardType = KeyboardType.Email)
     onClick: () -> Unit = {},
     enabled: Boolean = true,
     isError: Boolean = false,
@@ -258,8 +269,8 @@ fun CustomTextField(
     minLines: Int = 1,
     maxLength: Int? = null,
     cornerRadius: Dp = Radius.box,
-    formatCurrency: Boolean = false,          // legacy — use CurrencyTextField instead
-    maxDecimalDigits: Int = 3,                // legacy — use CurrencyTextField instead
+    formatCurrency: Boolean = false,
+    maxDecimalDigits: Int = 3,
     visualTransformation: VisualTransformation? = null,
     itemOptions: List<String> = listOf(),
     floatingLabel: Boolean = true,
@@ -273,7 +284,7 @@ fun CustomTextField(
     focusRequester: FocusRequester? = null,
     nextFocusRequester: FocusRequester? = null,
     previousFocusRequester: FocusRequester? = null,
-    autoHandlePassword: Boolean = true,       // legacy — use PasswordTextField instead
+    autoHandlePassword: Boolean = true,
     allCaps: Boolean = false,
     textTransform: TextTransform = TextTransform.NONE,
     onEnter: (() -> Unit)? = null,
@@ -286,49 +297,32 @@ fun CustomTextField(
     val isWeb = remember { PlatformType.isWeb }
     val transform: TextTransform = if (allCaps) TextTransform.UPPERCASE else textTransform
 
-    val currentBgColor = if (isFocused && focusedBackgroundColor != null) focusedBackgroundColor else backgroundColor
-    val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
-
-    // Legacy password handling
+    // ✅ Password visibility state
     var isPasswordVisible by remember { mutableStateOf(false) }
+
+    // ✅ Detect if this is a password field
     val isPasswordField = remember(inputType) {
         inputType.keyboardType == KeyboardType.Password ||
                 inputType.keyboardType == KeyboardType.NumberPassword
     }
 
-    val passwordToggleIcon = if (isPasswordField && autoHandlePassword && endIcon == null) {
-        if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-    } else null
-
-    val finalEndIcon = endIcon ?: passwordToggleIcon
-
-    val finalEndIconOnClick: () -> Unit = {
-        if (isPasswordField && autoHandlePassword && endIcon == null) {
-            isPasswordVisible = !isPasswordVisible
-        } else {
-            endIconOnClick()
-        }
+    val currentBgColor = if (isFocused && focusedBackgroundColor != null) {
+        focusedBackgroundColor
+    } else {
+        backgroundColor
     }
 
-    val finalVisualTransformation = when {
-        visualTransformation != null -> visualTransformation
-        isPasswordField && autoHandlePassword && !isPasswordVisible -> PasswordVisualTransformation()
-        transform == TextTransform.UPPERCASE ->
-            VisualTransformation { text ->
-                TransformedText(AnnotatedString(text.text.uppercase()), OffsetMapping.Identity)
-            }
-        transform == TextTransform.LOWERCASE ->
-            VisualTransformation { text ->
-                TransformedText(AnnotatedString(text.text.lowercase()), OffsetMapping.Identity)
-            }
-        else -> VisualTransformation.None
+    val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) {
+        focusedStrokeWidth
+    } else {
+        strokeWidth
     }
 
     var tfv by remember {
         mutableStateOf(
             TextFieldValue(
                 text = value.def(),
-                selection = TextRange(value.def().length),
+                selection = TextRange(value.def().length)
             )
         )
     }
@@ -347,31 +341,113 @@ fun CustomTextField(
         }
     }
 
+    // ✅ PERBAIKAN: Password icon di luar remember block
+    val passwordToggleIcon = if (isPasswordField && autoHandlePassword && endIcon == null) {
+        if (isPasswordVisible) {
+            Icons.Filled.Visibility
+        } else {
+            Icons.Filled.VisibilityOff
+        }
+    } else {
+        null
+    }
+
+    // ✅ Determine final end icon
+    val finalEndIcon = endIcon ?: passwordToggleIcon
+
+    // ✅ Determine visual transformation
+//    val finalVisualTransformation = when {
+//        visualTransformation != null -> visualTransformation
+//        isPasswordField && autoHandlePassword && !isPasswordVisible -> PasswordVisualTransformation()
+//        else -> VisualTransformation.None
+//    }
+
+    val finalVisualTransformation = when {
+        visualTransformation != null -> visualTransformation
+
+        isPasswordField && autoHandlePassword && !isPasswordVisible ->
+            PasswordVisualTransformation()
+
+        transform == TextTransform.UPPERCASE ->
+            VisualTransformation { text ->
+                TransformedText(
+                    AnnotatedString(text.text.uppercase()),
+                    OffsetMapping.Identity
+                )
+            }
+
+        transform == TextTransform.LOWERCASE ->
+            VisualTransformation { text ->
+                TransformedText(
+                    AnnotatedString(text.text.lowercase()),
+                    OffsetMapping.Identity
+                )
+            }
+
+        else -> VisualTransformation.None
+    }
+
+
+    // ✅ Determine end icon click handler
+    val finalEndIconOnClick: () -> Unit = {
+        if (isPasswordField && autoHandlePassword && endIcon == null) {
+            isPasswordVisible = !isPasswordVisible
+        } else {
+            endIconOnClick()
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .then(
+                if (focusRequester != null) {
+                    Modifier.focusRequester(focusRequester)
+                } else Modifier
+            )
             .onPreviewKeyEvent { keyEvent ->
-                if (!editable) return@onPreviewKeyEvent false
+                // ✅ TAMBAH: Skip jika not editable
+                if (!editable) {
+                    return@onPreviewKeyEvent false
+                }
 
+                // ✅ TAMBAH: Handle Enter key
                 if (keyEvent.key == Key.Enter && keyEvent.type == KeyEventType.KeyDown) {
                     onEnter?.let {
                         it.invoke()
                         return@onPreviewKeyEvent true
                     }
+                    // Jika onEnter null dan singleLine, pindah ke next field
                     if (singleLine) {
-                        nextFocusRequester?.requestFocus()
-                            ?: focusManager.moveFocus(FocusDirection.Next)
+                        if (isWeb) {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        } else {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        }
                         return@onPreviewKeyEvent true
                     }
                     false
-                } else if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
+                }
+                // Tab handling (existing)
+                else if (keyEvent.key == Key.Tab && keyEvent.type == KeyEventType.KeyDown) {
                     if (keyEvent.isShiftPressed) {
-                        previousFocusRequester?.requestFocus()
-                            ?: focusManager.moveFocus(FocusDirection.Previous)
+                        if (isWeb) {
+                            previousFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Previous)
+                        } else {
+                            previousFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Previous)
+                        }
                     } else {
-                        nextFocusRequester?.requestFocus()
-                            ?: focusManager.moveFocus(FocusDirection.Next)
+                        if (isWeb) {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        } else {
+                            nextFocusRequester?.requestFocus()
+                                ?: focusManager.moveFocus(FocusDirection.Next)
+                        }
                     }
                     true
                 } else {
@@ -383,12 +459,14 @@ fun CustomTextField(
                     Modifier.clickable(
                         enabled = enabled,
                         interactionSource = interactionSource,
-                        indication = null,
+                        indication = null
                     ) {
                         onClick()
                         if (itemOptions.isNotEmpty()) expanded = !expanded
                     }
-                } else Modifier
+                } else {
+                    Modifier
+                }
             )
     ) {
         BasicTextField(
@@ -398,19 +476,28 @@ fun CustomTextField(
                     val input = newV.text.removePrefix(prefix)
                     val filtered = input.filter { it.isDigit() || it == ',' }
                     val commaCount = filtered.count { it == ',' }
+
                     val clean = if (commaCount > 1) {
                         filtered.replaceFirst(",", "").replace(",", "")
-                    } else filtered
+                    } else {
+                        filtered
+                    }
 
                     val parts = clean.split(",")
                     val integerPart = parts[0].filter { it.isDigit() }
-                    val decimalPart = parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
+                    val decimalPart =
+                        parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
 
-                    val rawValue = if (decimalPart.isNotEmpty()) "$integerPart.$decimalPart"
-                    else if (clean.endsWith(",")) "$integerPart."
-                    else integerPart
+                    val rawValue = if (decimalPart.isNotEmpty()) {
+                        "$integerPart.$decimalPart"
+                    } else if (clean.endsWith(",")) {
+                        "$integerPart."
+                    } else {
+                        integerPart
+                    }
 
                     onValueChange(rawValue)
+
                     val formatted = formatCurrencyValue(rawValue)
                     tfv = TextFieldValue(formatted, TextRange(formatted.length))
                 } else {
@@ -423,7 +510,7 @@ fun CustomTextField(
                         newV.copy(
                             text = clippedText,
                             selection = TextRange(selStart, selEnd),
-                            composition = null,
+                            composition = null
                         )
                     } else newV
 
@@ -442,10 +529,15 @@ fun CustomTextField(
 
                     onValueChange(transformedText)
 
+                    // Hanya reset selection ke akhir kalau ada transform
+                    // Kalau normal, pakai selection asli supaya bisa di-select di web
                     tfv = if (needsTransform) {
-                        next.copy(text = transformedText, selection = TextRange(transformedText.length))
+                        next.copy(
+                            text = transformedText,
+                            selection = TextRange(transformedText.length)
+                        )
                     } else {
-                        next.copy(text = transformedText)
+                        next.copy(text = transformedText) // selection ikut dari next
                     }
                 }
             },
@@ -457,19 +549,25 @@ fun CustomTextField(
             keyboardOptions = if (formatCurrency) {
                 KeyboardOptions(
                     keyboardType = KeyboardType.Number,
-                    imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next,
+                    imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next
                 )
-            } else if (singleLine) {
-                inputType.copy(imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next)
             } else {
-                inputType
+                if (singleLine) {
+                    inputType.copy(
+                        imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next
+                    )
+                } else {
+                    inputType
+                }
             },
             keyboardActions = KeyboardActions(
                 onNext = {
                     nextFocusRequester?.requestFocus()
                         ?: focusManager.moveFocus(FocusDirection.Next)
                 },
-                onDone = { onEnter?.invoke() },
+                onDone = {
+                    onEnter?.invoke()
+                }
             ),
             interactionSource = interactionSource,
             singleLine = singleLine,
@@ -477,7 +575,7 @@ fun CustomTextField(
             minLines = minLines,
             modifier = Modifier
                 .fillMaxWidth()
-                .onFocusChanged { if (it.isFocused) onFocused() },
+                .onFocusChanged { if (it.isFocused) onFocused() }
         ) { innerTextField ->
             OutlinedTextFieldDefaults.DecorationBox(
                 value = tfv.text,
@@ -489,14 +587,14 @@ fun CustomTextField(
                     {
                         Text(
                             text = hint,
-                            style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+                            style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray)
                         )
                     }
                 } else null,
                 placeholder = {
                     Text(
                         text = if (!floatingLabel && hint.isNotEmpty()) hint else placeholder,
-                        style = if (!floatingLabel && hint.isNotEmpty()) hintStyle else placeholderStyle,
+                        style = if (!floatingLabel && hint.isNotEmpty()) hintStyle else placeholderStyle
                     )
                 },
                 prefix = {
@@ -512,21 +610,21 @@ fun CustomTextField(
                 supportingText = supportingText?.let { msg ->
                     { Text(text = msg, style = supportingTextStyle) }
                 },
-                trailingIcon = finalEndIcon?.let {
+                trailingIcon = finalEndIcon?.let { // ✅ Use computed end icon
                     {
                         Box(
                             modifier = Modifier
                                 .size(35.dp)
                                 .padding(end = Spacing.box)
-                                .clickable { finalEndIconOnClick() },
-                            contentAlignment = Alignment.Center,
+                                .clickable { finalEndIconOnClick() }, // ✅ Use computed click handler
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = it,
                                 contentDescription = if (isPasswordField) {
                                     if (isPasswordVisible) "Hide password" else "Show password"
                                 } else null,
-                                modifier = Modifier.size(endIconSize),
+                                modifier = Modifier.size(endIconSize)
                             )
                         }
                     }
@@ -538,12 +636,12 @@ fun CustomTextField(
                                 .size(35.dp)
                                 .padding(start = Spacing.box)
                                 .clickable { leadingIconOnClick() },
-                            contentAlignment = Alignment.Center,
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = it,
                                 contentDescription = null,
-                                modifier = Modifier.size(leadingIconSize),
+                                modifier = Modifier.size(leadingIconSize)
                             )
                         }
                     }
@@ -552,7 +650,7 @@ fun CustomTextField(
                     top = Spacing.box,
                     bottom = Spacing.box,
                     start = if (leadingIcon != null) 4.dp else Spacing.box,
-                    end = if (finalEndIcon != null) 4.dp else Spacing.box,
+                    end = if (finalEndIcon != null) 4.dp else Spacing.box
                 ),
                 interactionSource = interactionSource,
                 container = {
@@ -561,9 +659,11 @@ fun CustomTextField(
                             OutlinedTextFieldDefaults.Container(
                                 enabled = enabled,
                                 isError = isError,
+                                modifier = Modifier,
                                 shape = RoundedCornerShape(cornerRadius),
                                 interactionSource = interactionSource,
-                                focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
+                                focusedBorderThickness = if (isFocused && focusedStrokeWidth != null)
+                                    focusedStrokeWidth else currentStrokeWidth,
                                 unfocusedBorderThickness = currentStrokeWidth,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = strokeColorOnFocused,
@@ -571,11 +671,12 @@ fun CustomTextField(
                                     focusedContainerColor = currentBgColor,
                                     unfocusedContainerColor = currentBgColor,
                                     disabledContainerColor = currentBgColor,
-                                    cursorColor = strokeColorOnFocused,
-                                ),
+                                    cursorColor = strokeColorOnFocused
+                                )
                             )
                         }
-                        TextFieldStyle.FILLED, TextFieldStyle.CLEAR -> {
+
+                        TextFieldStyle.FILLED -> {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -585,14 +686,31 @@ fun CustomTextField(
                                             Modifier.border(
                                                 width = currentStrokeWidth,
                                                 color = if (isFocused) strokeColorOnFocused else strokeColor,
-                                                shape = RoundedCornerShape(cornerRadius),
+                                                shape = RoundedCornerShape(cornerRadius)
+                                            )
+                                        } else Modifier
+                                    )
+                            )
+                        }
+
+                        TextFieldStyle.CLEAR -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(currentBgColor, RoundedCornerShape(cornerRadius))
+                                    .then(
+                                        if (currentStrokeWidth > 0.dp) {
+                                            Modifier.border(
+                                                width = currentStrokeWidth,
+                                                color = if (isFocused) strokeColorOnFocused else strokeColor,
+                                                shape = RoundedCornerShape(cornerRadius)
                                             )
                                         } else Modifier
                                     )
                             )
                         }
                     }
-                },
+                }
             )
         }
 
@@ -603,7 +721,7 @@ fun CustomTextField(
                     .background(Color.Transparent)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
+                        indication = null
                     ) {
                         onClick()
                         if (itemOptions.isNotEmpty()) expanded = !expanded
@@ -616,7 +734,7 @@ fun CustomTextField(
                         .padding(end = 4.dp)
                         .width(50.dp)
                         .padding(7.dp)
-                        .align(Alignment.CenterEnd),
+                        .align(Alignment.CenterEnd)
                 ) {}
             }
         }
@@ -629,42 +747,107 @@ fun CustomTextField(
                 onSelected = {
                     onValueChange(it)
                     onItemSelected?.invoke(itemOptions.indexOf(it))
-                },
+                }
             )
         }
     }
 }
 
-// ── Legacy currency formatter ────────────────────────────────────────────────
-
+// ✅ Helper function untuk format currency
 private fun formatCurrencyValue(value: String): String {
     if (value.isEmpty()) return ""
+
     val parts = value.split(".")
     val integerPart = parts[0]
     val decimalPart = parts.getOrNull(1)
+
     if (integerPart.isEmpty() && decimalPart == null) return ""
-    val formattedInteger = if (integerPart.isEmpty() || integerPart == "0") "0"
-    else integerPart.reversed().chunked(3).joinToString(".").reversed()
-    return if (decimalPart != null) "$formattedInteger,$decimalPart"
-    else if (value.endsWith(".")) "$formattedInteger,"
-    else formattedInteger
+
+    val formattedInteger = if (integerPart.isEmpty() || integerPart == "0") {
+        "0"
+    } else {
+        integerPart.reversed()
+            .chunked(3)
+            .joinToString(".")
+            .reversed()
+    }
+
+    return if (decimalPart != null) {
+        "$formattedInteger,$decimalPart"
+    } else if (value.endsWith(".")) {
+        "$formattedInteger,"
+    } else {
+        formattedInteger
+    }
 }
 
-// ── Previews ─────────────────────────────────────────────────────────────────
+enum class TextFieldStyle {
+    OUTLINED,
+    FILLED,
+    CLEAR
+}
 
 @Composable
-private fun CustomTextFieldExamples() {
+fun SearchTextField(
+    modifier: Modifier = Modifier,
+    value: String = "",
+    onValueChange: (String) -> Unit = {},
+    hint: String = "Cari...",
+    style: TextFieldStyle = TextFieldStyle.OUTLINED,
+    leadingIcon: ImageVector = MyIcon.IcSearch,
+    strokeWidth: Dp = 0.5.dp,
+    strokeColor: Color = Colors.Gray2,
+    strokeColorOnFocused: Color = Colors.Gray2,
+    cornerRadius: Dp = Radius.box,
+    onClear: (() -> Unit)? = null,
+    onEnter: () -> Unit = {},
+) {
+    CustomTextField(
+        value = value,
+        onValueChange = onValueChange,
+        hint = hint,
+        style = style,
+        leadingIcon = leadingIcon,
+        strokeWidth = strokeWidth,
+        strokeColor = strokeColor,
+        strokeColorOnFocused = strokeColorOnFocused,
+        cornerRadius = cornerRadius,
+        endIcon = if (value.isNotEmpty() && onClear != null) Icons.Default.Close else null,
+        endIconOnClick = { onClear?.invoke() },
+        floatingLabel = false,
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        onEnter = onEnter,
+    )
+}
+
+@Composable
+fun EditTextCustomExamples() {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var code by remember { mutableStateOf("") }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text("CustomTextField Examples", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "EditTextCustom Examples",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
+
+        // 1. Outlined dengan Border Normal (1dp)
         item {
             Text("1. Outlined Standard", fontWeight = FontWeight.Medium)
             CustomTextField(
@@ -673,9 +856,13 @@ private fun CustomTextFieldExamples() {
                 hint = "Nama",
                 style = TextFieldStyle.OUTLINED,
                 strokeWidth = 1.dp,
-                modifier = Modifier.fillMaxWidth(),
+                strokeColor = Color(0xFFE0E0E0),
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                modifier = Modifier.fillMaxWidth()
             )
         }
+
+        // 2. Tanpa Border (strokeWidth = 0.dp)
         item {
             Text("2. Filled tanpa Border", fontWeight = FontWeight.Medium)
             CustomTextField(
@@ -685,19 +872,161 @@ private fun CustomTextFieldExamples() {
                 style = TextFieldStyle.FILLED,
                 backgroundColor = Color(0xFFF5F7FA),
                 strokeWidth = 0.dp,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             )
         }
+
+        // 3. Border Tipis ke Tebal saat Focus
         item {
-            Text("3. Clear/Transparent", fontWeight = FontWeight.Medium)
+            Text("3. Border Dynamic (Tipis → Tebal)", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = password,
+                onValueChange = { password = it },
+                hint = "Password",
+                style = TextFieldStyle.OUTLINED,
+                strokeWidth = 1.dp,
+                focusedStrokeWidth = 2.dp,
+                strokeColor = Color(0xFFE0E0E0),
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 4. Border Tebal
+        item {
+            Text("4. Border Tebal", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = phone,
+                onValueChange = { phone = it },
+                hint = "Phone",
+                style = TextFieldStyle.OUTLINED,
+                strokeWidth = 2.dp,
+                strokeColor = Color(0xFF0ABAB5),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 5. Bottom Border Only (Material Style)
+        item {
+            Text("5. Bottom Border Only", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = username,
+                onValueChange = { username = it },
+                hint = "Username",
+                style = TextFieldStyle.FILLED,
+                backgroundColor = Color.Transparent,
+                strokeWidth = 0.dp,
+                focusedStrokeWidth = 2.dp,
+                cornerRadius = 0.dp,
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 6. Search Bar tanpa Border
+        item {
+            Text("6. Search Bar", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = "Search...",
+                style = TextFieldStyle.FILLED,
+                backgroundColor = Color(0xFFF5F7FA),
+                strokeWidth = 0.dp,
+                cornerRadius = 24.dp,
+                floatingLabel = false,
+                onClick = {
+
+                },
+                editable = false,
+                leadingIcon = Icons.Default.Search,
+                endIcon = Icons.Default.Close,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 7. Clear/Transparent tanpa Border
+        item {
+            Text("7. Clear/Transparent", fontWeight = FontWeight.Medium)
             CustomTextField(
                 value = note,
                 onValueChange = { note = it },
                 hint = "Catatan",
                 style = TextFieldStyle.CLEAR,
+                backgroundColor = Color.Transparent,
                 strokeWidth = 0.dp,
                 floatingLabel = false,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 8. Custom: Background + Border Tipis
+        item {
+            Text("8. Background Cyan + Border", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = price,
+                onValueChange = { price = it },
+                hint = "Harga",
+                prefix = "Rp",
+                style = TextFieldStyle.FILLED,
+                backgroundColor = Color(0xFFE6F9F8),
+                focusedBackgroundColor = Color(0xFFCCF3F1),
+                strokeWidth = 0.5.dp,
+                strokeColor = Color(0xFF0ABAB5),
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                cornerRadius = 8.dp,
+                formatCurrency = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // 9. Border Tebal untuk Emphasis
+        item {
+            Text("9. Border Tebal (Emphasis)", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = code,
+                onValueChange = { code = it },
+                hint = "Kode Verifikasi",
+                style = TextFieldStyle.OUTLINED,
+                strokeWidth = 3.dp,
+                strokeColor = Color(0xFF9E9E9E),
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                cornerRadius = 8.dp,
+                textStyle = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 4.sp,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        item {
+            var price by remember { mutableStateOf("") }
+            Text("10. Example Standalone - Price Input:", fontWeight = FontWeight.Medium)
+            CustomTextField(
+                value = price,
+                onValueChange = { price = it },
+                hint = "Harga",
+                prefix = "Rp",
+                style = TextFieldStyle.OUTLINED,
+                cornerRadius = 8.dp,
+                formatCurrency = true,
+                inputType = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            CustomTextField(
+                value = name,
+                onValueChange = { name = it },
+                hint = "Nama",
+                style = TextFieldStyle.OUTLINED,
+                formatCurrency = true,
+                strokeWidth = 0.5.dp,
+                strokeColor = Colors.Gray4,
+                strokeColorOnFocused = Color(0xFF0ABAB5),
+                modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
             )
         }
     }
@@ -705,12 +1034,17 @@ private fun CustomTextFieldExamples() {
 
 @TabletPreview
 @Composable
-private fun TabletPreviews() {
-    HelperTheme { CustomTextFieldExamples() }
+fun TabletPreviews() {
+    HelperTheme {
+        EditTextCustomExamples()
+    }
+
 }
 
 @MobilePreview
 @Composable
-private fun MobilePreviews() {
-    HelperTheme { CustomTextFieldExamples() }
+fun MobilePreviews() {
+    HelperTheme {
+        EditTextCustomExamples()
+    }
 }
