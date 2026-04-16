@@ -1,6 +1,7 @@
 package com.tisto.kmp.helper.ui.component
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -32,6 +35,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.MobilePreview
 import com.tisto.kmp.helper.ui.ext.TabletPreview
+import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
@@ -60,8 +64,11 @@ fun filterPriceInput(v: String, maxDecimalDigits: Int = 3): String {
             when {
                 c.isDigit() -> {
                     if (!hasComma) append(c)
-                    else if (decCount < maxDecimalDigits) { append(c); decCount++ }
+                    else if (decCount < maxDecimalDigits) {
+                        append(c); decCount++
+                    }
                 }
+
                 c == ',' && !hasComma && isNotEmpty() -> {
                     hasComma = true
                     append(c)
@@ -161,14 +168,21 @@ fun CurrencyTextField(
     textStyle: TextStyle = TextAppearance.body1(),
     cornerRadius: Dp = Radius.box,
     prefix: String? = "Rp ",
+    suffix: String? = null,
+    strokeColor: Color = Colors.Gray2,
+    strokeWidth: Dp = 0.5.dp,
+    focusedStrokeWidth: Dp? = null,
+    strokeColorOnFocused: Color = Color.Black,
+    maxLength: Int = Int.MAX_VALUE,
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
     val interactionSource = remember { MutableInteractionSource() }
+    val isFocused = interactionSource.collectIsFocusedAsState().value
 
     Column(modifier = modifier) {
         BasicTextField(
             value = value,
-            onValueChange = { onValueChange(filterPriceInput(it)) },
+            onValueChange = { onValueChange(filterPriceInput(it).take(maxLength)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             textStyle = textStyle,
@@ -177,6 +191,7 @@ fun CurrencyTextField(
                 keyboardType = KeyboardType.Number,
                 imeAction = imeAction,
             ),
+            cursorBrush = SolidColor(strokeColorOnFocused),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
                 OutlinedTextFieldDefaults.DecorationBox(
@@ -187,8 +202,9 @@ fun CurrencyTextField(
                     visualTransformation = transformation,
                     interactionSource = interactionSource,
                     isError = isError,
-                    label = { Text(label) },
+                    label = { Text(label, color = strokeColorOnFocused) },
                     prefix = prefix?.let { { Text(it) } },
+                    suffix = suffix?.let { { Text(it) } },
                     contentPadding = PaddingValues(
                         top = Spacing.box,
                         bottom = Spacing.box,
@@ -196,11 +212,18 @@ fun CurrencyTextField(
                         end = Spacing.box,
                     ),
                     container = {
+                        val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
                         OutlinedTextFieldDefaults.Container(
                             enabled = true,
                             isError = isError,
                             interactionSource = interactionSource,
                             shape = RoundedCornerShape(cornerRadius),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = strokeColorOnFocused,
+                                unfocusedBorderColor = strokeColor,
+                            ),
+                            focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
+                            unfocusedBorderThickness = currentStrokeWidth,
                         )
                     },
                 )
@@ -210,7 +233,7 @@ fun CurrencyTextField(
             Text(
                 text = supportingText,
                 color = if (isError) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = Spacing.box, top = 4.dp),
             )
