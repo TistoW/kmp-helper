@@ -141,6 +141,14 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ Form Route passes `itemId.toString()` into `safeKoinViewModel(itemId.toString())`
 //     as the VM key, so Create ("null") and Edit ("<id>") get distinct instances.
 //
+// PREVIEWS
+//   ▸ Every stateless Screen composable must end with private `@Preview` functions.
+//   ▸ Required targets: Phone (widthDp=360, heightDp=800) and Tablet (widthDp=840, heightDp=1080).
+//   ▸ List Screen: one preview showing Success state with 2-3 sample items (phone + tablet).
+//   ▸ Form Screen: one preview showing fully filled state with Edit mode (phone + tablet).
+//   ▸ Place all @Preview functions at the bottom of the Screen file, `private`.
+//   ▸ Never wrap previews in the app theme — Material3 defaults are sufficient.
+//
 // EFFECT HANDLING
 //   ▸ `ShowMessage` → `snackbar.showSnackbar(effect.message)`.
 //   ▸ `NavigateToForm(id)` → `onNavigateToForm(effect.itemId)`.
@@ -148,7 +156,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ EffectHandler is always `LaunchedEffect(Unit) { effects.collect { … } }`.
 //
 // WRAPPER ROUTE (top-level)
-//   ▸ Crossfade over a `rememberSaveable` `stage: Stage` sealed interface.
+//   ▸ Crossfade over a `remember` (NOT rememberSaveable) `stage: Stage` sealed interface.
+//   ▸ Stage is a non-Parcelable sealed interface — rememberSaveable crashes with
+//     "MutableState containing List cannot be saved using the current SaveableStateRegistry"
+//     because Bundle serialization fails on custom sealed types. `remember` is correct here:
+//     navigation stage does not need to survive process death.
 //   ▸ `refreshToken` via `remember { mutableIntStateOf(0) }` — increment on form `onDone`.
 //   ▸ `private sealed interface Stage { data object List; data class Form(val id: String?) }`.
 //   ▸ No nav library. No NavHost.
@@ -610,6 +622,26 @@ sealed interface ExampleListEffect {
 //         }
 //     }
 // }
+//
+// // ── Previews ──────────────────────────────────────────────────────────────
+//
+// @Preview(name = "List – Phone", showBackground = true, widthDp = 360, heightDp = 800)
+// @Preview(name = "List – Tablet", showBackground = true, widthDp = 840, heightDp = 1080)
+// @Composable
+// private fun PreviewExampleList() {
+//     ExampleListScreen(
+//         state = ExampleListUiState.Success(
+//             items = listOf(
+//                 Example(id = "1", name = "Item Satu"),
+//                 Example(id = "2", name = "Item Dua"),
+//                 Example(id = "3", name = "Item Tiga"),
+//             ),
+//         ),
+//         snackbar = SnackbarHostState(),
+//         onEvent = {},
+//         onBack = {},
+//     )
+// }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 9 — FORM CONTRACT  (presentation/form/ExampleFormContract.kt)
@@ -898,6 +930,25 @@ sealed interface ExampleListEffect {
 //         }
 //     }
 // }
+//
+// // ── Previews ──────────────────────────────────────────────────────────────
+//
+// @Preview(name = "Form – Phone", showBackground = true, widthDp = 360, heightDp = 800)
+// @Preview(name = "Form – Tablet", showBackground = true, widthDp = 840, heightDp = 1080)
+// @Composable
+// private fun PreviewExampleForm() {
+//     ExampleFormScreen(
+//         state = ExampleFormUiState(
+//             mode = ExampleFormMode.Edit("1"),
+//             name = "Contoh Item",
+//             description = "Deskripsi contoh item",
+//             isActive = true,
+//         ),
+//         snackbar = SnackbarHostState(),
+//         onEvent = {},
+//         onBack = {},
+//     )
+// }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 12 — WRAPPER ROUTE  (presentation/ExampleRoute.kt)
@@ -909,12 +960,11 @@ sealed interface ExampleListEffect {
 // import androidx.compose.runtime.mutableIntStateOf
 // import androidx.compose.runtime.mutableStateOf
 // import androidx.compose.runtime.remember
-// import androidx.compose.runtime.saveable.rememberSaveable
 // import androidx.compose.runtime.setValue
 //
 // @Composable
 // fun ExampleRoute(onBack: () -> Unit = {}) {
-//     var stage by rememberSaveable { mutableStateOf<Stage>(Stage.List) }
+//     var stage by remember { mutableStateOf<Stage>(Stage.List) } // NOT rememberSaveable — Stage is not Parcelable
 //     var refreshToken by remember { mutableIntStateOf(0) }
 //
 //     Crossfade(targetState = stage) { current ->
