@@ -53,7 +53,7 @@ fun SearchTextField(
     strokeColor: Color = Colors.Gray4,
     focusedStrokeColor: Color = Colors.Gray3,
     strokeWidth: Dp = 0.5.dp,
-    cornerRadius: Dp = Radius.normal,
+    cornerRadius: Dp = Radius.box,
     onClear: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
 ) {
@@ -78,7 +78,7 @@ fun SearchTextField(
         interactionSource = interactionSource,
         decorationBox = { innerTextField ->
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                modifier = Modifier.padding(horizontal = Spacing.box, vertical = Spacing.box),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.MobilePreview
 import com.tisto.kmp.helper.ui.ext.TabletPreview
 import com.tisto.kmp.helper.ui.theme.HelperTheme
+import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import kotlin.math.roundToLong
@@ -157,6 +158,7 @@ fun CurrencyTextField(
     isError: Boolean = false,
     supportingText: String? = null,
     textStyle: TextStyle = TextAppearance.body1(),
+    cornerRadius: Dp = Radius.box,
     prefix: String? = "Rp ",
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
@@ -197,7 +199,7 @@ fun CurrencyTextField(
                             enabled = true,
                             isError = isError,
                             interactionSource = interactionSource,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(cornerRadius),
                         )
                     },
                 )
