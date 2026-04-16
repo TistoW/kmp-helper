@@ -5,6 +5,7 @@ import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.*
@@ -49,6 +50,21 @@ object HttpClientFactory {
                 requestTimeoutMillis = TIMEOUT_MILLIS
                 connectTimeoutMillis = CONNECT_TIMEOUT_MILLIS
                 socketTimeoutMillis = TIMEOUT_MILLIS
+            }
+
+            // Retry on dropped-connection errors (local server keep-alive timeout,
+            // "unexpected end of stream", "Connection reset by peer").
+            // PartData.FileItem.provider is a lambda that creates a fresh ByteReadChannel
+            // each call, so multipart retries are safe.
+            install(HttpRequestRetry) {
+                maxRetries = 2
+                retryOnExceptionIf { _, cause ->
+                    val msg = cause.message ?: ""
+                    msg.contains("unexpected end of stream", ignoreCase = true) ||
+                    msg.contains("Connection reset", ignoreCase = true) ||
+                    msg.contains("broken pipe", ignoreCase = true)
+                }
+                delayMillis { retry -> retry * 600L }
             }
 
             // ✅ Ktor 3.x syntax
