@@ -26,13 +26,13 @@ import com.tisto.kmp.helper.ui.ext.TabletPreview
 import com.tisto.kmp.helper.utils.ext.shorten
 import com.tisto.kmp.helper.ui.ext.title
 
-sealed interface FormContent {
-    data class Column(val content: @Composable ColumnScope.() -> Unit) : FormContent
-    data class Form(val content: @Composable FormScopeImpl.() -> Unit) : FormContent
-}
+//sealed interface FormContent {
+//    data class Column(val content: @Composable ColumnScope.() -> Unit) : FormContent
+//    data class Form(val content: @Composable FormScopeImpl.() -> Unit) : FormContent
+//}
 
 @Composable
-fun <ITEM> FormContainer(
+fun <ITEM> FormContainerOld(
     title: String = "Title",
     forceTitle: String? = null,
     screenConfig: ScreenConfig = ScreenConfig(),
@@ -220,47 +220,47 @@ fun <ITEM> FormContainer(
 }
 
 
-@Composable
-fun FromScreenContentPreview(
-    screenConfig: ScreenConfig = ScreenConfig(),
-) {
-    FormContainer(
-        screenConfig = screenConfig,
-        item = ExampleModel(),
-        content = {
+//@Composable
+//fun FromScreenContentPreview(
+//    screenConfig: ScreenConfig = ScreenConfig(),
+//) {
+//    FormContainer(
+//        screenConfig = screenConfig,
+//        item = ExampleModel(),
+//        content = {
+//
+//            Column {
+//
+//                Spacer(modifier = Modifier.height(Spacing.large))
+//
+//                CustomTextField(
+//                    value = "",
+//                    onValueChange = { },
+//                    hint = "Nama",
+//                    style = TextFieldStyle.OUTLINED,
+//                    strokeWidth = 1.dp,
+//                    modifier = Modifier.fillMaxWidth()
+//                )
+//
+//            }
+//
+//        }
+//    )
+//}
 
-            Column {
-
-                Spacer(modifier = Modifier.height(Spacing.large))
-
-                CustomTextField(
-                    value = "",
-                    onValueChange = { },
-                    hint = "Nama",
-                    style = TextFieldStyle.OUTLINED,
-                    strokeWidth = 1.dp,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-            }
-
-        }
-    )
-}
-
-@TabletPreview
-@Composable
-fun TabletPreviewsForm() {
-    HelperTheme {
-        FromScreenContentPreview(ScreenConfig(700.dp))
-    }
-
-}
-
-@MobilePreview
-@Composable
-fun MobilePreviewsForm() {
-    HelperTheme {
-        FromScreenContentPreview()
-    }
-}
+//@TabletPreview
+//@Composable
+//fun TabletPreviewsForm() {
+//    HelperTheme {
+//        FromScreenContentPreview(ScreenConfig(700.dp))
+//    }
+//
+//}
+//
+//@MobilePreview
+//@Composable
+//fun MobilePreviewsForm() {
+//    HelperTheme {
+//        FromScreenContentPreview()
+//    }
+//}

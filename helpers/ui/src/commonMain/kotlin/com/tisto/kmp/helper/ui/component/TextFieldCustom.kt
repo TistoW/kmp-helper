@@ -78,8 +78,6 @@ import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.ext.def
-import com.tisto.kmp.helper.utils.getPlatform
-import org.jetbrains.compose.resources.vectorResource
 import kotlin.collections.isNotEmpty
 import kotlin.let
 import kotlin.ranges.coerceAtMost
