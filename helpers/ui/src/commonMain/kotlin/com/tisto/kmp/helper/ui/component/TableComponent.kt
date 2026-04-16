@@ -161,9 +161,11 @@ fun <T> TableRow(
     actions: (@Composable RowScope.(T) -> Unit)? = null
 ) {
     Column(
-        modifier = modifier.then(
-            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
-        ).fillMaxWidth()
+        modifier = modifier
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+            )
+            .fillMaxWidth()
     ) {
 
         Row(
@@ -198,9 +200,10 @@ fun <T> TableRow(
 
 @Composable
 fun TablePaginationFooter(
-    rowsPerPage: Int,
-    totalItems: Int,
-    currentPage: Int,
+    modifier: Modifier = Modifier,
+    rowsPerPage: Int = 10,
+    totalItems: Int = 1,
+    currentPage: Int = 1,
     onRowsPerPageChange: (Int) -> Unit = {},
     onPrevPage: () -> Unit = {},
     onNextPage: () -> Unit = {},
@@ -211,7 +214,7 @@ fun TablePaginationFooter(
 
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Colors.Gray5)
             .padding(horizontal = Spacing.medium),
@@ -221,7 +224,7 @@ fun TablePaginationFooter(
 
         // Rows per page
         Text(
-            text = "Rows per page:",
+            text = "Per page:",
             style = TextAppearance.body1(),
             color = Color.Gray
         )
