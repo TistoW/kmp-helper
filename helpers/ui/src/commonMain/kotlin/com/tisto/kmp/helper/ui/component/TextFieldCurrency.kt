@@ -23,12 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,21 +42,21 @@ import kotlin.math.roundToLong
 
 // ─── Raw string format ────────────────────────────────────────────────────────
 //
-// State stores:  digits + optional decimal separator (comma OR period) + up to 3 decimal digits
-//   e.g. "10000,9"  "10000.9"  "75000"  "1500000,25"
+// State stores:  digits + optional decimal separator (comma) + up to 3 decimal digits
+//   e.g. "10000,9"  "75000"  "1500000,25"
 //
-// Display format (CurrencyVisualTransformation):
+// Display format (formatCurrency):
 //   dot as thousands separator, comma as decimal separator, max 3 decimal digits
 //   e.g. "10.000,9"  "75.000"  "1.500.000,25"
 //
-// The raw text preserves whatever the keyboard sends ('.' or ',') so the IME
-// stays in sync. The VisualTransformation always displays comma for decimal.
+// BasicTextField receives the already-formatted display string directly —
+// NO VisualTransformation is used. This avoids the IME composition bug where
+// VisualTransformation that changes text length breaks comma/period input.
 
 /**
  * Filters user input to only allow a valid price string:
- * digits, at most one decimal separator (',' or '.'), and at most [maxDecimalDigits]
- * digits after it.  The separator character the user typed is preserved as-is so the
- * IME stays in sync with the raw text (avoids the IME reverting the edit).
+ * digits, at most one decimal separator (','), and at most [maxDecimalDigits]
+ * digits after it.
  */
 fun filterPriceInput(
     v: String,
@@ -78,16 +77,16 @@ fun filterPriceInput(
                     }
                 }
 
-                (c == ',' || c == '.') && !hasDec && isNotEmpty() -> {
+                (c == ',') && !hasDec && isNotEmpty() -> {
                     hasDec = true
-                    append(c) // keep original char so IME doesn't detect a mismatch
+                    append(',')
                 }
             }
         }
     }
 }
 
-/** Parses a raw price string to Double. "10000,9" → 10000.9, "10000.9" → 10000.9 */
+/** Parses a raw price string to Double. "10000,9" → 10000.9 */
 fun String.toRawDouble(): Double = replace(',', '.').toDoubleOrNull() ?: 0.0
 
 /**
@@ -105,59 +104,56 @@ fun Double.toRawPriceString(): String {
     return "${longPart},${decStr}"
 }
 
-// ─── VisualTransformation ─────────────────────────────────────────────────────
+// ─── Formatting helpers ──────────────────────────────────────────────────────
 //
-// State stores raw string ("10000,9" or "10000.9"); display shows "10.000,9".
-// Raw may contain ',' or '.' as decimal — both are displayed as ','.
-// Dots in the formatted output are ONLY thousands separators.
-// OffsetMapping treats those inserted dots as zero-width to the cursor.
+// These convert between raw ("10000,9") and display ("10.000,9") formats.
+// The BasicTextField shows the display format directly — no VisualTransformation.
 
-class CurrencyVisualTransformation : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val raw = text.text
-        val formatted = format(raw)
-
-        val mapping = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int {
-                var rawSeen = 0
-                formatted.forEachIndexed { i, c ->
-                    if (rawSeen == offset) return i
-                    if (c != '.') rawSeen++
-                }
-                return formatted.length
-            }
-
-            override fun transformedToOriginal(offset: Int): Int =
-                formatted.take(offset.coerceAtMost(formatted.length)).count { it != '.' }
-        }
-
-        return TransformedText(AnnotatedString(formatted), mapping)
-    }
-
-    private fun format(raw: String): String {
-        if (raw.isEmpty()) return ""
-        val decIdx = raw.indexOfFirst { it == ',' || it == '.' }
-        return if (decIdx >= 0) {
-            val intPart = raw.substring(0, decIdx).ifEmpty { "0" }
-            val decPart = raw.substring(decIdx + 1)
-            "${formatIntPart(intPart)},${decPart}"
-        } else {
-            formatIntPart(raw)
-        }
-    }
-
-    private fun formatIntPart(digits: String): String {
-        val long = digits.toLongOrNull() ?: return digits
-        if (long == 0L) return "0"
-        return long.toString().reversed().chunked(3).joinToString(".").reversed()
+/** "10000,9" → "10.000,9" */
+private fun formatCurrency(raw: String): String {
+    if (raw.isEmpty()) return ""
+    val decIdx = raw.indexOf(',')
+    return if (decIdx >= 0) {
+        val intPart = raw.substring(0, decIdx).ifEmpty { "0" }
+        val decPart = raw.substring(decIdx + 1)
+        "${formatIntPart(intPart)},${decPart}"
+    } else {
+        formatIntPart(raw)
     }
 }
+
+/** "10.000,9" → "10000,9" */
+private fun stripThousands(display: String): String = buildString {
+    for (c in display) {
+        if (c != '.') append(c)
+    }
+}
+
+private fun formatIntPart(digits: String): String {
+    val long = digits.toLongOrNull() ?: return digits
+    if (long == 0L) return "0"
+    return long.toString().reversed().chunked(3).joinToString(".").reversed()
+}
+
+/** Map a cursor position in raw string to a position in formatted string. */
+private fun rawCursorToFormatted(rawPos: Int, formatted: String): Int {
+    var rawSeen = 0
+    formatted.forEachIndexed { i, c ->
+        if (rawSeen == rawPos) return i
+        if (c != '.') rawSeen++
+    }
+    return formatted.length
+}
+
+/** Map a cursor position in formatted string to a position in raw string. */
+private fun formattedCursorToRaw(fmtPos: Int, formatted: String): Int =
+    formatted.take(fmtPos.coerceAtMost(formatted.length)).count { it != '.' }
 
 // ─── Composable ───────────────────────────────────────────────────────────────
 
 /**
  * A currency-aware outlined text field that:
- * - Stores raw input as "10000,9" (comma or period as decimal separator)
+ * - Stores raw input as "10000,9" (comma as decimal separator)
  * - Displays formatted output as "10.000,9" (dot as thousands separator)
  * - Prefixes with "Rp "
  * - Only allows valid numeric/decimal input via [filterPriceInput]
@@ -168,9 +164,9 @@ class CurrencyVisualTransformation : VisualTransformation {
  * Uses BasicTextField + DecorationBox so [contentPadding] can be controlled,
  * keeping height consistent with PasswordTextField / SearchTextField / CustomTextField.
  *
- * IMPORTANT: keyboardType must be [KeyboardType.Number] (NOT Decimal).
- * [KeyboardType.Decimal] changes the keyboard layout and can break comma input
- * on Indonesian-locale devices.
+ * The field manages formatting internally via [TextFieldValue] — no
+ * VisualTransformation is used, which avoids the IME composition bug where
+ * length-changing transformations break comma/period input on Android.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,18 +188,43 @@ fun CurrencyTextField(
     strokeColorOnFocused: Color = Color.Black,
     maxLength: Int = Int.MAX_VALUE,
 ) {
-    val transformation = remember { CurrencyVisualTransformation() }
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused = interactionSource.collectIsFocusedAsState().value
 
+    // The formatted display string derived from the raw value.
+    val formatted = remember(value) { formatCurrency(value) }
+    // TextFieldValue that the BasicTextField actually sees (formatted text + cursor).
+    var tfv by remember(value) {
+        mutableStateOf(TextFieldValue(formatted, TextRange(formatted.length)))
+    }
+    // Keep tfv in sync when external value changes (e.g. reset).
+    if (tfv.text != formatted && stripThousands(tfv.text) != value) {
+        tfv = TextFieldValue(formatted, TextRange(formatted.length))
+    }
+
     Column(modifier = modifier) {
         BasicTextField(
-            value = value,
-            onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
+            value = tfv,
+            onValueChange = { newTfv ->
+                // 1. Strip thousands dots to get raw-like text
+                val typed = stripThousands(newTfv.text)
+                // 2. Convert any typed '.' to ',' (period key → decimal comma)
+                val normalized = typed.replace('.', ',')
+                // 3. Filter to valid price input
+                val newRaw = filterPriceInput(normalized, maxIntegerDigits = maxLength)
+                // 4. Format for display
+                val newFormatted = formatCurrency(newRaw)
+                // 5. Map cursor from the user's typing position to the new formatted string
+                val rawCursor = formattedCursorToRaw(newTfv.selection.start, newTfv.text)
+                    .coerceAtMost(newRaw.length)
+                val fmtCursor = rawCursorToFormatted(rawCursor, newFormatted)
+                tfv = TextFieldValue(newFormatted, TextRange(fmtCursor))
+                // 6. Notify parent with the raw value
+                if (newRaw != value) onValueChange(newRaw)
+            },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             textStyle = textStyle,
-            visualTransformation = transformation,
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
                 imeAction = imeAction,
@@ -212,11 +233,11 @@ fun CurrencyTextField(
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
                 OutlinedTextFieldDefaults.DecorationBox(
-                    value = value,
+                    value = tfv.text,
                     innerTextField = innerTextField,
                     enabled = true,
                     singleLine = true,
-                    visualTransformation = transformation,
+                    visualTransformation = VisualTransformation.None,
                     interactionSource = interactionSource,
                     isError = isError,
                     label = { Text(label) },
