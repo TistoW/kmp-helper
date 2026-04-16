@@ -170,7 +170,12 @@ fun GeneralFilterBottomSheet(
         Row {
             Button(
                 modifier = Modifier.weight(1f),
-                onClick = { selectedMap = emptyMap() },
+                onClick = {
+                    selectedMap = emptyMap()
+                    val selectedList = selectedMap.values.filterNotNull()
+                    onApply(selectedList) // kirim hasil ke parent
+                    onClose()
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Colors.Gray2.copy(alpha = 0.2f),
                     contentColor = Colors.Gray1
