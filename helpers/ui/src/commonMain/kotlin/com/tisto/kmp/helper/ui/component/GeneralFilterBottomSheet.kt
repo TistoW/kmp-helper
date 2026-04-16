@@ -165,43 +165,34 @@ fun GeneralFilterBottomSheet(
             Spacer(Modifier.height(Spacing.box))
         }
 
-        Spacer(Modifier.height(Spacing.extraLarge))
+        Spacer(Modifier.height(Spacing.normal))
 
         Row {
-            Button(
+
+            ButtonNormal(
                 modifier = Modifier.weight(1f),
-                onClick = {
-                    selectedMap = emptyMap()
-                    val selectedList = selectedMap.values.filterNotNull()
-                    onApply(selectedList) // kirim hasil ke parent
-                    onClose()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Colors.Gray2.copy(alpha = 0.2f),
-                    contentColor = Colors.Gray1
-                ),
-                shape = RoundedCornerShape(8.dp)
+                text = "Reset",
+                style = ButtonStyle.Outlined,
+                strokeColor = Colors.Black
             ) {
-                Text(
-                    text = "Reset",
-                    style = TextAppearance.body2(),
-                )
+                selectedMap = emptyMap()
+                val selectedList = selectedMap.values.filterNotNull()
+                onApply(selectedList) // kirim hasil ke parent
+                onClose()
             }
-            Spacer(Modifier.width(Spacing.normal))
-            Button(
+
+            Spacer(Modifier.width(Spacing.box))
+
+            ButtonNormal(
                 modifier = Modifier.weight(1f),
-                onClick = {
-                    val selectedList = selectedMap.values.filterNotNull()
-                    onApply(selectedList) // kirim hasil ke parent
-                    onClose()
-                },
-                shape = RoundedCornerShape(8.dp)
+                text = "Terapkan",
+                backgroundColor = Colors.Black
             ) {
-                Text(
-                    text = "Terapkan",
-                    style = TextAppearance.body2(),
-                )
+                val selectedList = selectedMap.values.filterNotNull()
+                onApply(selectedList) // kirim hasil ke parent
+                onClose()
             }
+
         }
     }
 }
