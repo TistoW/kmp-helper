@@ -157,7 +157,8 @@ fun ListMobileRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.box),
+                .padding(Spacing.box)
+            ,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (imageUrl != null) {
