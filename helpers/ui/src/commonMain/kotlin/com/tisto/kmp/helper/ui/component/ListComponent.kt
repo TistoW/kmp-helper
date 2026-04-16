@@ -33,9 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.tisto.kmp.helper.ui.ext.ScreenConfig
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
+import com.tisto.kmp.helper.utils.PlatformType
+import com.tisto.kmp.helper.utils.model.FilterGroup
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ListComponent — reusable list/table pattern for KMP features.
@@ -219,6 +222,51 @@ fun ListActions(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SearchFilterRow(
+    modifier: Modifier = Modifier,
+    screenConfig: ScreenConfig,
+    showSearch: Boolean = true,
+    filterOptions: List<FilterGroup> = defaultFilter(),
+    searchQuery: String = "",
+    hint: String = "Cari",
+    onSearchChange: (String) -> Unit = {},
+    onClearSearch: () -> Unit = {},
+    refreshCount: Int = 0,
+    onRefresh: () -> Unit = {},
+    onOpenFilter: () -> Unit = {},
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.box),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (showSearch) {
+            SearchTextField(
+                modifier = Modifier.then(
+                    if (screenConfig.isMobile) Modifier.weight(1f)
+                    else Modifier.width(300.dp)
+                ),
+                value = searchQuery,
+                onValueChange = onSearchChange,
+                onClear = onClearSearch,
+                hint = hint
+            )
+        }
+
+        if (!screenConfig.isMobile) {
+            Spacer(Modifier.weight(1f))
+        }
+
+        if (filterOptions.isNotEmpty()) {
+            if (PlatformType.isWeb) {
+                RefreshButton(onClick = onRefresh)
+            }
+            FilterButton(count = refreshCount, onClick = onOpenFilter)
         }
     }
 }
