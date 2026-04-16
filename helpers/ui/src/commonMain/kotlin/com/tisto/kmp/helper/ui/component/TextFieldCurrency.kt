@@ -50,6 +50,8 @@ import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
+import com.tisto.kmp.helper.utils.ext.logs
+import com.tisto.kmp.helper.utils.ext.remove
 import kotlin.math.roundToLong
 
 // ─── Raw string format ────────────────────────────────────────────────────────
@@ -71,10 +73,14 @@ import kotlin.math.roundToLong
  * IME stays in sync with the raw text (avoids the IME reverting the edit).
  */
 fun filterPriceInput(
-    v: String,
+    it: String,
     maxDecimalDigits: Int = 3,
     maxIntegerDigits: Int = Int.MAX_VALUE,
 ): String {
+    val v = if (',' in it) {
+        if ('.' in it) it.remove(",")
+        else it.replace(",", ".")
+    } else it
     var hasDec = false
     var intCount = 0
     var decCount = 0
@@ -205,7 +211,9 @@ fun CurrencyTextField(
 
     OutlinedTextFields(
         value = value,
-        onValueChange = { onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength)) },
+        onValueChange = {
+            onValueChange(filterPriceInput(it, maxIntegerDigits = maxLength))
+        },
         modifier = modifier.fillMaxWidth(),
         singleLine = true,
         textStyle = textStyle,
@@ -271,7 +279,8 @@ private fun OutlinedTextFields(
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isFocused = interactionSource.collectIsFocusedAsState().value
-    val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
+    val currentStrokeWidth =
+        if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
     // If color is not provided via the text style, use content color as a default
     val textColor =
         textStyle.color.takeOrElse {
