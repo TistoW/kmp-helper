@@ -203,6 +203,7 @@ fun CurrencyTextField(
     focusedStrokeWidth: Dp? = null,
     strokeColorOnFocused: Color = Color.Black,
     maxLength: Int = Int.MAX_VALUE,
+    enabled: Boolean = true,
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
     val interactionSource = remember { MutableInteractionSource() }
@@ -242,7 +243,8 @@ fun CurrencyTextField(
         ),
         interactionSource = interactionSource,
         strokeWidth = strokeWidth,
-        focusedStrokeWidth = focusedStrokeWidth
+        focusedStrokeWidth = focusedStrokeWidth,
+        enabled = enabled
     )
 }
 

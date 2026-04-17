@@ -179,7 +179,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             leadingIcon = leadingIcon,
             leadingIconSize = leadingIconSize,
             leadingIconOnClick = leadingIconOnClick,
-            inputType = inputType,
+            keyboardOptions = inputType,
             onClick = onClick,
             enabled = enabled,
             isError = isError,
@@ -247,7 +247,7 @@ fun CustomTextField(
     leadingIcon: ImageVector? = null,
     leadingIconSize: Dp = 20.dp,
     leadingIconOnClick: () -> Unit = {},
-    inputType: KeyboardOptions = KeyboardOptions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onClick: () -> Unit = {},
     enabled: Boolean = true,
     isError: Boolean = false,
@@ -291,9 +291,9 @@ fun CustomTextField(
 
     // Legacy password handling
     var isPasswordVisible by remember { mutableStateOf(false) }
-    val isPasswordField = remember(inputType) {
-        inputType.keyboardType == KeyboardType.Password ||
-                inputType.keyboardType == KeyboardType.NumberPassword
+    val isPasswordField = remember(keyboardOptions) {
+        keyboardOptions.keyboardType == KeyboardType.Password ||
+                keyboardOptions.keyboardType == KeyboardType.NumberPassword
     }
 
     val passwordToggleIcon = if (isPasswordField && autoHandlePassword && endIcon == null) {
@@ -460,9 +460,9 @@ fun CustomTextField(
                     imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next,
                 )
             } else if (singleLine) {
-                inputType.copy(imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next)
+                keyboardOptions.copy(imeAction = if (onEnter != null) ImeAction.Done else ImeAction.Next)
             } else {
-                inputType
+                keyboardOptions
             },
             keyboardActions = KeyboardActions(
                 onNext = {
