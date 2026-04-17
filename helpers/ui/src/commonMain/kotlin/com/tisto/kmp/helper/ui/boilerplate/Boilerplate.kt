@@ -6,22 +6,68 @@ package com.tisto.kmp.helper.ui.boilerplate
 // MVI / UDF BOILERPLATE — The rulebook + full concrete reference for new features.
 //
 // READ THIS FIRST. This single file holds everything: the non-negotiable rules,
-// then 12 copy-ready sections mirroring the canonical Category feature shipped at:
+// then 12 copy-ready sections with "Example" placeholder names. But don't study
+// only this file — open the two canonical implementations below and read them
+// side by side. They are the living proof that the rules work.
 //
-//   data → kmp/feature/transaction/.../categoryFinance/data/
-//     ├── model/CategoryFinance.kt
-//     ├── request/CategoryFinanceRequest.kt
-//     ├── CategoryFinanceApi.kt                ← Ktor HttpClient
-//     ├── CategoryFinanceRepository.kt         ← apiCall() → Flow<Resource<T>>
-//     └── categoryFinanceModule.kt
-//   ui   → kmp/feature/transaction/.../categoryFinance/presentation/
-//     ├── CategoryFinanceRoute.kt              ← Crossfade wrapper
-//     ├── CategoryFinanceStrings.kt            ← Indonesian strings (no R.string)
-//     ├── list/{Contract,ViewModel,Screen}.kt
-//     └── form/{Contract,ViewModel,Screen}.kt
+// ──────────────────────────────────────────────────────────────────────────────────────────
+// ★ REFERENCE IMPLEMENTATION 1 — Category (basic CRUD + image + picker)
+//
+//   Base path: kmp/feature/product/src/main/java/com/zenenta/pos/product/category/
+//
+//   data/
+//     model/Category.kt               ← @Serializable, image field, isActive flag
+//     request/CategoryRequest.kt      ← @Transient pickedImage for multipart upload
+//     CategoryApi.kt                  ← Ktor HttpClient, postMethod with pickedImage
+//     CategoryRepository.kt           ← apiCall() wrappers, Flow<Resource<T>>
+//     categoryModule.kt               ← Koin: singleOf Api/Repo, viewModelOf ListVM, viewModel { params -> FormVM }
+//   presentation/
+//     CategoryRoute.kt                ← Crossfade wrapper with onPick support
+//     CategoryStrings.kt              ← Indonesian strings including titlePicker, search, columnUpdate
+//     list/
+//       CategoryListContract.kt       ← Effect only — UiState/Event are generic ListUiState<T>/ListEvent<T>
+//       CategoryListViewModel.kt      ← ListUiState<Category>, ListEvent<Category>, isActive default filter
+//       CategoryListScreen.kt         ← ListContainer with image column, picker support, filter by status
+//     form/
+//       CategoryFormContract.kt       ← Flat UiState with image/pickedImage/isActive
+//       CategoryFormViewModel.kt      ← initialItem + refreshInBackground pattern
+//       CategoryFormScreen.kt         ← ScaffoldBox + FormContainer, CardImagePicker, SwitchCard
+//
+//   Use Category as your starting point when the feature has:
+//     • image upload, isActive toggle, picker mode, or a straightforward text+image form
+//
+// ──────────────────────────────────────────────────────────────────────────────────────────
+// ★ REFERENCE IMPLEMENTATION 2 — Discount (numeric fields + type chips + CurrencyTextField)
+//
+//   Base path: kmp/feature/product/src/main/java/com/zenenta/pos/product/discount/
+//
+//   data/
+//     model/Discount.kt               ← @Serializable, type field (percent/nominal), numeric fields
+//     request/DiscountRequest.kt       ← No image, numeric/type fields
+//     DiscountApi.kt                   ← Ktor HttpClient, standard CRUD
+//     DiscountRepository.kt            ← apiCall() wrappers
+//     discountModule.kt                ← Koin module
+//   presentation/
+//     DiscountRoute.kt                 ← Crossfade wrapper with onPick
+//     DiscountStrings.kt               ← Includes type labels, hint texts, range errors
+//     list/
+//       DiscountListContract.kt        ← Effect only
+//       DiscountListViewModel.kt       ← ListUiState<Discount>, filter by type
+//       DiscountListScreen.kt          ← ListContainer, columns show formatted type/value
+//     form/
+//       DiscountFormContract.kt        ← Flat UiState with type, conditional validation (percent range)
+//       DiscountFormViewModel.kt       ← initialItem pattern, conditional field logic per type
+//       DiscountFormScreen.kt          ← FilterChip type selector, CurrencyTextField with prefix/suffix
+//
+//   Use Discount as your starting point when the feature has:
+//     • numeric/currency fields, type selection chips, conditional form fields,
+//       percentage vs nominal logic, or no image upload
+//
+// ──────────────────────────────────────────────────────────────────────────────────────────
+// Also shipped: Voucher, Variant — same patterns, same module (:kmp:feature:product).
 //
 // When the user asks for a new feature, produce something indistinguishable from
-// CategoryFinance in shape. Any deviation from the rules below is a bug.
+// Category/Discount in shape. Any deviation from the rules below is a bug.
 //
 // ──────────────────────────────────────────────────────────────────────────────────────────
 // HOW TO USE
@@ -49,12 +95,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //       ├── <Name>Route.kt                    ← Crossfade wrapper (List ↔ Form)
 //       ├── <Name>Strings.kt                  ← Indonesian strings (KMP-ready; no R.string)
 //       ├── list/
-//       │   ├── <Name>ListContract.kt         ← UiState / Event / Effect (sealed)
+//       │   ├── <Name>ListContract.kt         ← Effect only (UiState + Event are generic)
 //       │   ├── <Name>ListViewModel.kt        ← plain ViewModel, single MutableStateFlow
 //       │   └── <Name>ListScreen.kt           ← Route (stateful) + Screen (stateless)
 //       └── form/
 //           ├── <Name>FormContract.kt
-//           ├── <Name>FormViewModel.kt        ← combine(fields, isLoading, isSubmitting)
+//           ├── <Name>FormViewModel.kt        ← single MutableStateFlow, no combine
 //           └── <Name>FormScreen.kt
 //
 // Folder convention: subfolders only when ≥2 files will realistically live there.
@@ -105,9 +151,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     `.collect { when (resource) { Resource.Success -> ... } }` manually.
 //     NEVER wrap an `onResource` call in your own try/catch.
 //
-// VIEWMODEL — LIST
-//   ▸ Single `MutableStateFlow<UiState>`. Direct `.value =` assignment. No `combine()`.
+// VIEWMODEL — LIST (uses generic ListUiState<T> + ListEvent<T>)
+//   ▸ Import `ListUiState` and `ListEvent` from `com.tisto.kmp.helper.ui.component`.
+//     Do NOT declare per-feature UiState/Event for list — only the Effect is feature-specific.
+//   ▸ `MutableStateFlow<ListUiState<T>>`. Direct `.value =` assignment. No `combine()`.
 //     No `flatMapLatest`. No derived LoadPhase.
+//   ▸ `onEvent(event: ListEvent<T>)` — typed to your model (e.g. `ListEvent<Category>`).
 //   ▸ `query`, `filters`, `perPage` are plain `private var` — only events mutate them.
 //   ▸ On refresh: if current state is Success, set `isRefreshing = true`;
 //     if Empty, keep Empty (so the search bar stays visible); else Loading.
@@ -116,7 +165,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     `perPage` into a `SearchRequest`. SORT-type filters → `orderBy`/`orderType`.
 //     FILTER-type filters → `simpleQuery` entries. Default `isActive = "true"` when
 //     no status filter is selected.
-//   ▸ Empty result list → `UiState.Empty(query, filters)` (not `Success(items = emptyList())`).
+//   ▸ Empty result list → `ListUiState.Empty(query, filters)` (not `Success(items = emptyList())`).
 //     `Empty` carries query + filters so the UI can keep search bar and filter badge visible.
 //   ▸ Search debounce: `QueryChanged` must NOT call `loadPage()` directly.
 //     Instead: update state.query immediately (so the text field never flickers),
@@ -126,6 +175,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `Refresh` (pull-to-refresh / back from form) calls `loadPage(1)` directly — no debounce.
 //   ▸ `FiltersApplied` stores filters in the private var, updates current state's
 //     filters field, then calls `loadPage(1)`.
+//   ▸ `DeleteConfirmed` receives the whole item (not just id) — extract id inside the handler.
 //
 // PAGINATION
 //   ▸ Success state carries: `page`, `perPage`, `totalItems`, `lastPage`, `isLoadingMore`.
@@ -139,28 +189,41 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     triggers `LoadNextPage` when composed.
 //   ▸ Web/Desktop: manual pagination via `TablePaginationFooter` with next/prev/rowsPerPage.
 //
-// PULL-TO-REFRESH
-//   ▸ Wrap list body with `PullToRefreshBox` on mobile (`!PlatformType.isWeb && !PlatformType.isJvm`).
+// LIST SCREEN — ListContainer
+//   ▸ Use `ListContainer<T>(...)` from `com.tisto.kmp.helper.ui.component`.
+//     It handles: Scaffold, Toolbar, search/filter, pull-to-refresh, pagination,
+//     infinite scroll, loading/error/empty states, delete confirmation dialog.
+//   ▸ Caller provides only: `columns`, `mobileRow`, `filterOptions`, strings, `itemKey`.
+//   ▸ `columns` callback signature: `(isPicker: Boolean, onEdit: (T) -> Unit, onDelete: (T) -> Unit) -> List<ListColumn<T>>`
+//   ▸ Supports picker mode via `onPick: ((T) -> Unit)?` — show `titlePicker` instead of `title`,
+//     hide action column in columns when `isPicker = true`.
+//   ▸ `backIcon` defaults to `Icons.AutoMirrored.Filled.ArrowBack`; use `AppIcon.IcMenuSolar`
+//     for features launched from the POS drawer.
+//   ▸ Do NOT manually write Scaffold, Toolbar, SearchFilterRow, pull-to-refresh, pagination,
+//     or empty state in the Screen — ListContainer handles all of it.
+//
+// PULL-TO-REFRESH (handled by ListContainer)
+//   ▸ ListContainer wraps list body with `PullToRefreshBox` on mobile (`!PlatformType.isWeb && !PlatformType.isJvm`).
 //     On web/desktop, use a plain `Box` — pull gesture doesn't work there.
 //   ▸ Web gets a `RefreshButton` in `SearchFilterRow` instead.
-//   ▸ Extract `val content: @Composable () -> Unit` lambda and conditionally wrap it
-//     with either `PullToRefreshBox` or plain `Box` based on platform.
 //
 // FILTER
-//   ▸ `filters: List<FilterItem>` lives in both `Success` and `Empty` states.
-//   ▸ `FiltersApplied(filters: List<FilterItem>)` event.
-//   ▸ Screen holds `showFilterSheet` state. `ModalBottomSheet` + `GeneralFilterBottomSheet`
-//     overlay at the screen level (alongside `DeleteConfirmationDialog`).
+//   ▸ `filters: List<FilterItem>` lives in both `Success` and `Empty` states (generic).
+//   ▸ `FiltersApplied(filters: List<FilterItem>)` event (generic).
 //   ▸ Define a private `featureFilterOptions()` function returning `List<FilterGroup>` —
-//     typically one SORT group + one STATUS group (Aktif/Tidak Aktif).
-//   ▸ `FilterButton(count = filters.size)` in `SearchFilterRow` shows active filter count.
+//     typically one SORT group + optionally a STATUS/TYPE group.
+//     Pass it to `ListContainer(filterOptions = featureFilterOptions())`.
 //   ▸ ViewModel converts filters in `buildSearchRequest()`:
 //     SORT filter → `orderBy` / `orderType` params.
 //     FILTER items → `simpleQuery` entries (e.g. `isActive = "false"`).
 //
 // VIEWMODEL — FORM
-//   ▸ Takes constructor param `itemId: String?`. Null = Create, non-null = Edit.
-//   ▸ Derive `mode: FormMode = if (itemId == null) Create else Edit(itemId)`.
+//   ▸ Takes constructor param `initialItem: <Name>?`. Null = Create, non-null = Edit.
+//   ▸ Derive `mode: FormMode = if (initialItem == null) Create else Edit(initialItem.id)`.
+//   ▸ Pre-populate UiState fields from `initialItem` in the MutableStateFlow constructor.
+//   ▸ `init { if (initialItem != null) refreshInBackground(initialItem.id) }` — silently
+//     fetch latest data from API. Only update fields the user hasn't touched yet:
+//         if (current.name == initialItem?.name.orEmpty()) item.name else current.name
 //   ▸ Single `MutableStateFlow<FormUiState>` — same pattern as List VM. No `combine`,
 //     no `stateIn`. Field values, `isLoading`, `isSubmitting`, per-field errors all
 //     live on UiState. Mutate with `_uiState.update { copy(...) }`.
@@ -169,12 +232,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `performSubmission(action)` scaffold flips `isSubmitting` on/off via try/finally.
 //     Use for submit AND delete. No catch block — onResource owns that.
 //   ▸ Clearing field errors: on NameChanged, also set `nameError = null`.
-//   ▸ Load existing in `init { if (itemId != null) loadExisting(itemId) }`. Toggle
-//     `isLoading` in try/finally around the call.
+//   ▸ Success message flows through `NavigateBack(message)` — do NOT call `showSuccess()`
+//     before `NavigateBack`. The form screen is disposed before the snackbar appears.
+//     The message is forwarded to the list screen via `pendingMessage`.
 //
 // ROUTE / SCREEN SPLIT
-//   ▸ Every screen has both. Route = stateful; Screen = pure
-//     `(screenConfig, state, snackbar, onEvent, onBack) -> Unit`.
+//   ▸ Every screen has both. Route = stateful; Screen = pure.
 //   ▸ Route responsibilities:
 //       – resolve VM via `safeKoinViewModel()` — NOT `koinViewModel()`. Always `?: return`.
 //       – own `SnackbarHostState`.
@@ -187,16 +250,18 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `Screen` always declares `screenConfig: ScreenConfig = ScreenConfig()` as first param
 //     so it can be called in previews without a real theme wrapper.
 //   ▸ List Route also takes `refreshToken`, `pendingMessage`, `onMessageShown`:
-//       `LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.onEvent(Refresh) }`.
+//       `LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.onEvent(ListEvent.Refresh) }`.
 //       `LaunchedEffect(pendingMessage) { if (pendingMessage != null) { snackbar.showSnackbar(pendingMessage); onMessageShown() } }`.
 //     This shows form success toasts on the list screen (form navigates back instantly).
-//   ▸ Form Route takes `formKey: Int` and uses `"${itemId}_$formKey"` as the VM key.
+//   ▸ Form Route takes `formKey: Int` and uses `"${item?.id}_$formKey"` as the VM key.
 //     This ensures a fresh ViewModel each time the form is opened — prevents stale
 //     data when creating again or re-editing the same item after save.
+//   ▸ Form Route passes `initialItem` via `parameters = { parametersOf(item) }`.
 //
 // UI COMPONENTS (use these — never raw Material3 equivalents in feature screens)
-//   ▸ `ToolbarRow(title, screenConfig, onBack, onAdd)` — toolbar with "Tambah" ButtonNormal.
-//   ▸ `SearchFilterRow(screenConfig, searchQuery, onSearchChange)` — search + filter bar.
+//   ▸ `ListContainer<T>(...)` — reusable list scaffold. Handles Scaffold, Toolbar,
+//     search/filter, pull-to-refresh, pagination, infinite scroll, empty/loading/error states,
+//     delete confirmation. Caller only provides: columns, mobileRow, filterOptions, strings.
 //   ▸ `ListColumn<T>(key, title, weight, cell)` — column descriptor for list/tablet tables.
 //   ▸ `ListHeader(columns)` — tablet column header row.
 //   ▸ `ListRow(item, columns, onClick)` — tablet data row with divider.
@@ -218,6 +283,8 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ `GeneralFilterBottomSheet(options, preselected, onClose, onApply)` — filter chip sheet.
 //   ▸ `FilterButton(count, onClick)` — opens filter sheet; badge shows active filter count.
 //   ▸ `RefreshButton(onClick)` — manual refresh for web (no pull gesture).
+//   ▸ `Toolbar(title, screenConfig, onBack, onAdd, backIcon)` — toolbar with "Tambah" button.
+//   ▸ `SearchFilterRow(screenConfig, searchQuery, onSearchChange)` — search + filter bar.
 //
 // PREVIEWS
 //   ▸ Use `@MobilePreview` and `@TabletPreview` (from `com.tisto.kmp.helper.ui.ext`).
@@ -229,7 +296,8 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ Place all @Preview functions at the bottom of the Screen file, `private`.
 //
 // EFFECT HANDLING
-//   ▸ `ShowMessage` → `snackbar.showSnackbar(effect.message)`.
+//   ▸ `ShowMessage` → `snackbar.showSnackbar(AppSnackbarVisuals(message, type))`.
+//     Map MessageType → SnackbarType (Success, Error, Warning, Info).
 //   ▸ `NavigateToForm(item)` → `onNavigateToForm(effect.item)`.
 //   ▸ `NavigateBack(message)` → `onDone(effect.message)`. The message (e.g. "Data tersimpan")
 //     is passed to the parent Route, then forwarded to the list screen as `pendingMessage`
@@ -258,13 +326,16 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ One module file per feature, declared `val <name>Module = module { ... }`.
 //   ▸ `singleOf(::<Name>Api)`, `singleOf(::<Name>Repository)`.
 //   ▸ `viewModelOf(::<Name>ListViewModel)`.
-//   ▸ Form VM: `viewModel { params -> <Name>FormViewModel(repo = get(), itemId = params.getOrNull()) }`.
+//   ▸ Form VM: `viewModel { params -> <Name>FormViewModel(repo = get(), initialItem = params.getOrNull()) }`.
 //   ▸ Register the module in `app/.../core/di/ListModules.kt`.
 //
 // STRINGS
+//   ▸ `internal object <Name>Strings` — all user-facing strings in one file.
 //   ▸ User-facing copy is Indonesian: "Kembali", "Cari...", "Tambah", "Simpan",
 //     "Menyimpan...", "Belum ada data", "Gagal memuat data", "Gagal menyimpan",
 //     "Gagal menghapus", "Data tersimpan", "Data berhasil dihapus", "Nama wajib diisi".
+//   ▸ Include: titleList, titlePicker, titleCreate, titleEdit, search, empty,
+//     label fields, err fields, loadFailed, saveFailed, deleteFailed, saved, deleted.
 //
 // NAMING & PACKAGING
 //   ▸ Feature package name is lowerCamelCase (e.g. `categoryNew`).
@@ -272,6 +343,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   ▸ Koin module file is lowerCamelCase: `composeProductModule.kt`, `exampleModule.kt`.
 //
 // WHAT YOU MUST NOT DO
+//   ✗ Do not declare per-feature `UiState` or `Event` sealed interfaces for the list —
+//     use generic `ListUiState<T>` and `ListEvent<T>` from `ListContainer.kt`.
+//     Only the `Effect` is feature-specific.
+//   ✗ Do not manually build Scaffold, Toolbar, SearchFilterRow, pull-to-refresh,
+//     pagination, or empty body in list screens — use `ListContainer`.
 //   ✗ Do not introduce interfaces (`IExampleRepository`, `ExampleRepositoryImpl`).
 //   ✗ Do not introduce a `UseCase` layer for passthrough CRUD.
 //   ✗ Do not use `send()` on Channels — always `trySend`.
@@ -292,10 +368,12 @@ package com.tisto.kmp.helper.ui.boilerplate
 //     for text, `CurrencyTextField` for currency/numbers, `SearchTextField` for search.
 //   ✗ Do not use raw `Switch` in a `Row` — use `SwitchCard`.
 //   ✗ Do not use `Scaffold` + `TopAppBar` + `FloatingActionButton` in list/form screens —
-//     use `ToolbarRow` + `ScaffoldBox` + `FormContainer`.
+//     use `ListContainer` for list, `ScaffoldBox` + `FormContainer` for form.
 //   ✗ Do not derive `ScreenConfig` from `LocalConfiguration` inside Screen —
 //     always receive it as a parameter from `ZenentaTheme { screenConfig -> }` in Route.
 //   ✗ Do not use raw `@Preview(widthDp=..., heightDp=...)` — use `@MobilePreview` / `@TabletPreview`.
+//   ✗ Do not use `loadExisting(itemId)` in form VM — use `initialItem` + `refreshInBackground`.
+//     Pre-fill from list data instantly, then silently refresh from API.
 // ══════════════════════════════════════════════════════════════════════════════════════════
 
 import androidx.compose.foundation.layout.Box
@@ -464,45 +542,49 @@ object ExampleTypeTypes {
 //     singleOf(::ExampleApi)
 //     singleOf(::ExampleRepository)
 //     viewModelOf(::ExampleListViewModel)
-//     viewModel { params -> ExampleFormViewModel(repo = get(), itemId = params.getOrNull()) }
+//     viewModel { params -> ExampleFormViewModel(repo = get(), initialItem = params.getOrNull()) }
+// }
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// SECTION 5B — STRINGS  (presentation/ExampleStrings.kt)
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// internal object ExampleStrings {
+//     const val titleList = "Example"
+//     const val titlePicker = "Pilih Example"
+//     const val titleCreate = "Tambah Example"
+//     const val titleEdit = "Edit Example"
+//
+//     const val back = "Kembali"
+//     const val add = "Tambah"
+//     const val edit = "Edit"
+//     const val delete = "Hapus"
+//     const val save = "Simpan"
+//     const val saving = "Menyimpan..."
+//     const val search = "Cari..."
+//     const val empty = "Belum ada data"
+//
+//     const val labelName = "Nama"
+//     const val labelDescription = "Deskripsi"
+//     const val labelActive = "Aktif"
+//     const val columnUpdate = "Update"
+//
+//     const val errName = "Nama wajib diisi"
+//
+//     const val loadFailed = "Gagal memuat data"
+//     const val saveFailed = "Gagal menyimpan"
+//     const val deleteFailed = "Gagal menghapus"
+//     const val saved = "Data tersimpan"
+//     const val deleted = "Data berhasil dihapus"
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 6 — LIST CONTRACT  (presentation/list/ExampleListContract.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
+// IMPORTANT: UiState and Event are now GENERIC — use ListUiState<T> + ListEvent<T>
+// from com.tisto.kmp.helper.ui.component. Only the Effect is feature-specific.
 
-// import com.tisto.kmp.helper.utils.model.FilterItem
-
-sealed interface ExampleListUiState {
-    data object Loading : ExampleListUiState
-    data class Empty(val query: String = "", val filters: List<FilterItem> = emptyList()) : ExampleListUiState
-    data class Success(
-        val items: List<Example>,
-        val query: String = "",
-        val filters: List<FilterItem> = emptyList(),
-        val isRefreshing: Boolean = false,
-        val page: Int = 1,
-        val perPage: Int = 10,
-        val totalItems: Int = 0,
-        val lastPage: Int = 1,
-        val isLoadingMore: Boolean = false,
-    ) : ExampleListUiState {
-        val hasMore: Boolean get() = page < lastPage
-    }
-    data class Error(val message: String) : ExampleListUiState
-}
-
-sealed interface ExampleListEvent {
-    data object Refresh : ExampleListEvent
-    data class QueryChanged(val query: String) : ExampleListEvent
-    data class FiltersApplied(val filters: List<FilterItem>) : ExampleListEvent
-    data object CreateClicked : ExampleListEvent
-    data class EditClicked(val item: Example) : ExampleListEvent
-    data class DeleteConfirmed(val id: String) : ExampleListEvent
-    data object LoadNextPage : ExampleListEvent
-    data class PageChanged(val page: Int) : ExampleListEvent
-    data class RowsPerPageChanged(val perPage: Int) : ExampleListEvent
-}
+// import com.tisto.kmp.helper.network.MessageType
 
 sealed interface ExampleListEffect {
     data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleListEffect
@@ -518,6 +600,8 @@ sealed interface ExampleListEffect {
 // import com.tisto.kmp.helper.network.model.Search
 // import com.tisto.kmp.helper.network.model.SearchRequest
 // import com.tisto.kmp.helper.network.MessageType
+// import com.tisto.kmp.helper.ui.component.ListEvent
+// import com.tisto.kmp.helper.ui.component.ListUiState
 // import com.tisto.kmp.helper.utils.model.FilterItem
 // import com.tisto.kmp.helper.utils.model.FilterType
 // import kotlinx.coroutines.Job
@@ -527,12 +611,21 @@ sealed interface ExampleListEffect {
 // import kotlinx.coroutines.flow.asStateFlow
 // import kotlinx.coroutines.launch
 //
+// // ── List Effect ──────────────────────────────────────────────────────────
+//
+// sealed interface ExampleListEffect {
+//     data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleListEffect
+//     data class NavigateToForm(val item: Example?) : ExampleListEffect
+// }
+//
+// // ── List ViewModel ───────────────────────────────────────────────────────
+//
 // class ExampleListViewModel(
 //     private val repo: ExampleRepository,
 // ) : FeatureViewModel<ExampleListEffect>() {
 //
-//     private val _uiState = MutableStateFlow<ExampleListUiState>(ExampleListUiState.Loading)
-//     val uiState: StateFlow<ExampleListUiState> = _uiState.asStateFlow()
+//     private val _uiState = MutableStateFlow<ListUiState<Example>>(ListUiState.Loading)
+//     val uiState: StateFlow<ListUiState<Example>> = _uiState.asStateFlow()
 //
 //     override fun showMessage(msg: String, type: MessageType) {
 //         sendEffect(ExampleListEffect.ShowMessage(msg, type))
@@ -545,52 +638,52 @@ sealed interface ExampleListEffect {
 //
 //     init { loadPage(1) }
 //
-//     fun onEvent(event: ExampleListEvent) {
+//     fun onEvent(event: ListEvent<Example>) {
 //         when (event) {
-//             ExampleListEvent.Refresh -> loadPage(1)
-//             is ExampleListEvent.QueryChanged -> {
+//             ListEvent.Refresh -> loadPage(1)
+//             is ListEvent.QueryChanged -> {
 //                 query = event.query
 //                 val current = _uiState.value
-//                 if (current is ExampleListUiState.Success) {
+//                 if (current is ListUiState.Success) {
 //                     _uiState.value = current.copy(query = event.query)
 //                 }
 //                 searchJob?.cancel()
 //                 searchJob = viewModelScope.launch { delay(500); loadPage(1) }
 //             }
-//             is ExampleListEvent.FiltersApplied -> {
+//             is ListEvent.FiltersApplied -> {
 //                 filters = event.filters
 //                 val current = _uiState.value
-//                 if (current is ExampleListUiState.Success) {
+//                 if (current is ListUiState.Success) {
 //                     _uiState.value = current.copy(filters = event.filters)
 //                 }
 //                 loadPage(1)
 //             }
-//             ExampleListEvent.CreateClicked -> sendEffect(ExampleListEffect.NavigateToForm(null))
-//             is ExampleListEvent.EditClicked -> sendEffect(ExampleListEffect.NavigateToForm(event.item))
-//             is ExampleListEvent.DeleteConfirmed -> delete(event.id)
-//             ExampleListEvent.LoadNextPage -> loadNextPage()
-//             is ExampleListEvent.PageChanged -> loadPage(event.page)
-//             is ExampleListEvent.RowsPerPageChanged -> { perPage = event.perPage; loadPage(1) }
+//             ListEvent.CreateClicked -> sendEffect(ExampleListEffect.NavigateToForm(null))
+//             is ListEvent.EditClicked -> sendEffect(ExampleListEffect.NavigateToForm(event.item))
+//             is ListEvent.DeleteConfirmed -> delete(event.item.id)
+//             ListEvent.LoadNextPage -> loadNextPage()
+//             is ListEvent.PageChanged -> loadPage(event.page)
+//             is ListEvent.RowsPerPageChanged -> { perPage = event.perPage; loadPage(1) }
 //         }
 //     }
 //
 //     private fun loadPage(page: Int) {
 //         val current = _uiState.value
 //         _uiState.value = when (current) {
-//             is ExampleListUiState.Success -> current.copy(isRefreshing = true)
-//             is ExampleListUiState.Empty -> current
-//             else -> ExampleListUiState.Loading
+//             is ListUiState.Success -> current.copy(isRefreshing = true)
+//             is ListUiState.Empty -> current
+//             else -> ListUiState.Loading
 //         }
 //         val search = buildSearchRequest(page)
 //         repo.get(search).launchResourcePaged(
-//             fallbackError = "Gagal memuat data",
-//             onError = { _uiState.value = ExampleListUiState.Error(it) },
+//             fallbackError = ExampleStrings.loadFailed,
+//             onError = { _uiState.value = ListUiState.Error(it) },
 //         ) { result ->
 //             val items = result.data
 //             if (items.isEmpty() && page == 1) {
-//                 _uiState.value = ExampleListUiState.Empty(query = query, filters = filters)
+//                 _uiState.value = ListUiState.Empty(query = query, filters = filters)
 //             } else {
-//                 _uiState.value = ExampleListUiState.Success(
+//                 _uiState.value = ListUiState.Success(
 //                     items = items, query = query, filters = filters,
 //                     page = result.currentPage ?: page,
 //                     perPage = result.perPage ?: perPage,
@@ -603,16 +696,16 @@ sealed interface ExampleListEffect {
 //
 //     private fun loadNextPage() {
 //         val current = _uiState.value
-//         if (current !is ExampleListUiState.Success) return
+//         if (current !is ListUiState.Success) return
 //         if (current.isLoadingMore || !current.hasMore) return
 //         val nextPage = current.page + 1
 //         _uiState.value = current.copy(isLoadingMore = true)
 //         val search = buildSearchRequest(nextPage)
 //         repo.get(search).launchResourcePaged(
-//             fallbackError = "Gagal memuat data",
+//             fallbackError = ExampleStrings.loadFailed,
 //             onError = { _uiState.value = current.copy(isLoadingMore = false); showError(it) },
 //         ) { result ->
-//             val prev = _uiState.value as? ExampleListUiState.Success ?: return@launchResourcePaged
+//             val prev = _uiState.value as? ListUiState.Success ?: return@launchResourcePaged
 //             _uiState.value = prev.copy(
 //                 items = prev.items + result.data,
 //                 page = result.currentPage ?: nextPage,
@@ -638,8 +731,8 @@ sealed interface ExampleListEffect {
 //     }
 //
 //     private fun delete(id: String) {
-//         repo.delete(id).launchResource(fallbackError = "Gagal menghapus") {
-//             showSuccess("Data berhasil dihapus"); loadPage(1)
+//         repo.delete(id).launchResource(fallbackError = ExampleStrings.deleteFailed) {
+//             showSuccess(ExampleStrings.deleted); loadPage(1)
 //         }
 //     }
 // }
@@ -647,39 +740,36 @@ sealed interface ExampleListEffect {
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 8 — LIST SCREEN  (presentation/list/ExampleListScreen.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
+// NOTE: The Screen composable now uses ListContainer<T> which handles ALL the boilerplate
+// (Scaffold, Toolbar, search, filter, pull-to-refresh, pagination, empty/loading/error).
+// The caller only provides: columns, mobileRow, filterOptions, and strings.
 //
 // import androidx.compose.foundation.layout.*
-// import androidx.compose.foundation.lazy.LazyColumn
-// import androidx.compose.foundation.lazy.items
-// import androidx.compose.foundation.lazy.rememberLazyListState
-// import androidx.compose.foundation.shape.RoundedCornerShape
 // import androidx.compose.material3.*
-// import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 // import androidx.compose.runtime.*
 // import androidx.compose.ui.Alignment
 // import androidx.compose.ui.Modifier
-// import androidx.compose.ui.graphics.Color
 // import androidx.compose.ui.unit.dp
 // import androidx.lifecycle.compose.collectAsStateWithLifecycle
 // import com.tisto.kmp.helper.ui.component.*
 // import com.tisto.kmp.helper.ui.ext.*
-// import com.tisto.kmp.helper.ui.theme.Spacing
-// import com.tisto.kmp.helper.utils.PlatformType
 // import com.tisto.kmp.helper.utils.ext.def
 // import com.tisto.kmp.helper.utils.ext.formatDate
 // import com.tisto.kmp.helper.utils.model.FilterGroup
 // import com.tisto.kmp.helper.utils.model.FilterItem
 // import com.tisto.kmp.helper.utils.model.FilterType
+// import com.zenenta.pos.core.ui.ui.icon.AppIcon
+// import com.zenenta.pos.core.ui.ui.icon.myicon.IcMenuSolar
 // import com.zenenta.pos.core.ui.ui.theme.ZenentaTheme
 // import kotlinx.coroutines.flow.Flow
-// import kotlinx.coroutines.launch
 //
-// // ── Route (stateful) ─────────────────────────────────────────────────────
+// // ── Route (stateful) ───────────────────────────────────────���─────────────
 //
 // @Composable
 // fun ExampleListRoute(
 //     onNavigateToForm: (item: Example?) -> Unit,
 //     onBack: () -> Unit,
+//     onPick: ((Example) -> Unit)? = null,
 //     refreshToken: Int = 0,
 //     pendingMessage: String? = null,
 //     onMessageShown: () -> Unit = {},
@@ -691,7 +781,7 @@ sealed interface ExampleListEffect {
 //     ExampleListEffectHandler(viewModel.effect, snackbar, onNavigateToForm)
 //
 //     LaunchedEffect(refreshToken) {
-//         if (refreshToken > 0) viewModel.onEvent(ExampleListEvent.Refresh)
+//         if (refreshToken > 0) viewModel.onEvent(ListEvent.Refresh)
 //     }
 //     LaunchedEffect(pendingMessage) {
 //         if (pendingMessage != null) { snackbar.showSnackbar(pendingMessage); onMessageShown() }
@@ -704,6 +794,7 @@ sealed interface ExampleListEffect {
 //             snackbar = snackbar,
 //             onEvent = viewModel::onEvent,
 //             onBack = onBack,
+//             onPick = onPick,
 //         )
 //     }
 // }
@@ -724,83 +815,65 @@ sealed interface ExampleListEffect {
 //     }
 // }
 //
-// // ── Screen (stateless) ──────────────────────────────────────────────────
+// // ── Screen (stateless) — uses ListContainer ──────────────────────────────
 //
-// @OptIn(ExperimentalMaterial3Api::class)
 // @Composable
 // fun ExampleListScreen(
 //     screenConfig: ScreenConfig = ScreenConfig(),
-//     state: ExampleListUiState,
+//     state: ListUiState<Example>,
 //     snackbar: SnackbarHostState,
-//     onEvent: (ExampleListEvent) -> Unit,
+//     onEvent: (ListEvent<Example>) -> Unit,
 //     onBack: () -> Unit,
+//     onPick: ((Example) -> Unit)? = null,
 // ) {
-//     var pendingDeleteItem by remember { mutableStateOf<Example?>(null) }
-//     var showFilterSheet by remember { mutableStateOf(false) }
-//     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-//
-//     val currentFilters = when (state) {
-//         is ExampleListUiState.Success -> state.filters
-//         is ExampleListUiState.Empty -> state.filters
-//         else -> emptyList()
-//     }
-//
-//     Scaffold(
-//         topBar = {
-//             Toolbar(
-//                 screenConfig = screenConfig,
-//                 title = "Example",
-//                 onAdd = { onEvent(ExampleListEvent.CreateClicked) },
-//                 onBack = if (screenConfig.isMobile) onBack else null,
+//     ListContainer(
+//         screenConfig = screenConfig,
+//         state = state,
+//         snackbar = snackbar,
+//         title = ExampleStrings.titleList,
+//         titlePicker = ExampleStrings.titlePicker,
+//         emptyText = ExampleStrings.empty,
+//         searchHint = ExampleStrings.search,
+//         filterOptions = exampleFilterOptions(),
+//         backIcon = AppIcon.IcMenuSolar,
+//         onEvent = onEvent,
+//         onBack = onBack,
+//         onPick = onPick,
+//         deleteItemName = { it.name },
+//         itemKey = { it.id },
+//         columns = ::exampleColumns,
+//         mobileRow = { item, onClick ->
+//             ListMobileRow(
+//                 imageUrl = item.image,
+//                 text = item.name.def(),
+//                 secondary = item.description?.takeIf { it.isNotBlank() },
+//                 onClick = onClick,
 //             )
 //         },
-//         snackbarHost = { SnackbarHost(snackbar) },
-//         containerColor = Color.White,
-//     ) { padding ->
-//         when (state) {
-//             ExampleListUiState.Loading -> CenteredLoader(padding)
-//             is ExampleListUiState.Error -> CenteredMessage(padding, state.message)
-//             is ExampleListUiState.Empty -> ExampleEmptyBody(
-//                 padding, state, screenConfig, onEvent,
-//                 onOpenFilter = { showFilterSheet = true },
-//                 filterCount = currentFilters.size,
-//             )
-//             is ExampleListUiState.Success -> ExampleListBody(
-//                 padding = padding, state = state, screenConfig = screenConfig,
-//                 onEvent = onEvent,
-//                 onRequestDelete = { pendingDeleteItem = it },
-//                 onOpenFilter = { showFilterSheet = true },
-//             )
-//         }
-//     }
-//
-//     DeleteConfirmationDialog(
-//         showDialog = pendingDeleteItem != null,
-//         onDismiss = { pendingDeleteItem = null },
-//         onConfirm = {
-//             pendingDeleteItem?.let { onEvent(ExampleListEvent.DeleteConfirmed(it.id)) }
-//             pendingDeleteItem = null
-//         },
-//         itemName = pendingDeleteItem?.name.orEmpty(),
 //     )
+// }
 //
-//     // ── Filter sheet ──
-//     if (showFilterSheet) {
-//         ModalBottomSheet(
-//             onDismissRequest = { showFilterSheet = false },
-//             sheetState = sheetState,
-//             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-//         ) {
-//             GeneralFilterBottomSheet(
-//                 options = exampleFilterOptions(),
-//                 preselected = currentFilters,
-//                 onClose = { showFilterSheet = false },
-//                 onApply = { selected ->
-//                     onEvent(ExampleListEvent.FiltersApplied(selected))
-//                     showFilterSheet = false
-//                 },
-//             )
+// // ── Columns ──────────────────────────────────────────────────────────────
+//
+// private fun exampleColumns(
+//     isPicker: Boolean,
+//     onEdit: (Example) -> Unit,
+//     onDelete: (Example) -> Unit,
+// ): List<ListColumn<Example>> = buildList {
+//     add(ListColumn(key = "name", title = ExampleStrings.labelName, weight = 3f, cell = { item ->
+//         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+//             CustomImageView(imageUrl = item.image, size = 50.dp)
+//             Spacer(Modifier.width(12.dp))
+//             RowText(modifier = Modifier.weight(1f), text = item.name.def(), secondary = item.description?.takeIf { it.isNotBlank() })
 //         }
+//     }))
+//     add(ListColumn(key = "updated", title = ExampleStrings.columnUpdate, weight = 1f, cell = { item ->
+//         RowText(modifier = Modifier.fillMaxWidth(), text = item.updatedAt?.formatDate("dd MMM yyyy").def("-"), secondary = item.updatedAt?.formatDate("HH:mm"))
+//     }))
+//     if (!isPicker) {
+//         add(ListColumn(key = "action", title = "", weight = 0.5f, contentArrangement = Arrangement.Center, cell = { item ->
+//             ListActions(onEdit = { onEdit(item) }, onDelete = { onDelete(item) })
+//         }))
 //     }
 // }
 //
@@ -816,169 +889,16 @@ sealed interface ExampleListEffect {
 //             FilterItem("Terlama", "asc", "createdAt", FilterType.SORT),
 //         ),
 //     ),
-//     FilterGroup(
-//         title = "Status", type = FilterType.FILTER,
-//         options = listOf(
-//             FilterItem("Aktif", "true", "isActive", FilterType.FILTER),
-//             FilterItem("Tidak Aktif", "false", "isActive", FilterType.FILTER),
-//         ),
-//     ),
 // )
-//
-// // ── Empty body ───────────────────────────────────────────────────────────
-//
-// @Composable
-// private fun ExampleEmptyBody(
-//     padding: PaddingValues,
-//     state: ExampleListUiState.Empty,
-//     screenConfig: ScreenConfig,
-//     onEvent: (ExampleListEvent) -> Unit,
-//     onOpenFilter: () -> Unit,
-//     filterCount: Int,
-// ) {
-//     Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-//         Spacer(Modifier.height(Spacing.small))
-//         SearchFilterRow(
-//             modifier = Modifier.padding(horizontal = Spacing.normal, Spacing.box),
-//             screenConfig = screenConfig,
-//             searchQuery = state.query,
-//             onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
-//             onClearSearch = { onEvent(ExampleListEvent.QueryChanged("")) },
-//             refreshCount = filterCount,
-//             onRefresh = { onEvent(ExampleListEvent.Refresh) },
-//             onOpenFilter = onOpenFilter,
-//         )
-//         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//             Text("Belum ada data")
-//         }
-//     }
-// }
-//
-// // ── List body with pull-to-refresh + pagination ─────────────────────────
-//
-// @OptIn(ExperimentalMaterial3Api::class)
-// @Composable
-// private fun ExampleListBody(
-//     padding: PaddingValues,
-//     state: ExampleListUiState.Success,
-//     screenConfig: ScreenConfig,
-//     onEvent: (ExampleListEvent) -> Unit,
-//     onRequestDelete: (Example) -> Unit,
-//     onOpenFilter: () -> Unit,
-// ) {
-//     val columns = remember(screenConfig.isTablet) {
-//         exampleColumns(
-//             onEdit = { item -> onEvent(ExampleListEvent.EditClicked(item)) },
-//             onDelete = onRequestDelete,
-//         )
-//     }
-//
-//     val usePullToRefresh = !PlatformType.isWeb && !PlatformType.isJvm
-//     val useInfiniteScroll = usePullToRefresh
-//     val listState = rememberLazyListState()
-//     val scope = rememberCoroutineScope()
-//
-//     // Scroll to top after refresh completes
-//     val wasRefreshing = remember { mutableStateOf(false) }
-//     LaunchedEffect(state.isRefreshing) {
-//         if (wasRefreshing.value && !state.isRefreshing) listState.animateScrollToItem(0)
-//         wasRefreshing.value = state.isRefreshing
-//     }
-//
-//     val contentPadding = if (screenConfig.isMobile) Spacing.normal else Spacing.extraLarge
-//
-//     val content: @Composable () -> Unit = {
-//         Column(modifier = Modifier.fillMaxSize()) {
-//             Spacer(Modifier.height(Spacing.small))
-//
-//             SearchFilterRow(
-//                 modifier = Modifier.padding(horizontal = contentPadding, Spacing.box),
-//                 screenConfig = screenConfig,
-//                 searchQuery = state.query,
-//                 onSearchChange = { onEvent(ExampleListEvent.QueryChanged(it)) },
-//                 onClearSearch = { onEvent(ExampleListEvent.QueryChanged("")) },
-//                 refreshCount = state.filters.size,
-//                 onRefresh = { onEvent(ExampleListEvent.Refresh) },
-//                 onOpenFilter = onOpenFilter,
-//             )
-//
-//             if (screenConfig.isTablet) {
-//                 ListHeader(columns = columns, modifier = Modifier.fillMaxWidth().padding(horizontal = contentPadding))
-//             }
-//
-//             LazyColumn(state = listState, modifier = Modifier.weight(1f).padding(horizontal = contentPadding)) {
-//                 items(state.items, key = { it.id }) { item ->
-//                     val onClick = { onEvent(ExampleListEvent.EditClicked(item)) }
-//                     if (screenConfig.isMobile) {
-//                         ListMobileRow(imageUrl = item.image, text = item.name.def(),
-//                             secondary = item.description?.takeIf { it.isNotBlank() }, onClick = { onClick() })
-//                     } else {
-//                         ListRow(item = item, columns = columns, onClick = { onClick() })
-//                     }
-//                 }
-//                 // Infinite scroll trigger (mobile only)
-//                 if (useInfiniteScroll && state.hasMore) {
-//                     item(key = "load_more") {
-//                         LaunchedEffect(state.page) { onEvent(ExampleListEvent.LoadNextPage) }
-//                         Box(Modifier.fillMaxWidth().padding(vertical = Spacing.normal), contentAlignment = Alignment.Center) {
-//                             CircularProgressIndicator()
-//                         }
-//                     }
-//                 }
-//             }
-//
-//             // Web/Desktop: manual pagination
-//             if (PlatformType.isWeb || PlatformType.isJvm) {
-//                 Box(modifier = Modifier.padding(horizontal = contentPadding)) {
-//                     TablePaginationFooter(
-//                         rowsPerPage = state.perPage, totalItems = state.totalItems, currentPage = state.page,
-//                         onNextPage = { onEvent(ExampleListEvent.PageChanged(state.page + 1)); scope.launch { listState.scrollToItem(0) } },
-//                         onPrevPage = { onEvent(ExampleListEvent.PageChanged(state.page - 1)); scope.launch { listState.scrollToItem(0) } },
-//                         onRowsPerPageChange = { onEvent(ExampleListEvent.RowsPerPageChanged(it)); scope.launch { listState.scrollToItem(0) } },
-//                     )
-//                 }
-//             }
-//         }
-//     }
-//
-//     // Conditional pull-to-refresh wrapper
-//     if (usePullToRefresh) {
-//         PullToRefreshBox(isRefreshing = state.isRefreshing, onRefresh = { onEvent(ExampleListEvent.Refresh) },
-//             modifier = Modifier.fillMaxSize().padding(padding)) { content() }
-//     } else {
-//         Box(modifier = Modifier.fillMaxSize().padding(padding)) { content() }
-//     }
-// }
-//
-// // ── Columns ──────────────────────────────────────────────────────────────
-//
-// private fun exampleColumns(
-//     onEdit: (Example) -> Unit,
-//     onDelete: (Example) -> Unit,
-// ): List<ListColumn<Example>> = buildList {
-//     add(ListColumn(key = "name", title = "Nama", weight = 3f, cell = { item ->
-//         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-//             CustomImageView(imageUrl = item.image, size = 50.dp)
-//             Spacer(Modifier.width(12.dp))
-//             RowText(modifier = Modifier.weight(1f), text = item.name.def(), secondary = item.description?.takeIf { it.isNotBlank() })
-//         }
-//     }))
-//     add(ListColumn(key = "updated", title = "Update", weight = 1f, cell = { item ->
-//         RowText(modifier = Modifier.fillMaxWidth(), text = item.updatedAt?.formatDate("dd MMM yyyy").def("-"), secondary = item.updatedAt?.formatDate("HH:mm"))
-//     }))
-//     add(ListColumn(key = "action", title = "", weight = 0.5f, contentArrangement = Arrangement.Center, cell = { item ->
-//         ListActions(onEdit = { onEdit(item) }, onDelete = { onDelete(item) })
-//     }))
-// }
 //
 // // ── Previews ──────────────────────────────────────────────────────────────
 //
 // @Composable
-// private fun ExampleListScreenPreview(screenConfig: ScreenConfig = ScreenConfig()) {
+// private fun ScreenContentPreview(screenConfig: ScreenConfig = ScreenConfig()) {
 //     ZenentaTheme {
 //         ExampleListScreen(
 //             screenConfig = screenConfig,
-//             state = ExampleListUiState.Success(
+//             state = ListUiState.Success(
 //                 items = listOf(
 //                     Example(id = "1", name = "Item Satu", updatedAt = "2025-12-22T04:12:09.000Z"),
 //                     Example(id = "2", name = "Item Dua", updatedAt = "2025-12-22T04:12:09.000Z"),
@@ -995,15 +915,15 @@ sealed interface ExampleListEffect {
 //
 // @MobilePreview
 // @Composable
-// private fun PreviewExampleList() { ExampleListScreenPreview() }
+// private fun PreviewExampleList() { ScreenContentPreview() }
 //
 // @TabletPreview
 // @Composable
-// private fun TabletPreviewExampleList() { ExampleListScreenPreview(ScreenConfig(700.dp)) }
+// private fun TabletPreviewExampleList() { ScreenContentPreview(ScreenConfig(700.dp)) }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 9 — FORM CONTRACT  (presentation/form/ExampleFormContract.kt)
-// ══════════════════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════════════���═══
 // Flat data-class UiState (not sealed). Forms have many small independent
 // fields — a sealed hierarchy would explode into near-identical states.
 //
@@ -1019,7 +939,7 @@ sealed interface ExampleListEffect {
 //     val mode: ExampleFormMode = ExampleFormMode.Create,
 //     val name: String = "",
 //     val description: String = "",
-//     val image: String? = null,
+//     val imageUrl: String? = null,
 //     val pickedImage: PickedImage? = null,
 //     val isActive: Boolean = true,
 //     val nameError: String? = null,
@@ -1033,7 +953,7 @@ sealed interface ExampleListEffect {
 // sealed interface ExampleFormEvent {
 //     data class NameChanged(val value: String) : ExampleFormEvent
 //     data class DescriptionChanged(val value: String) : ExampleFormEvent
-//     data class ImagePicked(val image: PickedImage?) : ExampleFormEvent
+//     data class ImagePicked(val value: PickedImage?) : ExampleFormEvent
 //     data class ActiveChanged(val value: Boolean) : ExampleFormEvent
 //     data object Submit : ExampleFormEvent
 //     data object Delete : ExampleFormEvent
@@ -1041,23 +961,21 @@ sealed interface ExampleListEffect {
 //
 // sealed interface ExampleFormEffect {
 //     data class ShowMessage(val message: String, val type: MessageType = MessageType.Info) : ExampleFormEffect
-//     data class NavigateBack(val message: String? = null) : ExampleFormEffect  // message shown on list screen
+//     data class NavigateBack(val message: String? = null) : ExampleFormEffect
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 10 — FORM VIEWMODEL  (presentation/form/ExampleFormViewModel.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
-// Single MutableStateFlow<UiState> — same pattern as List VM. `performSubmission`
-// and `loadExisting` use raw `viewModelScope.launch` because they need try/finally
-// around `isSubmitting` / `isLoading`. That's the ONE pattern that stays manual;
-// everything else is a one-liner via `.launchResource { }`.
+// Takes `initialItem: Example?` — pre-fills from list data, then refreshes in background.
+// Single MutableStateFlow<UiState>. `performSubmission` uses raw `viewModelScope.launch`
+// because it needs try/finally around `isSubmitting`. That's the ONE pattern that stays
+// manual; everything else is a one-liner via `.launchResource { }`.
 //
 // import androidx.lifecycle.viewModelScope
 // import com.tisto.kmp.helper.network.base.FeatureViewModel
 // import com.tisto.kmp.helper.network.utils.onResource
 // import com.tisto.kmp.helper.network.MessageType
-// import com.tisto.kmp.helper.utils.ext.def
-// import com.tisto.kmp.helper.utils.model.PickedImage
 // import kotlinx.coroutines.flow.MutableStateFlow
 // import kotlinx.coroutines.flow.StateFlow
 // import kotlinx.coroutines.flow.asStateFlow
@@ -1066,20 +984,28 @@ sealed interface ExampleListEffect {
 //
 // class ExampleFormViewModel(
 //     private val repo: ExampleRepository,
-//     private val itemId: String?,
+//     private val initialItem: Example?,
 // ) : FeatureViewModel<ExampleFormEffect>() {
 //
 //     private val mode: ExampleFormMode =
-//         if (itemId == null) ExampleFormMode.Create else ExampleFormMode.Edit(itemId)
+//         if (initialItem == null) ExampleFormMode.Create else ExampleFormMode.Edit(initialItem.id)
 //
-//     private val _uiState = MutableStateFlow(ExampleFormUiState(mode = mode))
+//     private val _uiState = MutableStateFlow(
+//         ExampleFormUiState(
+//             mode = mode,
+//             name = initialItem?.name.orEmpty(),
+//             description = initialItem?.description.orEmpty(),
+//             imageUrl = initialItem?.image,
+//             isActive = initialItem?.isActive ?: true,
+//         )
+//     )
 //     val uiState: StateFlow<ExampleFormUiState> = _uiState.asStateFlow()
 //
 //     override fun showMessage(msg: String, type: MessageType) {
 //         sendEffect(ExampleFormEffect.ShowMessage(msg, type))
 //     }
 //
-//     init { if (itemId != null) loadExisting(itemId) }
+//     init { if (initialItem != null) refreshInBackground(initialItem.id) }
 //
 //     fun onEvent(event: ExampleFormEvent) {
 //         when (event) {
@@ -1088,7 +1014,7 @@ sealed interface ExampleListEffect {
 //             is ExampleFormEvent.DescriptionChanged ->
 //                 _uiState.update { it.copy(description = event.value) }
 //             is ExampleFormEvent.ImagePicked ->
-//                 _uiState.update { it.copy(pickedImage = event.image) }
+//                 _uiState.update { it.copy(pickedImage = event.value) }
 //             is ExampleFormEvent.ActiveChanged ->
 //                 _uiState.update { it.copy(isActive = event.value) }
 //             ExampleFormEvent.Submit -> submit()
@@ -1096,43 +1022,48 @@ sealed interface ExampleListEffect {
 //         }
 //     }
 //
-//     private fun loadExisting(id: String) {
+//     private fun refreshInBackground(id: String) {
 //         viewModelScope.launch {
-//             _uiState.update { it.copy(isLoading = true) }
 //             try {
-//                 repo.getOne(id).onResource(fallbackError = "Gagal memuat data", onError = ::showError) { item ->
+//                 repo.getOne(id).onResource(
+//                     fallbackError = ExampleStrings.loadFailed,
+//                     onError = { /* silent — we already have list data */ },
+//                 ) { item ->
+//                     val current = _uiState.value
+//                     // Only update fields the user hasn't touched yet
 //                     _uiState.update {
 //                         it.copy(
-//                             name = item.name.def(),
-//                             description = item.description.def(),
-//                             image = item.image,
-//                             isActive = item.isActive,
+//                             name = if (current.name == initialItem?.name.orEmpty()) item.name else current.name,
+//                             description = if (current.description == initialItem?.description.orEmpty()) item.description.orEmpty() else current.description,
+//                             imageUrl = if (current.pickedImage == null) item.image else current.imageUrl,
+//                             isActive = if (current.isActive == initialItem?.isActive) item.isActive else current.isActive,
 //                         )
 //                     }
 //                 }
-//             } finally { _uiState.update { it.copy(isLoading = false) } }
+//             } catch (_: Exception) {
+//                 // silent — list data is good enough
+//             }
 //         }
 //     }
 //
 //     private fun submit() {
 //         val state = _uiState.value
-//         val validation = validate(state)
-//         if (validation.hasErrors) {
-//             _uiState.update { it.copy(nameError = validation.name) }
+//         if (state.name.isBlank()) {
+//             _uiState.update { it.copy(nameError = ExampleStrings.errName) }
 //             return
 //         }
 //         val request = ExampleRequest(
 //             id = (mode as? ExampleFormMode.Edit)?.itemId,
 //             name = state.name.trim(),
-//             description = state.description.trim().ifBlank { null },
-//             image = state.image,
+//             description = state.description.trim().takeIf { it.isNotEmpty() },
+//             image = state.imageUrl,
 //             isActive = state.isActive,
 //             pickedImage = state.pickedImage,
 //         )
 //         performSubmission {
 //             val flow = if (mode is ExampleFormMode.Create) repo.create(request) else repo.update(request)
-//             flow.onResource(fallbackError = "Gagal menyimpan", onError = ::showError) {
-//                 sendEffect(ExampleFormEffect.NavigateBack("Data tersimpan"))
+//             flow.onResource(fallbackError = ExampleStrings.saveFailed, onError = ::showError) {
+//                 sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.saved))
 //             }
 //         }
 //     }
@@ -1140,8 +1071,8 @@ sealed interface ExampleListEffect {
 //     private fun delete() {
 //         val editMode = mode as? ExampleFormMode.Edit ?: return
 //         performSubmission {
-//             repo.delete(editMode.itemId).onResource(fallbackError = "Gagal menghapus", onError = ::showError) {
-//                 sendEffect(ExampleFormEffect.NavigateBack("Data berhasil dihapus"))
+//             repo.delete(editMode.itemId).onResource(fallbackError = ExampleStrings.deleteFailed, onError = ::showError) {
+//                 sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.deleted))
 //             }
 //         }
 //     }
@@ -1152,14 +1083,6 @@ sealed interface ExampleListEffect {
 //             try { action() } finally { _uiState.update { it.copy(isSubmitting = false) } }
 //         }
 //     }
-//
-//     private fun validate(state: ExampleFormUiState): Validation = Validation(
-//         name = if (state.name.isBlank()) "Nama wajib diisi" else null,
-//     )
-//
-//     private data class Validation(val name: String?) {
-//         val hasErrors: Boolean = listOf(name).any { it != null }
-//     }
 // }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
@@ -1167,7 +1090,6 @@ sealed interface ExampleListEffect {
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.foundation.layout.*
-// import androidx.compose.material3.CircularProgressIndicator
 // import androidx.compose.material3.SnackbarHostState
 // import androidx.compose.runtime.*
 // import androidx.compose.ui.Alignment
@@ -1176,13 +1098,12 @@ sealed interface ExampleListEffect {
 // import androidx.lifecycle.compose.collectAsStateWithLifecycle
 // import com.tisto.kmp.helper.network.MessageType
 // import com.tisto.kmp.helper.ui.component.AppSnackbarVisuals
-// import com.tisto.kmp.helper.ui.component.BackHandler
 // import com.tisto.kmp.helper.ui.component.CardImagePicker
 // import com.tisto.kmp.helper.ui.component.CustomTextField
 // import com.tisto.kmp.helper.ui.component.FormContainer
 // import com.tisto.kmp.helper.ui.component.ScaffoldBox
-// import com.tisto.kmp.helper.ui.component.SwitchCard
 // import com.tisto.kmp.helper.ui.component.TextFieldStyle
+// import com.tisto.kmp.helper.ui.ext.BackHandler
 // import com.tisto.kmp.helper.ui.ext.MobilePreview
 // import com.tisto.kmp.helper.ui.ext.ScreenConfig
 // import com.tisto.kmp.helper.ui.ext.TabletPreview
@@ -1191,6 +1112,7 @@ sealed interface ExampleListEffect {
 // import com.tisto.kmp.helper.utils.SnackbarType
 // import com.zenenta.pos.core.ui.ui.theme.ZenentaTheme
 // import kotlinx.coroutines.flow.Flow
+// import org.koin.core.parameter.parametersOf
 //
 // @Composable
 // fun ExampleFormRoute(
@@ -1256,10 +1178,9 @@ sealed interface ExampleListEffect {
 //
 //     ScaffoldBox(
 //         snackbarHostState = snackbar,
-//         isLoadingProcess = state.isSubmitting,
-//     ) { _ ->
+//     ) {
 //         FormContainer(
-//             forceTitle = if (state.mode is ExampleFormMode.Edit) "Edit Example" else "Tambah Example",
+//             forceTitle = if (state.mode is ExampleFormMode.Edit) ExampleStrings.titleEdit else ExampleStrings.titleCreate,
 //             screenConfig = screenConfig,
 //             item = (state.mode as? ExampleFormMode.Edit)?.itemId,
 //             selectedItemName = state.name,
@@ -1270,97 +1191,97 @@ sealed interface ExampleListEffect {
 //             onDelete = { onEvent(ExampleFormEvent.Delete) },
 //             horizontalAlignment = Alignment.CenterHorizontally,
 //         ) {
-//             if (state.isLoading) {
-//                 Spacer(Modifier.height(Spacing.large))
-//                 CircularProgressIndicator()
-//             } else {
-//                 Spacer(Modifier.height(if (screenConfig.isMobile) Spacing.normal else Spacing.large))
+//             Spacer(Modifier.height(if (screenConfig.isMobile) Spacing.normal else Spacing.large))
 //
-//                 CardImagePicker(
-//                     modifier = Modifier.width(120.dp).height(120.dp),
-//                     imageUrl = state.imageUrl,
-//                     onPicker = { onEvent(ExampleFormEvent.ImagePicked(it)) },
-//                 )
+//             CardImagePicker(
+//                 modifier = Modifier.width(120.dp).height(120.dp),
+//                 imageUrl = state.imageUrl,
+//                 onPicker = { onEvent(ExampleFormEvent.ImagePicked(it)) },
+//             )
 //
-//                 Spacer(Modifier.height(Spacing.large))
+//             Spacer(Modifier.height(Spacing.large))
 //
-//                 CustomTextField(
-//                     value = state.name,
-//                     onValueChange = { onEvent(ExampleFormEvent.NameChanged(it)) },
-//                     hint = "Nama",
-//                     style = TextFieldStyle.OUTLINED,
-//                     strokeWidth = 1.dp,
-//                     isError = state.nameError != null,
-//                     supportingText = state.nameError,
-//                     modifier = Modifier.fillMaxWidth(),
-//                     singleLine = true,
-//                 )
+//             CustomTextField(
+//                 value = state.name,
+//                 onValueChange = { onEvent(ExampleFormEvent.NameChanged(it)) },
+//                 hint = ExampleStrings.labelName,
+//                 style = TextFieldStyle.OUTLINED,
+//                 strokeWidth = 1.dp,
+//                 isError = state.nameError != null,
+//                 supportingText = state.nameError,
+//                 modifier = Modifier.fillMaxWidth(),
+//                 singleLine = true,
+//             )
 //
-//                 Spacer(Modifier.height(Spacing.normal))
+//             Spacer(Modifier.height(Spacing.normal))
 //
-//                 CustomTextField(
-//                     value = state.description,
-//                     onValueChange = { onEvent(ExampleFormEvent.DescriptionChanged(it)) },
-//                     hint = "Deskripsi",
-//                     style = TextFieldStyle.OUTLINED,
-//                     strokeWidth = 1.dp,
-//                     modifier = Modifier.fillMaxWidth(),
-//                 )
-//
-//                 Spacer(Modifier.height(Spacing.normal))
-//
-//                 SwitchCard(
-//                     checked = state.isActive,
-//                     onCheckedChange = { onEvent(ExampleFormEvent.ActiveChanged(it)) },
-//                     text = "Aktif",
-//                 )
-//             }
+//             CustomTextField(
+//                 value = state.description,
+//                 onValueChange = { onEvent(ExampleFormEvent.DescriptionChanged(it)) },
+//                 hint = ExampleStrings.labelDescription,
+//                 style = TextFieldStyle.OUTLINED,
+//                 strokeWidth = 1.dp,
+//                 modifier = Modifier.fillMaxWidth(),
+//             )
 //         }
 //     }
 // }
 //
 // // ── Previews ──────────────────────────────────────────────────────────────
 //
-// @Composable
-// private fun ExampleFormScreenPreview(screenConfig: ScreenConfig = ScreenConfig()) {
-//     ZenentaTheme {
-//         ExampleFormScreen(
-//             state = ExampleFormUiState(
-//                 mode = ExampleFormMode.Edit("1"),
-//                 name = "Contoh Item",
-//                 description = "Deskripsi contoh item",
-//                 isActive = true,
-//             ),
-//             snackbar = SnackbarHostState(),
-//             screenConfig = screenConfig,
-//             onEvent = {},
-//             onBack = {},
-//         )
-//     }
-// }
-//
 // @MobilePreview
 // @Composable
-// private fun PreviewExampleForm() { ExampleFormScreenPreview() }
+// private fun PreviewExampleFormPhone() {
+//     ExampleFormScreen(
+//         state = ExampleFormUiState(
+//             mode = ExampleFormMode.Edit("1"),
+//             name = "Contoh Item",
+//             description = "Deskripsi contoh item",
+//             isActive = true,
+//         ),
+//         snackbar = SnackbarHostState(),
+//         screenConfig = ScreenConfig(maxWidth = 360.dp),
+//         onEvent = {},
+//         onBack = {},
+//     )
+// }
 //
 // @TabletPreview
 // @Composable
-// private fun TabletPreviewExampleForm() { ExampleFormScreenPreview(ScreenConfig(840.dp)) }
+// private fun PreviewExampleFormTablet() {
+//     ExampleFormScreen(
+//         state = ExampleFormUiState(
+//             mode = ExampleFormMode.Edit("1"),
+//             name = "Contoh Item",
+//             description = "Deskripsi contoh item",
+//             isActive = true,
+//         ),
+//         snackbar = SnackbarHostState(),
+//         screenConfig = ScreenConfig(maxWidth = 840.dp),
+//         onEvent = {},
+//         onBack = {},
+//     )
+// }
 
 // ══════════════════════════════════════════════════════════════════════════════════════════
 // SECTION 12 — WRAPPER ROUTE  (presentation/ExampleRoute.kt)
 // ══════════════════════════════════════════════════════════════════════════════════════════
 //
 // import androidx.compose.animation.Crossfade
+// import androidx.compose.foundation.layout.fillMaxSize
 // import androidx.compose.runtime.Composable
 // import androidx.compose.runtime.getValue
 // import androidx.compose.runtime.mutableIntStateOf
 // import androidx.compose.runtime.mutableStateOf
 // import androidx.compose.runtime.remember
 // import androidx.compose.runtime.setValue
+// import androidx.compose.ui.Modifier
 //
 // @Composable
-// fun ExampleRoute(onBack: () -> Unit = {}) {
+// fun ExampleRoute(
+//     onBack: () -> Unit = {},
+//     onPick: ((Example) -> Unit)? = null,
+// ) {
 //     var stage by remember { mutableStateOf<Stage>(Stage.List) }
 //     var refreshToken by remember { mutableIntStateOf(0) }
 //     var formKey by remember { mutableIntStateOf(0) }
@@ -1371,6 +1292,7 @@ sealed interface ExampleListEffect {
 //             Stage.List -> ExampleListRoute(
 //                 onNavigateToForm = { item -> formKey++; stage = Stage.Form(item) },
 //                 onBack = onBack,
+//                 onPick = onPick,
 //                 refreshToken = refreshToken,
 //                 pendingMessage = pendingMessage,
 //                 onMessageShown = { pendingMessage = null },
