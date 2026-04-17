@@ -286,3 +286,34 @@ fun String.toTimestamp(format: String = defaultDateFormat): Long? {
         null
     }
 }
+
+fun getTimeDifferenceString(startTime: String? = null): String? {
+    if (startTime == null) return null
+
+    val startInstant = try {
+        // Parse "yyyy-MM-dd HH:mm:ss" → replace space with T for ISO format
+        val isoFormat = startTime.replace(" ", "T")
+        LocalDateTime.parse(isoFormat)
+            .toInstant(TimeZone.currentSystemDefault())
+    } catch (e: Exception) {
+        return "Invalid date"
+    }
+
+    val currentInstant = Clock.System.now()
+    val diffInMillis = currentInstant.toEpochMilliseconds() - startInstant.toEpochMilliseconds()
+
+    val totalSeconds = diffInMillis / 1000
+    val totalMinutes = totalSeconds / 60
+    val totalHours = totalMinutes / 60
+    val totalDays = totalHours / 24
+
+    return when {
+        totalMinutes < 1 -> "$totalMinutes menit"
+        totalMinutes < 60 -> "$totalMinutes menit"
+        totalHours < 24 -> {
+            val remainingMinutes = totalMinutes % 60
+            "$totalHours jam $remainingMinutes menit"
+        }
+        else -> "$totalDays hari"
+    }
+}

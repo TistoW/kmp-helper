@@ -14,6 +14,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 
+
+class EmptyBody()
 class UnauthorizedException : Exception("Unauthorized")
 
 suspend inline fun <reified T> HttpClient.getMethod(
