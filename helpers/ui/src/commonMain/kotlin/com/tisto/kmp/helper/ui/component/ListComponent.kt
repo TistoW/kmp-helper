@@ -254,7 +254,7 @@ fun SearchFilterRow(
                 value = searchQuery,
                 onValueChange = onSearchChange,
                 onClear = onClearSearch,
-                hint = hint
+                label = hint
             )
         }
 

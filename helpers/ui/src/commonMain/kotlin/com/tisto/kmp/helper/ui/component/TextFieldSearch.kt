@@ -48,7 +48,7 @@ fun SearchTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    hint: String = "Cari...",
+    label: String = "Cari...",
     leadingIcon: ImageVector = MyIcon.IcSearch,
     strokeColor: Color = Colors.Gray4,
     focusedStrokeColor: Color = Colors.Gray3,
@@ -93,7 +93,7 @@ fun SearchTextField(
                         .padding(horizontal = 8.dp),
                 ) {
                     if (value.isEmpty()) {
-                        Text(hint, style = TextAppearance.body1().copy(color = Colors.Gray3))
+                        Text(label, style = TextAppearance.body1().copy(color = Colors.Gray3))
                     }
                     innerTextField()
                 }

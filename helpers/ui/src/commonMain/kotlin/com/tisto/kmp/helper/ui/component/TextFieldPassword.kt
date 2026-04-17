@@ -68,7 +68,7 @@ fun PasswordTextField(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    hint: String = "Password",
+    label: String = "Password",
     hintStyle: TextStyle = TextAppearance.body2(),
     textStyle: TextStyle = TextAppearance.body1(),
     supportingText: String? = null,
@@ -125,10 +125,10 @@ fun PasswordTextField(
             enabled = enabled,
             singleLine = true,
             visualTransformation = visualTransformation,
-            label = if (hint.isNotEmpty()) {
+            label = if (label.isNotEmpty()) {
                 {
                     Text(
-                        text = hint,
+                        text = label,
                         style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
                     )
                 }
@@ -197,7 +197,7 @@ private fun PasswordTextFieldExample() {
         PasswordTextField(
             value = password,
             onValueChange = { password = it },
-            hint = "Password",
+            label = "Password",
             strokeWidth = 1.dp,
         )
 
@@ -205,7 +205,7 @@ private fun PasswordTextFieldExample() {
         PasswordTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            hint = "Konfirmasi Password",
+            label = "Konfirmasi Password",
             strokeWidth = 1.dp,
             isError = true,
             supportingText = "Password tidak sama",

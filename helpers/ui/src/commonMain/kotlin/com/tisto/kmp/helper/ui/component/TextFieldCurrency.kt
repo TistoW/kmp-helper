@@ -189,7 +189,7 @@ class CurrencyVisualTransformation : VisualTransformation {
 fun CurrencyTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    hint: String,
+    label: String,
     modifier: Modifier = Modifier,
     imeAction: ImeAction = ImeAction.Next,
     isError: Boolean = false,
@@ -223,7 +223,7 @@ fun CurrencyTextField(
             imeAction = imeAction,
         ),
         isError = isError,
-        label = { Text(hint, color = if (isFocused) strokeColorOnFocused else Colors.Gray3) },
+        label = { Text(label, color = if (isFocused) strokeColorOnFocused else Colors.Gray3) },
         prefix = prefix?.let { { Text(it) } },
         suffix = suffix?.let { { Text(it) } },
         supportingText = supportingText?.let {
@@ -381,7 +381,7 @@ private fun CurrencyTextFieldExample() {
         CurrencyTextField(
             value = price,
             onValueChange = { price = it },
-            hint = "Harga",
+            label = "Harga",
         )
         Text(
             "raw: \"$price\"  →  double: ${price.toRawDouble()}",
@@ -393,7 +393,7 @@ private fun CurrencyTextFieldExample() {
         CurrencyTextField(
             value = discount,
             onValueChange = { discount = it },
-            hint = "Diskon",
+            label = "Diskon",
         )
 
         // 3. Field with decimal digits
@@ -401,7 +401,7 @@ private fun CurrencyTextFieldExample() {
         CurrencyTextField(
             value = decimal,
             onValueChange = { decimal = it },
-            hint = "Harga (desimal)",
+            label = "Harga (desimal)",
         )
         Text(
             "raw: \"$decimal\"  →  double: ${decimal.toRawDouble()}",
