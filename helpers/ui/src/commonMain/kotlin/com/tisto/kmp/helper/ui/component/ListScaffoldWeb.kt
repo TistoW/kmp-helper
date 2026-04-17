@@ -808,7 +808,7 @@ private fun SearchFilterRow(
             CustomTextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                hint = "Cari...",
+                label = "Cari...",
                 style = TextFieldStyle.OUTLINED,
                 strokeWidth = 0.5.dp,
                 strokeColor = Colors.Gray3,

@@ -162,7 +162,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             value = value,
             onValueChange = onValueChange,
             textStyle = textStyle,
-            hint = hint,
+            label = hint,
             hintStyle = hintStyle,
             placeholder = placeholder,
             placeholderStyle = placeholderStyle,
@@ -230,7 +230,7 @@ fun CustomTextField(
     modifier: Modifier = Modifier,
     value: String? = "",
     textStyle: TextStyle = TextAppearance.body1(),
-    hint: String = "",
+    label: String = "",
     hintStyle: TextStyle = TextAppearance.body2(),
     placeholder: String = "",
     placeholderStyle: TextStyle = TextAppearance.body1(),
@@ -485,18 +485,18 @@ fun CustomTextField(
                 enabled = enabled,
                 singleLine = singleLine,
                 visualTransformation = finalVisualTransformation,
-                label = if (floatingLabel && hint.isNotEmpty()) {
+                label = if (floatingLabel && label.isNotEmpty()) {
                     {
                         Text(
-                            text = hint,
+                            text = label,
                             style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
                         )
                     }
                 } else null,
                 placeholder = {
                     Text(
-                        text = if (!floatingLabel && hint.isNotEmpty()) hint else placeholder,
-                        style = if (!floatingLabel && hint.isNotEmpty()) hintStyle else placeholderStyle,
+                        text = if (!floatingLabel && label.isNotEmpty()) label else placeholder,
+                        style = if (!floatingLabel && label.isNotEmpty()) hintStyle else placeholderStyle,
                     )
                 },
                 prefix = {
@@ -670,7 +670,7 @@ private fun CustomTextFieldExamples() {
             CustomTextField(
                 value = name,
                 onValueChange = { name = it },
-                hint = "Nama",
+                label = "Nama",
                 style = TextFieldStyle.OUTLINED,
                 strokeWidth = 1.dp,
                 modifier = Modifier.fillMaxWidth(),
@@ -681,7 +681,7 @@ private fun CustomTextFieldExamples() {
             CustomTextField(
                 value = email,
                 onValueChange = { email = it },
-                hint = "Email",
+                label = "Email",
                 style = TextFieldStyle.FILLED,
                 backgroundColor = Color(0xFFF5F7FA),
                 strokeWidth = 0.dp,
@@ -693,7 +693,7 @@ private fun CustomTextFieldExamples() {
             CustomTextField(
                 value = note,
                 onValueChange = { note = it },
-                hint = "Catatan",
+                label = "Catatan",
                 style = TextFieldStyle.CLEAR,
                 strokeWidth = 0.dp,
                 floatingLabel = false,

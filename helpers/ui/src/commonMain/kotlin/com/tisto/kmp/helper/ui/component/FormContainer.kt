@@ -213,7 +213,7 @@ private fun FormScreenContentPreview(
                 CustomTextField(
                     value = "",
                     onValueChange = { },
-                    hint = "Nama",
+                    label = "Nama",
                     style = TextFieldStyle.OUTLINED,
                     strokeWidth = 1.dp,
                     modifier = Modifier.fillMaxWidth(),

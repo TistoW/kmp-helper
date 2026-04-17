@@ -139,7 +139,7 @@ fun <STATE, ITEMS> ListScaffold(
                                     searchQuery = it
                                     onSearch(it)
                                 },
-                                hint = "Cari...",
+                                label = "Cari...",
                                 style = TextFieldStyle.OUTLINED,
                                 strokeWidth = 0.5.dp,
                                 strokeColor = Colors.Gray3,
