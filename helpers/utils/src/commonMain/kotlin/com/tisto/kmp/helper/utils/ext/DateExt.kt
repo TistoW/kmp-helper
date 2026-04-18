@@ -38,10 +38,34 @@ private val monthNamesFullEnglish = listOf(
 fun currentTime(): String {
     val now = Clock.System.now()
     val local = now.toLocalDateTime(TimeZone.currentSystemDefault())
-
     fun Int.twoDigit() = this.toString().padStart(2, '0')
-
     return "${local.hour.twoDigit()}:${local.minute.twoDigit()}:${local.second.twoDigit()}"
+}
+
+/**
+ * Get current datetime as string
+ */
+@OptIn(ExperimentalTime::class)
+fun currentDate(format: String = "yyyy-MM-dd"): String {
+    return getCurrentDateTime(format)
+}
+
+/**
+ * Get current datetime as string
+ */
+@OptIn(ExperimentalTime::class)
+fun currentDateTime(format: String = defaultDateFormat): String {
+    return getCurrentDateTime(format)
+}
+
+/**
+ * Get current datetime as string
+ */
+@OptIn(ExperimentalTime::class)
+fun getCurrentDateTime(format: String = defaultDateFormat): String {
+    val now = Clock.System.now()
+    val localDateTime = now.toLocalDateTime(TimeZone.currentSystemDefault())
+    return formatDateTime(localDateTime, format)
 }
 
 fun String?.reformatDate(
@@ -249,16 +273,6 @@ private fun dummyResult(format: String): String {
 }
 
 // ========== EXTENSION FUNCTIONS ==========
-
-/**
- * Get current datetime as string
- */
-@OptIn(ExperimentalTime::class)
-fun getCurrentDateTime(format: String = defaultDateFormat): String {
-    val now = Clock.System.now()
-    val localDateTime = now.toLocalDateTime(TimeZone.currentSystemDefault())
-    return formatDateTime(localDateTime, format)
-}
 
 /**
  * Convert Long (timestamp millis) to formatted string
