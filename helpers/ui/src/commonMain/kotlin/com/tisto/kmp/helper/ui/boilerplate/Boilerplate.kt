@@ -63,11 +63,21 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Wire toast by overriding showMessage → sendEffect(<Name>Effect.ShowMessage(msg, type)).
 //   After that, just call showSuccess(...) / showError(...) — no per-VM helper funs.
 //   Single onEvent(event) entry point per VM.
-//   ALL repo calls use .launchResource(fallbackError, onSuccess = { ... }). No exceptions.
-//   NEVER use raw viewModelScope.launch — .launchResource() handles launching internally.
-//   NEVER use try/catch in ViewModel — .launchResource() handles errors via onError callback.
+//   ALL network/API repo calls use .launchResource(fallbackError, onSuccess = { ... }).
+//   NEVER use raw viewModelScope.launch for network calls — .launchResource() handles launching.
+//   NEVER use try/catch for network calls — .launchResource() handles errors via onError.
 //   NEVER use .onResource() directly — use .launchResource() which wraps it.
 //   NEVER write .collect { when (resource) { Resource.Success -> ... } } manually.
+//
+//   EXCEPTION — Room DB and sequential initialization:
+//   viewModelScope.launch + withContext(Dispatchers.IO) is CORRECT for:
+//     a) Room DB suspend operations (cartRepo.getCarts(), productRepo.getProductsPaged(), etc.)
+//        — launchResource() only works with Flow<Resource<T>> (network layer), not Room suspend funs.
+//     b) initialize() that sequences multiple async sources (Prefs reads + API call + Room) into
+//        one initial UiState — launchResource() is callback-based and can't be composed inline.
+//     c) Debounce search: viewModelScope.launch { delay(400); loadPage() } — already accepted.
+//   In these cases, try/catch is also acceptable (silent fallback catches are the norm).
+//   The rule targets only: simple CRUD form/list VMs that do pure API calls via Flow<Resource<T>>.
 //
 // ── VIEWMODEL — LIST ──
 //   Import ListUiState and ListEvent from com.tisto.kmp.helper.ui.component.
@@ -214,8 +224,10 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Use BaseViewModel<STATE> (use FeatureViewModel<EFFECT>).
 //   Re-declare effectChannel, effect, showMessage/Success/Error in feature VM.
 //   Use LiveData or asLiveData().
-//   Use viewModelScope.launch in feature VM (use .launchResource() which handles launching).
-//   Use try/catch in feature VM (use .launchResource(onError = { ... }) for error handling).
+//   Use viewModelScope.launch for NETWORK calls — use .launchResource() instead.
+//     (viewModelScope.launch is fine for Room DB ops and debounce — see EXCEPTION above.)
+//   Use try/catch for NETWORK calls — use .launchResource(onError = { ... }) instead.
+//     (try/catch is fine inside viewModelScope.launch for Room DB / silent fallbacks.)
 //   Use .onResource() directly (use .launchResource() which wraps it).
 //   Use performSubmission wrapper (use setSubmitting + .launchResource() directly).
 //   Import another kmp:feature module's types (use boundary types + composition root mapping).
