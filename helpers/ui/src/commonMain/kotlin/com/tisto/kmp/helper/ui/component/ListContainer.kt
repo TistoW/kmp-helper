@@ -109,6 +109,7 @@ sealed interface ListEvent<out T> {
 @Composable
 fun <T> ListContainer(
     screenConfig: ScreenConfig = ScreenConfig(),
+    modifier: Modifier = Modifier,
     state: ListUiState<T>,
     snackbar: SnackbarHostState,
     title: String,
@@ -159,6 +160,7 @@ fun <T> ListContainer(
         },
         snackbarHost = { SnackbarHost(snackbar) },
         containerColor = Color.White,
+        modifier = modifier
     ) { padding ->
         when (state) {
             ListUiState.Loading -> ListCenteredLoader(padding)
