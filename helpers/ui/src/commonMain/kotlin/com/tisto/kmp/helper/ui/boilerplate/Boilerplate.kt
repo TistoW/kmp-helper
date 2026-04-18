@@ -63,11 +63,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Wire toast by overriding showMessage → sendEffect(<Name>Effect.ShowMessage(msg, type)).
 //   After that, just call showSuccess(...) / showError(...) — no per-VM helper funs.
 //   Single onEvent(event) entry point per VM.
-//   Default for repo calls: .launchResource(fallbackError, onSuccess = { ... }).
-//   Drop to raw viewModelScope.launch { flow.onResource(...) } ONLY when you need extra
-//     bookkeeping (e.g. performSubmission flipping isSubmitting in try/finally).
+//   ALL repo calls use .launchResource(fallbackError, onSuccess = { ... }). No exceptions.
+//   NEVER use raw viewModelScope.launch — .launchResource() handles launching internally.
+//   NEVER use try/catch in ViewModel — .launchResource() handles errors via onError callback.
+//   NEVER use .onResource() directly — use .launchResource() which wraps it.
 //   NEVER write .collect { when (resource) { Resource.Success -> ... } } manually.
-//   NEVER wrap an onResource call in your own try/catch.
 //
 // ── VIEWMODEL — LIST ──
 //   Import ListUiState and ListEvent from com.tisto.kmp.helper.ui.component.
@@ -118,12 +118,13 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Constructor param initialItem: <Name>?. Null = Create, non-null = Edit(initialItem.id).
 //   Pre-populate UiState fields from initialItem in MutableStateFlow constructor.
 //   init { if (initialItem != null) refreshInBackground(initialItem.id) }
-//   refreshInBackground silently fetches latest from API. Only updates fields the user
-//     hasn't touched yet (compare current value against initialItem's original value).
+//   refreshInBackground: repo.getOne(id).launchResource(onError = { /* silent */ }) { ... }.
+//     Only updates fields the user hasn't touched yet (compare current against initialItem).
+//     No viewModelScope.launch, no try/catch — launchResource handles both.
 //   Single MutableStateFlow<FormUiState>. No combine, no stateIn, no separate flows.
-//   performSubmission(action): flips isSubmitting on/off via try/finally. Use for both
-//     submit and delete. No catch block — onResource handles errors.
-//     Why raw viewModelScope.launch here: need try/finally around isSubmitting flag.
+//   Private helper: setSubmitting(Boolean) = _uiState.update { it.copy(isSubmitting = ...) }.
+//     Call setSubmitting(true) before .launchResource(), reset in both onError and onSuccess.
+//     No performSubmission wrapper, no try/finally, no viewModelScope.launch.
 //   On NameChanged: also clear nameError = null.
 //   Success message: send NavigateBack(message). Do NOT call showSuccess() before NavigateBack
 //     — the form screen is disposed before the snackbar appears. The message gets forwarded
@@ -161,6 +162,24 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   private sealed interface Stage { data object List; data class Form(val item: <Name>?) }
 //   No nav library. No NavHost.
 //
+// ── CROSS-MODULE PICKER SLOTS ──
+//   When a Route accepts a picker from another kmp:feature module (e.g. customerPicker
+//   in SalesCreateRoute), the two modules must stay independent — no direct type imports.
+//   1. Consumer defines a local boundary type: data class Picked<Name>(val id, val name, ...)
+//      Only include fields this module actually needs. Lives in <feature>/model/.
+//   2. Picker slot signature uses the boundary type:
+//        customerPicker: @Composable ((PickedCustomer) -> Unit, () -> Unit) -> Unit
+//   3. Provider module (e.g. CustomerRoute) exposes its OWN internal type in onPick:
+//        fun CustomerRoute(onPick: ((Customer) -> Unit)? = null)
+//      No CoreCustomer alias, no toCoreX() bridge function.
+//   4. Composition root (DashboardRouter / app module) maps between the two:
+//        CustomerRoute(onPick = { customer -> onPick(PickedCustomer(id = customer.id, ...)) })
+//   5. Inside the consumer, FormRoute converts boundary type → core model if needed:
+//        LaunchedEffect(customerResult) { viewModel.onEvent(CustomerSelected(Customer(...))) }
+//   NEVER import another kmp:feature module's model types directly.
+//   NEVER create a shared :core:domain module just for 1-2 boundary types — only when
+//     3+ modules share the same types or shared business logic is needed.
+//
 // ── KOIN MODULE ──
 //   One module file per feature: val <name>Module = module { ... }.
 //   singleOf(::<Name>Api), singleOf(::<Name>Repository).
@@ -195,6 +214,11 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Use BaseViewModel<STATE> (use FeatureViewModel<EFFECT>).
 //   Re-declare effectChannel, effect, showMessage/Success/Error in feature VM.
 //   Use LiveData or asLiveData().
+//   Use viewModelScope.launch in feature VM (use .launchResource() which handles launching).
+//   Use try/catch in feature VM (use .launchResource(onError = { ... }) for error handling).
+//   Use .onResource() directly (use .launchResource() which wraps it).
+//   Use performSubmission wrapper (use setSubmitting + .launchResource() directly).
+//   Import another kmp:feature module's types (use boundary types + composition root mapping).
 //   Manually write Scaffold/Toolbar/SearchFilterRow in list screens (ListContainer does it).
 //   Use combine/stateIn/flatMapLatest in either VM — single MutableStateFlow only.
 //   Split model into <Name>Dto + toDomain().
@@ -614,6 +638,10 @@ sealed interface ExampleListEffect {
 //     ))
 //     val uiState: StateFlow<ExampleFormUiState> = _uiState.asStateFlow()
 //
+//     private fun setSubmitting(isSubmitting: Boolean) {
+//         _uiState.update { it.copy(isSubmitting = isSubmitting) }
+//     }
+//
 //     override fun showMessage(msg: String, type: MessageType) {
 //         sendEffect(ExampleFormEffect.ShowMessage(msg, type))
 //     }
@@ -632,53 +660,48 @@ sealed interface ExampleListEffect {
 //     }
 //
 //     private fun refreshInBackground(id: String) {
-//         viewModelScope.launch {
-//             try {
-//                 repo.getOne(id).onResource(
-//                     fallbackError = ExampleStrings.loadFailed,
-//                     onError = { /* silent */ },
-//                 ) { item ->
-//                     val current = _uiState.value
-//                     _uiState.update { it.copy(
-//                         name = if (current.name == initialItem?.name.orEmpty()) item.name else current.name,
-//                         description = if (current.description == initialItem?.description.orEmpty()) item.description.orEmpty() else current.description,
-//                         imageUrl = if (current.pickedImage == null) item.image else current.imageUrl,
-//                         isActive = if (current.isActive == initialItem?.isActive) item.isActive else current.isActive,
-//                     )}
-//                 }
-//             } catch (_: Exception) { /* silent */ }
+//         repo.getOne(id).launchResource(
+//             fallbackError = ExampleStrings.loadFailed,
+//             onError = { /* silent — we already have list data */ },
+//         ) { item ->
+//             val current = _uiState.value
+//             _uiState.update { it.copy(
+//                 name = if (current.name == initialItem?.name.orEmpty()) item.name else current.name,
+//                 description = if (current.description == initialItem?.description.orEmpty()) item.description.orEmpty() else current.description,
+//                 imageUrl = if (current.pickedImage == null) item.image else current.imageUrl,
+//                 isActive = if (current.isActive == initialItem?.isActive) item.isActive else current.isActive,
+//             )}
 //         }
 //     }
 //
 //     private fun submit() {
 //         val state = _uiState.value
 //         if (state.name.isBlank()) { _uiState.update { it.copy(nameError = ExampleStrings.errName) }; return }
+//         setSubmitting(true)
 //         val request = ExampleRequest(
 //             id = (mode as? ExampleFormMode.Edit)?.itemId,
 //             name = state.name.trim(), description = state.description.trim().takeIf { it.isNotEmpty() },
 //             image = state.imageUrl, isActive = state.isActive, pickedImage = state.pickedImage,
 //         )
-//         performSubmission {
-//             val flow = if (mode is ExampleFormMode.Create) repo.create(request) else repo.update(request)
-//             flow.onResource(fallbackError = ExampleStrings.saveFailed, onError = ::showError) {
-//                 sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.saved))
-//             }
+//         val flow = if (mode is ExampleFormMode.Create) repo.create(request) else repo.update(request)
+//         flow.launchResource(
+//             fallbackError = ExampleStrings.saveFailed,
+//             onError = { setSubmitting(false); showError(it) },
+//         ) {
+//             setSubmitting(false)
+//             sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.saved))
 //         }
 //     }
 //
 //     private fun delete() {
 //         val editMode = mode as? ExampleFormMode.Edit ?: return
-//         performSubmission {
-//             repo.delete(editMode.itemId).onResource(fallbackError = ExampleStrings.deleteFailed, onError = ::showError) {
-//                 sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.deleted))
-//             }
-//         }
-//     }
-//
-//     private fun performSubmission(action: suspend () -> Unit) {
-//         viewModelScope.launch {
-//             _uiState.update { it.copy(isSubmitting = true) }
-//             try { action() } finally { _uiState.update { it.copy(isSubmitting = false) } }
+//         setSubmitting(true)
+//         repo.delete(editMode.itemId).launchResource(
+//             fallbackError = ExampleStrings.deleteFailed,
+//             onError = { setSubmitting(false); showError(it) },
+//         ) {
+//             setSubmitting(false)
+//             sendEffect(ExampleFormEffect.NavigateBack(ExampleStrings.deleted))
 //         }
 //     }
 // }
