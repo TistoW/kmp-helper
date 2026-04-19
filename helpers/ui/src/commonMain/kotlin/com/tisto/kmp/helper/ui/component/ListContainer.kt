@@ -12,6 +12,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -63,6 +66,26 @@ import kotlinx.coroutines.launch
 //       mobileRow = { item, onClick -> ListMobileRow(...) },
 //   )
 // ══════════════════════════════════════════════════════════════════════════════
+
+// ── Scroll-position holder ───────────────────────────────────────────────────
+// Created in the Route (outside Crossfade) so the position survives
+// Crossfade composition removal.  ListContainer reads/writes it automatically
+// via LocalListScrollState.
+
+class ListScrollState {
+    var index by mutableIntStateOf(0)
+    var offset by mutableIntStateOf(0)
+
+    fun resetToTop() {
+        index = 0
+        offset = 0
+    }
+}
+
+@Composable
+fun rememberListScrollState() = remember { ListScrollState() }
+
+val LocalListScrollState = staticCompositionLocalOf<ListScrollState?> { null }
 
 // ── Generic list state ───────────────────────────────────────────────────────
 
@@ -242,15 +265,20 @@ private fun <T> ListContainerBody(
 ) {
     val usePullToRefresh = !PlatformType.isWeb && !PlatformType.isJvm
     val useInfiniteScroll = usePullToRefresh
-    val listState = rememberLazyListState()
+    val scrollState = LocalListScrollState.current
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = scrollState?.index ?: 0,
+        initialFirstVisibleItemScrollOffset = scrollState?.offset ?: 0,
+    )
     val scope = rememberCoroutineScope()
 
-    val wasRefreshing = remember { mutableStateOf(false) }
-    LaunchedEffect(state.isRefreshing) {
-        if (wasRefreshing.value && !state.isRefreshing) {
-            listState.animateScrollToItem(0)
-        }
-        wasRefreshing.value = state.isRefreshing
+    // Persist scroll position so it survives Crossfade recomposition
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                scrollState?.index = index
+                scrollState?.offset = offset
+            }
     }
 
     val contentHorizontalPadding =
