@@ -2,6 +2,7 @@ package com.tisto.kmp.helper.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -47,6 +48,7 @@ fun <ITEM> FormContainer(
     saveText: String = "Simpan",
     deleteText: String = "Hapus",
     backText: String = "Kembali",
+    scrollState: ScrollState = rememberScrollState(),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     formScope: (@Composable FormScopeImpl.() -> Unit)? = null,
@@ -54,7 +56,6 @@ fun <ITEM> FormContainer(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val isMobile = screenConfig.isMobile
-    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
