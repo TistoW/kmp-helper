@@ -1,5 +1,6 @@
 package com.tisto.kmp.helper.ui.component
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.ScrollState
@@ -37,6 +38,7 @@ fun <ITEM> FormContainer(
     title: String = "Title",
     forceTitle: String? = null,
     screenConfig: ScreenConfig = ScreenConfig(),
+    scrollState: ScrollState = rememberScrollState(),
     isFormValid: Boolean = true,
     horizontalPadding: Float? = null,
     item: ITEM? = null,
@@ -60,7 +62,7 @@ fun <ITEM> FormContainer(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Colors.White)
+            .background(Colors.White),
     ) {
         Toolbar(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
