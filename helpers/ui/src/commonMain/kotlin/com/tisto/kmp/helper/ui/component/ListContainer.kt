@@ -116,7 +116,7 @@ fun <T> ListContainer(
     titlePicker: String = title,
     emptyText: String = "Data tidak ditemukan",
     searchHint: String = "Cari",
-    filterOptions: List<FilterGroup> = emptyList(),
+    filterOptions: List<FilterGroup> = defaultFilter(),
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     showAddButton: Boolean = true,
     onEvent: (ListEvent<T>) -> Unit = {},
@@ -166,6 +166,7 @@ fun <T> ListContainer(
             ListUiState.Loading -> ListCenteredLoader(padding)
             is ListUiState.Error -> ListCenteredMessage(padding, state.message)
             is ListUiState.Empty -> ListContainerEmpty(
+                filterOptions = filterOptions,
                 padding = padding,
                 query = state.query,
                 filterCount = currentFilters.size,
@@ -178,6 +179,7 @@ fun <T> ListContainer(
             )
 
             is ListUiState.Success -> ListContainerBody(
+                filterOptions = filterOptions,
                 padding = padding,
                 state = state,
                 screenConfig = screenConfig,
@@ -233,6 +235,7 @@ private fun <T> ListContainerBody(
     columns: List<ListColumn<T>>,
     itemKey: (T) -> Any,
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
+    filterOptions: List<FilterGroup> = defaultFilter(),
     onEvent: (ListEvent<T>) -> Unit,
     onOpenFilter: () -> Unit,
     onPick: ((T) -> Unit)?,
@@ -265,6 +268,7 @@ private fun <T> ListContainerBody(
                 onClearSearch = { onEvent(ListEvent.QueryChanged("")) },
                 refreshCount = state.filters.size,
                 onRefresh = { onEvent(ListEvent.Refresh) },
+                filterOptions = filterOptions,
                 onOpenFilter = onOpenFilter,
             )
 
@@ -361,6 +365,7 @@ private fun <T> ListContainerBody(
 
 @Composable
 private fun ListContainerEmpty(
+    filterOptions: List<FilterGroup> = defaultFilter(),
     padding: PaddingValues,
     query: String,
     filterCount: Int,
@@ -388,6 +393,7 @@ private fun ListContainerEmpty(
             refreshCount = filterCount,
             onRefresh = onRefresh,
             onOpenFilter = onOpenFilter,
+            filterOptions = filterOptions
         )
 
         Box(
