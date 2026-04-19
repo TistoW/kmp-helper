@@ -3,7 +3,6 @@ package com.tisto.kmp.helper.ui.component
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,7 +37,6 @@ fun <ITEM> FormContainer(
     title: String = "Title",
     forceTitle: String? = null,
     screenConfig: ScreenConfig = ScreenConfig(),
-    scrollState: ScrollState = rememberScrollState(),
     isFormValid: Boolean = true,
     horizontalPadding: Float? = null,
     item: ITEM? = null,
