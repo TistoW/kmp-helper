@@ -1,5 +1,6 @@
 package com.tisto.kmp.helper.ui.component
 
+import com.tisto.kmp.helper.network.MessageType
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -140,4 +141,14 @@ suspend fun SnackbarHostState.showSuccess(msg: String) =
 
 suspend fun SnackbarHostState.showError(msg: String) =
     showSnackbar(AppSnackbarVisuals(msg, type = SnackbarType.ERROR))
+
+fun MessageType.toSnackbarType(): SnackbarType = when (this) {
+    MessageType.Success -> SnackbarType.SUCCESS
+    MessageType.Error   -> SnackbarType.ERROR
+    MessageType.Warning -> SnackbarType.WARNING
+    MessageType.Info    -> SnackbarType.INFO
+}
+
+suspend fun SnackbarHostState.showMessage(message: String, type: MessageType) =
+    showSnackbar(AppSnackbarVisuals(message = message, type = type.toSnackbarType()))
 
