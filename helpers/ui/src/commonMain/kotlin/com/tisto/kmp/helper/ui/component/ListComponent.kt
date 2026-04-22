@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.ScreenConfig
@@ -149,6 +150,7 @@ fun ListMobileRow(
     modifier: Modifier = Modifier,
     imageUrl: String? = null,
     imageSize: Dp = 50.dp,
+    contentScale: ContentScale = ContentScale.Crop,
     text: String,
     secondary: String? = null,
     onClick: () -> Unit,
@@ -166,7 +168,7 @@ fun ListMobileRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (imageUrl != null) {
-                CustomImageView(imageUrl = imageUrl, size = imageSize)
+                CustomImageView(imageUrl = imageUrl, size = imageSize, contentScale = contentScale)
                 Spacer(Modifier.width(Spacing.normal))
             }
             RowText(
