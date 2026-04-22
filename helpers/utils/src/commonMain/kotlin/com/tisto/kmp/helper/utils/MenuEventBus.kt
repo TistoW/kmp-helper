@@ -4,4 +4,5 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 
 object MenuEventBus {
     val trigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val openPos = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 }
