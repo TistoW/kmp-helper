@@ -13,11 +13,14 @@ data class FilterItem(
 object FilterType {
     const val FILTER = "filter"
     const val SORT = "sort"
+    const val DATE_RANGE = "date_range"
 }
 
 data class FilterGroup(
     var title: String = "Urutkan",        // untuk header di UI
     var type: String = FilterType.SORT,   // tipe grup
     var options: List<FilterItem> = listOf(), // daftar pilihan
-    var selected: FilterItem? = null      // pilihan yang sedang dipilih
+    var selected: FilterItem? = null,     // pilihan yang sedang dipilih
+    var startDate: String? = null,        // untuk DATE_RANGE: tanggal mulai (yyyy-MM-dd)
+    var endDate: String? = null,          // untuk DATE_RANGE: tanggal akhir (yyyy-MM-dd)
 )

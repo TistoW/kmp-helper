@@ -140,6 +140,9 @@ fun <T> ListContainer(
     emptyText: String = "Data tidak ditemukan",
     searchHint: String = "Cari",
     filterOptions: List<FilterGroup> = defaultFilter(),
+    datePresets: List<DatePresetOption> = emptyList(),
+    currentDateRange: DateRangeResult? = null,
+    onDateRangeApply: (DateRangeResult) -> Unit = {},
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     showAddButton: Boolean = true,
     onEvent: (ListEvent<T>) -> Unit = {},
@@ -237,9 +240,15 @@ fun <T> ListContainer(
             GeneralFilterBottomSheet(
                 options = filterOptions,
                 preselected = currentFilters,
+                datePresets = datePresets,
+                currentDateRange = currentDateRange,
                 onClose = { showFilterSheet = false },
                 onApply = { selected ->
                     onEvent(ListEvent.FiltersApplied(selected))
+                    showFilterSheet = false
+                },
+                onDateRangeApply = { dateRange ->
+                    onDateRangeApply(dateRange)
                     showFilterSheet = false
                 },
             )

@@ -28,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +50,13 @@ import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.model.FilterGroup
 import com.tisto.kmp.helper.utils.model.FilterItem
 import com.tisto.kmp.helper.utils.model.FilterType
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import kotlin.apply
 import kotlin.collections.filterNotNull
 import kotlin.collections.firstOrNull
@@ -93,16 +101,79 @@ fun defaultFilter() = listOf(
     )
 )
 
+/**
+ * Result for DATE_RANGE filter groups.
+ * @param preset  The selected preset key (e.g. "today", "thisWeek", "custom") or empty if reset.
+ * @param startDate Start date in "yyyy-MM-dd" format.
+ * @param endDate   End date in "yyyy-MM-dd" format.
+ */
+data class DateRangeResult(
+    val preset: String = "",
+    val startDate: String = "",
+    val endDate: String = "",
+)
+
+data class DatePresetOption(
+    val label: String,
+    val value: String,
+)
+
+/**
+ * Resolves a preset key into a (startDate, endDate) pair in "yyyy-MM-dd" format.
+ */
+fun resolveDatesFromPreset(preset: String): Pair<String, String> {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    return when (preset) {
+        "today" -> today.toString() to today.toString()
+        "yesterday" -> {
+            val y = today.minus(DatePeriod(days = 1))
+            y.toString() to y.toString()
+        }
+        "last7" -> today.minus(DatePeriod(days = 6)).toString() to today.toString()
+        "last30" -> today.minus(DatePeriod(days = 29)).toString() to today.toString()
+        "thisWeek" -> {
+            val dayOfWeek = today.dayOfWeek.ordinal // Monday=0
+            val start = today.minus(DatePeriod(days = dayOfWeek))
+            val end = start.plus(DatePeriod(days = 6))
+            start.toString() to end.toString()
+        }
+        "lastWeek" -> {
+            val dayOfWeek = today.dayOfWeek.ordinal
+            val thisWeekStart = today.minus(DatePeriod(days = dayOfWeek))
+            val lastWeekStart = thisWeekStart.minus(DatePeriod(days = 7))
+            val lastWeekEnd = lastWeekStart.plus(DatePeriod(days = 6))
+            lastWeekStart.toString() to lastWeekEnd.toString()
+        }
+        "thisMonth" -> {
+            val start = LocalDate(today.year, today.monthNumber, 1)
+            start.toString() to today.toString()
+        }
+        "lastMonth" -> {
+            val firstThisMonth = LocalDate(today.year, today.monthNumber, 1)
+            val lastMonthEnd = firstThisMonth.minus(DatePeriod(days = 1))
+            val lastMonthStart = LocalDate(lastMonthEnd.year, lastMonthEnd.monthNumber, 1)
+            lastMonthStart.toString() to lastMonthEnd.toString()
+        }
+        "thisYear" -> {
+            val start = LocalDate(today.year, 1, 1)
+            start.toString() to today.toString()
+        }
+        else -> today.toString() to today.toString()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GeneralFilterBottomSheet(
     onClose: () -> Unit,
     options: List<FilterGroup> = defaultFilter(),
-    preselected: List<FilterItem> = listOf(), // ⬅️ kirim selected dari parent
-    onApply: (List<FilterItem>) -> Unit = {} // hasil apply dikirim keluar
+    preselected: List<FilterItem> = listOf(),
+    datePresets: List<DatePresetOption> = emptyList(),
+    currentDateRange: DateRangeResult? = null,
+    onApply: (List<FilterItem>) -> Unit = {},
+    onDateRangeApply: (DateRangeResult) -> Unit = {},
 ) {
 
-    // State semua pilihan: Map<GroupTitle, SelectedOption?>
-    // Gunakan map: GroupTitle -> SelectedFilterItem?
     var selectedMap by remember {
         mutableStateOf(buildMap {
             options.forEach { group ->
@@ -110,7 +181,6 @@ fun GeneralFilterBottomSheet(
                     put(group.title, group.selected)
                 }
             }
-            // override kalau ada preselected dari parent
             preselected.forEach { item ->
                 val groupTitle = options.firstOrNull { g -> g.options.contains(item) }?.title
                 if (groupTitle != null) put(groupTitle, item)
@@ -118,6 +188,23 @@ fun GeneralFilterBottomSheet(
         }
         )
     }
+
+    // Date range state — initialized from currentDateRange or first date group's values
+    val dateGroup = options.firstOrNull { it.type == FilterType.DATE_RANGE }
+    val initialPreset = currentDateRange?.preset
+        ?: dateGroup?.selected?.value
+        ?: "today"
+    val initialDates = if (currentDateRange != null && currentDateRange.startDate.isNotBlank()) {
+        currentDateRange.startDate to currentDateRange.endDate
+    } else {
+        resolveDatesFromPreset(initialPreset)
+    }
+
+    var selectedDatePreset by remember { mutableStateOf(initialPreset) }
+    var startDate by remember { mutableStateOf(initialDates.first) }
+    var endDate by remember { mutableStateOf(initialDates.second) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
 
     Column(
         Modifier
@@ -149,19 +236,50 @@ fun GeneralFilterBottomSheet(
 
         HorizontalDivider()
         Spacer(Modifier.height(Spacing.box))
-        // 🔹 Loop semua grup filter
+
         options.forEach { group ->
-            val selectedItem = selectedMap[group.title]
-            SortOptionsFlowRow(
-                title = group.title,
-                items = group.options,
-                selected = selectedItem,
-                onSelect = { newItem ->
-                    selectedMap = selectedMap.toMutableMap().apply {
-                        this[group.title] = newItem
+            if (group.type == FilterType.DATE_RANGE) {
+                // Date range group: preset chips + custom date pickers
+                val presets = if (datePresets.isNotEmpty()) datePresets else defaultDatePresets()
+                DateRangeFilterSection(
+                    title = group.title,
+                    presets = presets,
+                    selectedPreset = selectedDatePreset,
+                    startDate = startDate,
+                    endDate = endDate,
+                    showStartPicker = showStartPicker,
+                    showEndPicker = showEndPicker,
+                    onPresetSelected = { preset ->
+                        selectedDatePreset = preset
+                        val dates = resolveDatesFromPreset(preset)
+                        startDate = dates.first
+                        endDate = dates.second
+                    },
+                    onStartDateToggle = { showStartPicker = !showStartPicker },
+                    onEndDateToggle = { showEndPicker = !showEndPicker },
+                    onStartDateSelected = { date ->
+                        startDate = date
+                        selectedDatePreset = "custom"
+                    },
+                    onEndDateSelected = { date ->
+                        endDate = date
+                        selectedDatePreset = "custom"
+                    },
+                )
+            } else {
+                // Regular chip-based filter/sort group
+                val selectedItem = selectedMap[group.title]
+                SortOptionsFlowRow(
+                    title = group.title,
+                    items = group.options,
+                    selected = selectedItem,
+                    onSelect = { newItem ->
+                        selectedMap = selectedMap.toMutableMap().apply {
+                            this[group.title] = newItem
+                        }
                     }
-                }
-            )
+                )
+            }
             Spacer(Modifier.height(Spacing.box))
         }
 
@@ -176,8 +294,15 @@ fun GeneralFilterBottomSheet(
                 strokeColor = Colors.Black
             ) {
                 selectedMap = emptyMap()
+                selectedDatePreset = "today"
+                val todayDates = resolveDatesFromPreset("today")
+                startDate = todayDates.first
+                endDate = todayDates.second
                 val selectedList = selectedMap.values.filterNotNull()
-                onApply(selectedList) // kirim hasil ke parent
+                onApply(selectedList)
+                if (dateGroup != null) {
+                    onDateRangeApply(DateRangeResult("today", todayDates.first, todayDates.second))
+                }
                 onClose()
             }
 
@@ -189,13 +314,104 @@ fun GeneralFilterBottomSheet(
                 backgroundColor = Colors.Black
             ) {
                 val selectedList = selectedMap.values.filterNotNull()
-                onApply(selectedList) // kirim hasil ke parent
+                onApply(selectedList)
+                if (dateGroup != null) {
+                    onDateRangeApply(DateRangeResult(selectedDatePreset, startDate, endDate))
+                }
                 onClose()
             }
 
         }
     }
 }
+
+// ── Date range filter section ───────────────────────────────────────────────
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DateRangeFilterSection(
+    title: String,
+    presets: List<DatePresetOption>,
+    selectedPreset: String,
+    startDate: String,
+    endDate: String,
+    showStartPicker: Boolean,
+    showEndPicker: Boolean,
+    onPresetSelected: (String) -> Unit,
+    onStartDateToggle: () -> Unit,
+    onEndDateToggle: () -> Unit,
+    onStartDateSelected: (String) -> Unit,
+    onEndDateSelected: (String) -> Unit,
+) {
+    Text(text = title, style = TextAppearance.body2())
+    Spacer(Modifier.height(Spacing.tiny))
+
+    // Preset chips
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        maxItemsInEachRow = Int.MAX_VALUE,
+    ) {
+        presets.forEach { option ->
+            val isSelected = selectedPreset == option.value
+            AssistChip(
+                modifier = Modifier.padding(end = Spacing.small),
+                onClick = { onPresetSelected(option.value) },
+                label = { Text(option.label, style = TextAppearance.body3()) },
+                colors = if (isSelected) AssistChipDefaults.assistChipColors(
+                    containerColor = Colors.ColorPrimary50,
+                    labelColor = Colors.Gray1
+                ) else AssistChipDefaults.assistChipColors(),
+                border = if (isSelected) AssistChipDefaults.assistChipBorder(
+                    true,
+                    borderColor = Colors.ColorPrimary,
+                    borderWidth = 0.5.dp
+                ) else AssistChipDefaults.assistChipBorder(true)
+            )
+        }
+    }
+
+    Spacer(Modifier.height(Spacing.small))
+    HorizontalDivider(thickness = 0.5.dp, color = Colors.Gray4)
+    Spacer(Modifier.height(Spacing.small))
+
+    // Custom date range pickers
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.box),
+    ) {
+        DatePickerField(
+            value = startDate,
+            label = "Tanggal Mulai",
+            showPicker = showStartPicker,
+            onToggle = onStartDateToggle,
+            onDateSelected = onStartDateSelected,
+            modifier = Modifier.weight(1f),
+        )
+        DatePickerField(
+            value = endDate,
+            label = "Tanggal Akhir",
+            showPicker = showEndPicker,
+            onToggle = onEndDateToggle,
+            onDateSelected = onEndDateSelected,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+// ── Default date presets ────────────────────────────────────────────────────
+
+fun defaultDatePresets(): List<DatePresetOption> = listOf(
+    DatePresetOption("Hari ini", "today"),
+    DatePresetOption("Kemarin", "yesterday"),
+    DatePresetOption("7 Hari Terakhir", "last7"),
+    DatePresetOption("30 Hari Terakhir", "last30"),
+    DatePresetOption("Minggu Ini", "thisWeek"),
+    DatePresetOption("Minggu Lalu", "lastWeek"),
+    DatePresetOption("Bulan Ini", "thisMonth"),
+    DatePresetOption("Bulan Lalu", "lastMonth"),
+    DatePresetOption("Tahun Ini", "thisYear"),
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
