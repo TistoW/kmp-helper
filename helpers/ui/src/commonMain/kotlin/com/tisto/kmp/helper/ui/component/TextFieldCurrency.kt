@@ -307,7 +307,7 @@ private fun OutlinedTextFields(
                     )
                     .defaultMinSize(
                         minWidth = OutlinedTextFieldDefaults.MinWidth,
-                        minHeight = OutlinedTextFieldDefaults.MinHeight,
+//                        minHeight = OutlinedTextFieldDefaults.MinHeight,
                     ),
             onValueChange = onValueChange,
             enabled = enabled,

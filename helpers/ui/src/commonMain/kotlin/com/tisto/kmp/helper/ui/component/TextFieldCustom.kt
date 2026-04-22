@@ -8,9 +8,12 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -231,7 +234,7 @@ fun CustomTextField(
     value: String? = "",
     textStyle: TextStyle = TextAppearance.body1(),
     label: String = "",
-    hintStyle: TextStyle = TextAppearance.body2(),
+    hintStyle: TextStyle = TextAppearance.body1(),
     placeholder: String = "",
     placeholderStyle: TextStyle = TextAppearance.body1(),
     prefix: String = "",
@@ -679,14 +682,29 @@ private fun CustomTextFieldExamples() {
         }
         item {
             Text("1. Outlined Standard", fontWeight = FontWeight.Medium)
-            CustomTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = "Nama",
-                style = TextFieldStyle.OUTLINED,
-                strokeWidth = 1.dp,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            Spacer(modifier = Modifier.height(Spacing.small))
+            Row() {
+
+                CustomTextField(
+                    value = "Yudi",
+                    onValueChange = { name = it },
+                    label = "Nama",
+                    style = TextFieldStyle.OUTLINED,
+                    strokeWidth = 1.dp,
+                    modifier = Modifier.weight(1f),
+                )
+
+                Spacer(modifier = Modifier.width(Spacing.small))
+
+                CurrencyTextField(
+                    value = "10000",
+                    onValueChange = { name = it },
+                    label = "Harga",
+                    strokeWidth = 1.dp,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
         }
         item {
             Text("2. Filled tanpa Border", fontWeight = FontWeight.Medium)

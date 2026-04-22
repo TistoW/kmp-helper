@@ -79,7 +79,7 @@ fun String?.formatDate(
     toFormat: String = "dd MMM yyyy HH:mm:ss",
     fromFormat: String = defaultDateFormat
 ): String {
-    val date  = this?:dateExample
+    val date = this ?: dateExample
     return date.convertDate(toFormat, fromFormat)
 }
 
@@ -153,24 +153,26 @@ private fun parseDateTime(dateStr: String, format: String): LocalDateTime {
         // Custom format - manual parsing
         else -> {
             val cleaned = dateStr.trim()
-
-            // Format: yyyy-MM-dd HH:mm:ss atau yyyy-MM-dd HH:mm:ss.SSS
             val parts = cleaned.split(" ")
-            if (parts.size < 2) throw IllegalArgumentException("Invalid date format")
 
             val datePart = parts[0].split("-")
-            val timePart = parts[1].split(":")
+            if (datePart.size < 3) throw IllegalArgumentException("Invalid date format: $dateStr")
 
             val year = datePart[0].toInt()
             val month = datePart[1].toInt()
             val day = datePart[2].toInt()
 
-            val hour = timePart[0].toInt()
-            val minute = timePart[1].toInt()
+            // Default time to 00:00:00 jika tidak ada time part
+            if (parts.size < 2) {
+                return LocalDateTime(year, month, day, 0, 0, 0, 0)
+            }
 
-            // Handle seconds with milliseconds
-            val secondsPart = timePart[2].split(".")
-            val second = secondsPart[0].toInt()
+            val timePart = parts[1].split(":")
+            val hour = timePart.getOrNull(0)?.toIntOrNull() ?: 0
+            val minute = timePart.getOrNull(1)?.toIntOrNull() ?: 0
+
+            val secondsPart = timePart.getOrNull(2)?.split(".") ?: emptyList()
+            val second = secondsPart.getOrNull(0)?.toIntOrNull() ?: 0
             val millisecond = if (secondsPart.size > 1) {
                 secondsPart[1].padEnd(3, '0').take(3).toInt()
             } else 0
@@ -328,6 +330,7 @@ fun getTimeDifferenceString(startTime: String? = null): String? {
             val remainingMinutes = totalMinutes % 60
             "$totalHours jam $remainingMinutes menit"
         }
+
         else -> "$totalDays hari"
     }
 }
