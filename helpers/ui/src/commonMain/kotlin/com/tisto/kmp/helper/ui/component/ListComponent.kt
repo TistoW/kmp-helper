@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RemoveRedEye
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -188,6 +189,7 @@ fun ListActions(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onMore: (() -> Unit)? = null,
+    onDetail: (() -> Unit)? = null,
     options: List<String> = listOf(),
     onOptionsClicked: (String) -> Unit = {},
 ) {
@@ -200,6 +202,11 @@ fun ListActions(
         onDelete?.let {
             IconButton(onClick = it) {
                 Icon(Icons.Default.Delete, "Delete", tint = Color.Gray)
+            }
+        }
+        onDetail?.let {
+            IconButton(onClick = it) {
+                Icon(Icons.Default.RemoveRedEye, "Delete", tint = Color.Gray)
             }
         }
         onMore?.let {

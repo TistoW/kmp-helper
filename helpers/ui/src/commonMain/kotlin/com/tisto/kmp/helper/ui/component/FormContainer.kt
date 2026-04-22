@@ -47,7 +47,7 @@ fun <ITEM> FormContainer(
     isLoadingProcess: Boolean = false,
     onBack: () -> Unit = {},
     onSave: () -> Unit = {},
-    onDelete: () -> Unit = {},
+    onDelete: (() -> Unit)? = null,
     saveText: String = "Simpan",
     deleteText: String = "Hapus",
     backText: String = "Kembali",
@@ -119,7 +119,7 @@ fun <ITEM> FormContainer(
                     // Bottom buttons
                     FormButtonBar(
                         isMobile = isMobile,
-                        isEdit = item != null,
+                        isEdit = item != null && onDelete != null,
                         isFormValid = isFormValid,
                         isLoadingProcess = isLoadingProcess,
                         saveText = saveText,
@@ -137,7 +137,7 @@ fun <ITEM> FormContainer(
             showDialog = showDeleteDialog,
             onDismiss = { showDeleteDialog = false },
             onConfirm = {
-                onDelete()
+                onDelete?.invoke()
                 showDeleteDialog = false
             },
             itemName = selectedItemName.shorten(),
@@ -213,6 +213,7 @@ private fun FormScreenContentPreview(
     FormContainer(
         screenConfig = screenConfig,
         item = ExampleModel(),
+        onDelete = { },
         content = {
             Column {
                 Spacer(modifier = Modifier.height(Spacing.large))
