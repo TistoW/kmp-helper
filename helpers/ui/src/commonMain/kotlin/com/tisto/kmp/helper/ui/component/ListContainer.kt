@@ -232,6 +232,7 @@ fun <T> ListContainer(
             onDismissRequest = { showFilterSheet = false },
             sheetState = sheetState,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            containerColor = Color.White,
         ) {
             GeneralFilterBottomSheet(
                 options = filterOptions,
