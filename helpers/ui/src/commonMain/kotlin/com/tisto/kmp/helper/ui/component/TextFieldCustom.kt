@@ -283,11 +283,12 @@ fun CustomTextField(
     var expanded by remember { mutableStateOf(false) }
     val isFocused = interactionSource.collectIsFocusedAsState().value
     val focusManager = LocalFocusManager.current
-    val isWeb = remember { PlatformType.isWeb }
     val transform: TextTransform = if (allCaps) TextTransform.UPPERCASE else textTransform
 
-    val currentBgColor = if (isFocused && focusedBackgroundColor != null) focusedBackgroundColor else backgroundColor
-    val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
+    val currentBgColor =
+        if (isFocused && focusedBackgroundColor != null) focusedBackgroundColor else backgroundColor
+    val currentStrokeWidth =
+        if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
 
     // Legacy password handling
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -317,10 +318,12 @@ fun CustomTextField(
             VisualTransformation { text ->
                 TransformedText(AnnotatedString(text.text.uppercase()), OffsetMapping.Identity)
             }
+
         transform == TextTransform.LOWERCASE ->
             VisualTransformation { text ->
                 TransformedText(AnnotatedString(text.text.lowercase()), OffsetMapping.Identity)
             }
+
         else -> VisualTransformation.None
     }
 
@@ -404,7 +407,8 @@ fun CustomTextField(
 
                     val parts = clean.split(",")
                     val integerPart = parts[0].filter { it.isDigit() }
-                    val decimalPart = parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
+                    val decimalPart =
+                        parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
 
                     val rawValue = if (decimalPart.isNotEmpty()) "$integerPart.$decimalPart"
                     else if (clean.endsWith(",")) "$integerPart."
@@ -415,7 +419,8 @@ fun CustomTextField(
                     tfv = TextFieldValue(formatted, TextRange(formatted.length))
                 } else {
                     val composing = newV.composition
-                    val over = maxLength != null && newV.text.length > maxLength && composing == null
+                    val over =
+                        maxLength != null && newV.text.length > maxLength && composing == null
                     val clippedText = if (over) newV.text.take(maxLength) else newV.text
                     val selStart = minOf(newV.selection.start, clippedText.length)
                     val selEnd = minOf(newV.selection.end, clippedText.length)
@@ -437,13 +442,17 @@ fun CustomTextField(
                                     if (c.isLowerCase()) c.titlecase() else c.toString()
                                 }
                             }
+
                         else -> next.text
                     }
 
                     onValueChange(transformedText)
 
                     tfv = if (needsTransform) {
-                        next.copy(text = transformedText, selection = TextRange(transformedText.length))
+                        next.copy(
+                            text = transformedText,
+                            selection = TextRange(transformedText.length)
+                        )
                     } else {
                         next.copy(text = transformedText)
                     }
@@ -575,6 +584,7 @@ fun CustomTextField(
                                 ),
                             )
                         }
+
                         TextFieldStyle.FILLED, TextFieldStyle.CLEAR -> {
                             Box(
                                 modifier = Modifier
@@ -659,7 +669,9 @@ private fun CustomTextFieldExamples() {
     var note by remember { mutableStateOf("") }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {

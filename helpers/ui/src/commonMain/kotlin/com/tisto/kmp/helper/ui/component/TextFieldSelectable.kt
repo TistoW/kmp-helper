@@ -70,7 +70,7 @@ fun SelectableTextField(
     cornerRadius: Dp = Radius.box,
     strokeColor: Color = Colors.Gray2,
     strokeWidth: Dp = 0.5.dp,
-    trailingIcon: ImageVector = Icons.Default.KeyboardArrowRight,
+    endIcon: ImageVector = Icons.Default.KeyboardArrowRight,
     trailingIconSize: Dp = 20.dp,
     trailingIconTint: Color = Colors.Gray2,
 ) {
@@ -109,7 +109,7 @@ fun SelectableTextField(
                 },
                 trailingIcon = {
                     Icon(
-                        imageVector = trailingIcon,
+                        imageVector = endIcon,
                         contentDescription = null,
                         modifier = Modifier.size(trailingIconSize),
                         tint = trailingIconTint,

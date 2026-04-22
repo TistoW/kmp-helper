@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.HelperTheme
@@ -48,6 +51,7 @@ fun <ITEM> FormContainer(
     saveText: String = "Simpan",
     deleteText: String = "Hapus",
     backText: String = "Kembali",
+    backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     scrollState: ScrollState = rememberScrollState(),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
@@ -65,6 +69,7 @@ fun <ITEM> FormContainer(
         Toolbar(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
             onBack = if (!isMobile) null else onBack,
+            backIcon = backIcon,
         )
 
         Box(

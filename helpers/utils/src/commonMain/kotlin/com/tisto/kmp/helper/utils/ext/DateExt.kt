@@ -70,14 +70,14 @@ fun getCurrentDateTime(format: String = defaultDateFormat): String {
 
 fun String?.reformatDate(
     toFormat: String = "dd MMM yyyy HH:mm:ss",
-    fromFormat: String = "yyyy-MM-dd HH:mm:ss"
+    fromFormat: String = defaultDateFormat
 ): String {
     return this?.convertDate(toFormat, fromFormat).def(dummyResult(toFormat))
 }
 
 fun String?.formatDate(
     toFormat: String = "dd MMM yyyy HH:mm:ss",
-    fromFormat: String = "yyyy-MM-dd HH:mm:ss"
+    fromFormat: String = defaultDateFormat
 ): String {
     val date  = this?:dateExample
     return date.convertDate(toFormat, fromFormat)
@@ -89,7 +89,7 @@ fun String?.formatDate(
  */
 fun String.convertDate(
     toFormat: String = "dd MMM yyyy HH:mm:ss",
-    fromFormat: String = "yyyy-MM-dd HH:mm:ss"
+    fromFormat: String = defaultDateFormat
 ): String {
     // Detect UTC format
     if (this.contains("Z", ignoreCase = true)) {
