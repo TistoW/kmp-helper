@@ -273,14 +273,13 @@ fun Number?.formatCurrency(
     val isNegative = value < 0
     val absValue = abs(value)
 
-    // ✅ FIX: Convert to string dulu untuk avoid floating point precision
-    val valueStr = absValue.toString()
+    // FIX: Gunakan toPlainString() untuk avoid scientific notation
+    val valueStr = absValue.toBigDecimal().toPlainString()
     val parts = valueStr.split(".")
 
     val integerPart = parts[0].toLongOrNull() ?: 0L
     val fractionStr = parts.getOrNull(1) ?: ""
 
-    // ✅ FIX: Process fraction sebagai string
     val fraction = if (fractionStr.isNotEmpty()) {
         processFraction(fractionStr, maxFractionDigits, rounding)
     } else {
@@ -291,12 +290,11 @@ fun Number?.formatCurrency(
     val formattedFraction = if (fraction.isNotEmpty()) ",$fraction" else ""
 
     val result = buildString {
-        if (isNegative) append("-")
         append(formattedInt)
         append(formattedFraction)
     }
 
-    return if (showCurrency) "Rp$result" else result
+    return if (showCurrency) "${if (isNegative) "-" else ""}Rp$result" else result
 }
 
 // ✅ NEW: Process fraction as string

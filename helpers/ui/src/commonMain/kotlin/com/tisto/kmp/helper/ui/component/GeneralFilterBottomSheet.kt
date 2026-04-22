@@ -50,7 +50,6 @@ import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.model.FilterGroup
 import com.tisto.kmp.helper.utils.model.FilterItem
 import com.tisto.kmp.helper.utils.model.FilterType
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -61,6 +60,7 @@ import kotlin.apply
 import kotlin.collections.filterNotNull
 import kotlin.collections.firstOrNull
 import kotlin.collections.toMutableMap
+import kotlin.time.Clock
 
 @Composable
 fun simpleFilter(): List<FilterGroup> {
