@@ -147,7 +147,7 @@ fun <T> ListContainer(
     onPick: ((T) -> Unit)? = null,
     deleteItemName: (T) -> String = { "" },
     itemKey: (T) -> Any,
-    columns: (isPicker: Boolean, onEdit: (T) -> Unit, onDelete: (T) -> Unit) -> List<ListColumn<T>>,
+    tabletRow: (isPicker: Boolean, onEdit: (T) -> Unit, onDelete: (T) -> Unit) -> List<ListColumn<T>>,
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
 ) {
     val isPicker = onPick != null
@@ -162,7 +162,7 @@ fun <T> ListContainer(
     }
 
     val resolvedColumns = remember(screenConfig.isTablet, isPicker) {
-        columns(
+        tabletRow(
             isPicker,
             { item -> onEvent(ListEvent.EditClicked(item)) },
             { item -> pendingDeleteItem = item },
