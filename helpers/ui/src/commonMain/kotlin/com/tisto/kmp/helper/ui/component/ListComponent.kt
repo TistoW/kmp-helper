@@ -33,10 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.ScreenConfig
 import com.tisto.kmp.helper.ui.theme.Colors
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.PlatformType
@@ -277,5 +279,120 @@ fun SearchFilterRow(
             }
             FilterButton(count = refreshCount, onClick = onOpenFilter)
         }
+    }
+}
+
+// ── Previews ─────────────────────────────────────────────────────────────────
+
+private data class PreviewItem(val name: String, val price: String, val stock: String)
+
+private val previewColumns = listOf(
+    ListColumn<PreviewItem>("name", "Nama Produk", weight = 2f) {
+        Text(it.name, style = TextAppearance.body1())
+    },
+    ListColumn<PreviewItem>("price", "Harga", weight = 1f) {
+        Text(it.price, style = TextAppearance.body1())
+    },
+    ListColumn<PreviewItem>("stock", "Stok", weight = 1f, contentArrangement = Arrangement.Center) {
+        Text(it.stock, style = TextAppearance.body1())
+    },
+    ListColumn<PreviewItem>("actions", "Aksi", weight = 1f, contentArrangement = Arrangement.End) {
+        ListActions(onEdit = {}, onDelete = {})
+    },
+)
+
+private val previewItems = listOf(
+    PreviewItem("Nasi Goreng Spesial", "Rp 25.000", "10"),
+    PreviewItem("Es Teh Manis", "Rp 5.000", "50"),
+    PreviewItem("Ayam Bakar", "Rp 35.000", "8"),
+)
+
+@Preview(showBackground = true, name = "ListHeader")
+@Composable
+private fun ListHeaderPreview() {
+    HelperTheme {
+        ListHeader(columns = previewColumns)
+    }
+}
+
+@Preview(showBackground = true, name = "ListRow")
+@Composable
+private fun ListRowPreview() {
+    HelperTheme {
+        Column {
+            ListHeader(columns = previewColumns)
+            previewItems.forEach { item ->
+                ListRow(item = item, columns = previewColumns, onClick = {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "ListMobileRow")
+@Composable
+private fun ListMobileRowPreview() {
+    HelperTheme {
+        Column {
+            ListMobileRow(text = "Nasi Goreng Spesial", secondary = "Rp 25.000 • Stok: 10", onClick = {})
+            ListMobileRow(text = "Es Teh Manis", secondary = "Rp 5.000", onClick = {})
+            ListMobileRow(text = "Ayam Bakar", onClick = {})
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "ListActions")
+@Composable
+private fun ListActionsPreview() {
+    HelperTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Edit + Delete:", modifier = androidx.compose.ui.Modifier.padding(start = 12.dp))
+                ListActions(onEdit = {}, onDelete = {})
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("All actions:", modifier = androidx.compose.ui.Modifier.padding(start = 12.dp))
+                ListActions(
+                    onEdit = {},
+                    onDelete = {},
+                    onDetail = {},
+                    onMore = {},
+                    options = listOf("Export", "Duplicate"),
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Detail only:", modifier = androidx.compose.ui.Modifier.padding(start = 12.dp))
+                ListActions(onDetail = {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "SearchFilterRow - Mobile")
+@Composable
+private fun SearchFilterRowMobilePreview() {
+    HelperTheme {
+        SearchFilterRow(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            searchQuery = "Nasi",
+            onSearchChange = {},
+            onClearSearch = {},
+            onRefresh = {},
+            onOpenFilter = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, name = "SearchFilterRow - Tablet")
+@Composable
+private fun SearchFilterRowTabletPreview() {
+    HelperTheme {
+        SearchFilterRow(
+            screenConfig = ScreenConfig(maxWidth = 800.dp),
+            searchQuery = "",
+            onSearchChange = {},
+            onClearSearch = {},
+            onRefresh = {},
+            onOpenFilter = {},
+        )
     }
 }

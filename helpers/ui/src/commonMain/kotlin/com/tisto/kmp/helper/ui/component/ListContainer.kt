@@ -17,6 +17,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -37,8 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.ScreenConfig
+import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.model.FilterGroup
@@ -190,7 +194,11 @@ fun <T> ListContainer(
     ) { padding ->
         when (state) {
             ListUiState.Loading -> ListCenteredLoader(padding)
-            is ListUiState.Error -> ListCenteredMessage(padding, state.message)
+            is ListUiState.Error -> ListCenteredMessage(
+                padding,
+                state.message,
+                onRefresh = { onEvent(ListEvent.Refresh) })
+
             is ListUiState.Empty -> ListContainerEmpty(
                 filterOptions = filterOptions,
                 padding = padding,
@@ -438,7 +446,21 @@ private fun ListContainerEmpty(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emptyText)
+            Column(
+                modifier = Modifier.padding(horizontal = Spacing.large),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = emptyText, textAlign = TextAlign.Center)
+                Spacer(modifier = Modifier.height(Spacing.small))
+                ButtonNormal(
+                    text = "Reload", onClick = onRefresh,
+                    style = ButtonStyle.Outlined,
+                    strokeColor = Color.Black,
+                    contentPadding = PaddingValues(horizontal = Spacing.normal),
+                    imageVector = Icons.Default.Refresh
+                )
+            }
+
         }
     }
 }
@@ -456,11 +478,187 @@ private fun ListCenteredLoader(padding: PaddingValues) {
 }
 
 @Composable
-private fun ListCenteredMessage(padding: PaddingValues, message: String) {
+private fun ListCenteredMessage(
+    padding: PaddingValues, message: String,
+    onRefresh: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(padding),
         contentAlignment = Alignment.Center,
-    ) { Text(message) }
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = Spacing.large),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = message, textAlign = TextAlign.Center)
+            Spacer(modifier = Modifier.height(Spacing.small))
+            ButtonNormal(
+                text = "Reload", onClick = onRefresh,
+                style = ButtonStyle.Outlined,
+                strokeColor = Color.Black,
+                contentPadding = PaddingValues(horizontal = Spacing.normal),
+                imageVector = Icons.Default.Refresh
+            )
+        }
+
+    }
+}
+
+// ── Previews ─────────────────────────────────────────────────────────────────
+
+private data class PreviewProduct(
+    val id: Int,
+    val name: String,
+    val price: String,
+    val stock: String
+)
+
+private val previewProductItems = listOf(
+    PreviewProduct(1, "Nasi Goreng Spesial", "Rp 25.000", "10"),
+    PreviewProduct(2, "Es Teh Manis", "Rp 5.000", "50"),
+    PreviewProduct(3, "Ayam Bakar", "Rp 35.000", "8"),
+    PreviewProduct(4, "Mie Goreng", "Rp 20.000", "15"),
+)
+
+private fun previewTabletColumns(
+    isPicker: Boolean,
+    onEdit: (PreviewProduct) -> Unit,
+    onDelete: (PreviewProduct) -> Unit,
+): List<ListColumn<PreviewProduct>> = listOf(
+    ListColumn("name", "Nama Produk", weight = 2f) { Text(it.name) },
+    ListColumn("price", "Harga", weight = 1f) { Text(it.price) },
+    ListColumn("stock", "Stok", weight = 1f) { Text(it.stock) },
+    ListColumn("actions", "Aksi", weight = 0.8f) {
+        if (!isPicker) ListActions(onEdit = { onEdit(it) }, onDelete = { onDelete(it) })
+    },
+)
+
+@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Loading (Mobile)")
+@Composable
+private fun ListContainerLoadingPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            state = ListUiState.Loading,
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Error (Mobile)")
+@Composable
+private fun ListContainerErrorPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            state = ListUiState.Error("Gagal memuat data. Periksa koneksi internet Anda."),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Empty (Mobile)")
+@Composable
+private fun ListContainerEmptyPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            state = ListUiState.Empty(query = "nasi"),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Success (Mobile)")
+@Composable
+private fun ListContainerSuccessMobilePreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            state = ListUiState.Success(
+                items = previewProductItems,
+                query = "",
+                totalItems = previewProductItems.size,
+            ),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(
+                    text = item.name,
+                    secondary = "${item.price} • Stok: ${item.stock}",
+                    onClick = onClick
+                )
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 800, name = "ListContainer - Success (Tablet)")
+@Composable
+private fun ListContainerSuccessTabletPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 800.dp),
+            state = ListUiState.Success(
+                items = previewProductItems,
+                query = "",
+                totalItems = previewProductItems.size,
+                page = 1,
+                lastPage = 3,
+            ),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Picker Mode")
+@Composable
+private fun ListContainerPickerPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 360.dp),
+            state = ListUiState.Success(
+                items = previewProductItems,
+                totalItems = previewProductItems.size,
+            ),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            titlePicker = "Pilih Produk",
+            showAddButton = false,
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+            onPick = {},
+        )
+    }
 }

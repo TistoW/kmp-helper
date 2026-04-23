@@ -73,8 +73,8 @@ enum class ButtonStyle {
 
 @Composable
 fun ButtonNormal(
-    modifier: Modifier = Modifier,
     text: String,
+    modifier: Modifier = Modifier,
     style: ButtonStyle = ButtonStyle.Primary,
     textStyle: TextStyle = TextAppearance.body2Bold(),
     enabled: Boolean = true,
