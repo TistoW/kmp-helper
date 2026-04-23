@@ -40,7 +40,7 @@ fun ConfirmationDialog(
     confirmText: String = "Konfirmasi",
     cancelText: String = "Batal",
     icon: ImageVector? = null,
-    iconTint: Color = Color(0xFF0ABAB5)
+    iconTint: Color = Color.Black
 ) {
     if (showDialog) {
         AlertDialog(
@@ -78,7 +78,7 @@ fun ConfirmationDialog(
                         onDismiss()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0ABAB5)
+                        containerColor = Color.Black
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -1015,38 +1015,309 @@ fun QuickUsageExample() {
 }
 
 // ========================================
-// PREVIEW
+// PREVIEWS
 // ========================================
 
-//@TabletPreview
-//@Composable
-//fun TabletDialogExamplePreviews() {
-//    ZenentaTheme {
-//        DialogExampleScreen()
-//    }
-//
-//}
-//
-//@MobilePreview
-//@Composable
-//fun MobileDialogExamplePreviews() {
-//    ZenentaTheme {
-//        DialogExampleScreen()
-//    }
-//}
+// ── 1. ConfirmationDialog ────────────────
 
 @MobilePreview
 @Composable
-fun DeleteDialogExamplePreviews() {
+private fun PreviewConfirmationDialogWithIcon() {
+    HelperTheme {
+        ConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            title = "Konfirmasi",
+            message = "Apakah Anda yakin ingin melanjutkan tindakan ini?",
+            icon = Icons.Default.Info,
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewConfirmationDialogNoIcon() {
+    HelperTheme {
+        ConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            title = "Simpan Data",
+            message = "Data Anda akan disimpan secara permanen.",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewConfirmationDialogCustomText() {
+    HelperTheme {
+        ConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            title = "Keluar Aplikasi",
+            message = "Apakah Anda yakin ingin keluar dari aplikasi?",
+            confirmText = "Ya, Keluar",
+            cancelText = "Tidak",
+            icon = Icons.Default.ExitToApp,
+            iconTint = Color(0xFFF44336),
+        )
+    }
+}
+
+// ── 2. CustomConfirmationDialog ──────────
+
+@MobilePreview
+@Composable
+private fun PreviewCustomConfirmationDialogWithCancel() {
+    HelperTheme {
+        CustomConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onCancel = {},
+            title = "Simpan Perubahan?",
+            message = "Data yang telah Anda ubah akan disimpan. Apakah Anda yakin ingin melanjutkan?",
+            confirmText = "Ya, Simpan",
+            cancelText = "Buang Perubahan",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewCustomConfirmationDialogNoCancel() {
+    HelperTheme {
+        CustomConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onCancel = null,
+            title = "Cetak Struk?",
+            message = "Transaksi berhasil. Apakah Anda ingin mencetak struk sekarang?",
+            confirmText = "Ya, Cetak",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewCustomConfirmationDialogCustomColor() {
+    HelperTheme {
+        CustomConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onCancel = {},
+            title = "Kirim Pesanan?",
+            message = "Pesanan akan dikirim ke dapur. Pastikan pesanan sudah benar.",
+            confirmText = "Kirim Sekarang",
+            cancelText = "Periksa Lagi",
+            icon = Icons.Default.Send,
+            iconBackgroundColor = Color(0xFFE8F5E9),
+            iconTint = Color(0xFF4CAF50),
+        )
+    }
+}
+
+// ── 3. DeleteConfirmationDialog ──────────
+
+@MobilePreview
+@Composable
+private fun PreviewDeleteConfirmationDialogDefault() {
     HelperTheme {
         DeleteConfirmationDialog(
             showDialog = true,
-            onDismiss = { },
-            onConfirm = {
-                // Handle delete action
-                println("Item Deleted")
-            },
-            itemName = "Semen Gresik"
+            onDismiss = {},
+            onConfirm = {},
+            itemName = "Semen Gresik 50 Kg",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewDeleteConfirmationDialogCustomTitle() {
+    HelperTheme {
+        DeleteConfirmationDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            itemName = "Transaksi #TRX-20250420",
+            title = "Batalkan Transaksi?",
+            message = "Transaksi #TRX-20250420 akan dibatalkan secara permanen. Tindakan ini tidak dapat dibatalkan.",
+            confirmText = "Ya, Batalkan",
+        )
+    }
+}
+
+// ── 4. SuccessDialog ────────────────────
+
+@MobilePreview
+@Composable
+private fun PreviewSuccessDialogDefault() {
+    HelperTheme {
+        SuccessDialog(
+            showDialog = true,
+            onDismiss = {},
+            message = "Data berhasil disimpan ke database.",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewSuccessDialogCustom() {
+    HelperTheme {
+        SuccessDialog(
+            showDialog = true,
+            onDismiss = {},
+            title = "Transaksi Berhasil!",
+            message = "Pembayaran sebesar Rp 125.000 telah berhasil diproses.",
+            buttonText = "Cetak Struk",
+        )
+    }
+}
+
+// ── 5. WarningDialog ────────────────────
+
+@MobilePreview
+@Composable
+private fun PreviewWarningDialogDefault() {
+    HelperTheme {
+        WarningDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            title = "Peringatan!",
+            message = "Tindakan ini akan mengubah data secara permanen. Pastikan Anda sudah yakin sebelum melanjutkan.",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewWarningDialogCustomText() {
+    HelperTheme {
+        WarningDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            title = "Stok Akan Habis",
+            message = "Stok produk Nasi Goreng Spesial tersisa 2 porsi. Ingin tetap melanjutkan pesanan?",
+            confirmText = "Ya, Lanjutkan",
+            cancelText = "Tidak",
+        )
+    }
+}
+
+// ── 6. ThreeButtonDialog (Vertical) ─────
+
+@MobilePreview
+@Composable
+private fun PreviewThreeButtonDialogDefault() {
+    HelperTheme {
+        ThreeButtonDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onReject = {},
+            title = "Persetujuan Diperlukan",
+            message = "Silakan pilih tindakan untuk permintaan ini.",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewThreeButtonDialogCustom() {
+    HelperTheme {
+        ThreeButtonDialog(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onReject = {},
+            title = "Status Pengiriman",
+            message = "Pesanan #ORD-001 dari Budi Santoso menunggu konfirmasi pengiriman.",
+            confirmText = "Siap Kirim",
+            rejectText = "Tunda",
+            cancelText = "Lihat Nanti",
+            icon = Icons.Default.LocalShipping,
+            iconBackgroundColor = Color(0xFFE3F2FD),
+            iconTint = Color(0xFF2196F3),
+        )
+    }
+}
+
+// ── 7. ThreeButtonDialogHorizontal ──────
+
+@MobilePreview
+@Composable
+private fun PreviewThreeButtonDialogHorizontalDefault() {
+    HelperTheme {
+        ThreeButtonDialogHorizontal(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onReject = {},
+            title = "Konfirmasi Transaksi",
+            message = "Apakah Anda ingin menyetujui atau menolak transaksi ini?",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewThreeButtonDialogHorizontalCustom() {
+    HelperTheme {
+        ThreeButtonDialogHorizontal(
+            showDialog = true,
+            onDismiss = {},
+            onConfirm = {},
+            onReject = {},
+            title = "Verifikasi Pembayaran",
+            message = "Pembayaran Rp 250.000 via Transfer Bank dari Andi Wijaya sedang menunggu verifikasi.",
+            confirmText = "Terima",
+            rejectText = "Tolak",
+            cancelText = "Periksa Nanti",
+            icon = Icons.Default.Payment,
+            iconBackgroundColor = Color(0xFFF3E5F5),
+            iconTint = Color(0xFF9C27B0),
+        )
+    }
+}
+
+// ── 8. ApprovalDialog ───────────────────
+
+@MobilePreview
+@Composable
+private fun PreviewApprovalDialogWithRequester() {
+    HelperTheme {
+        ApprovalDialog(
+            showDialog = true,
+            onDismiss = {},
+            onApprove = {},
+            onReject = {},
+            itemName = "Pembelian Semen 100 Zak",
+            requestedBy = "Budi Santoso",
+            approvalType = "Permintaan",
+        )
+    }
+}
+
+@MobilePreview
+@Composable
+private fun PreviewApprovalDialogNoRequester() {
+    HelperTheme {
+        ApprovalDialog(
+            showDialog = true,
+            onDismiss = {},
+            onApprove = {},
+            onReject = {},
+            itemName = "Diskon Akhir Tahun 15%",
+            approvalType = "Pengajuan",
         )
     }
 }
