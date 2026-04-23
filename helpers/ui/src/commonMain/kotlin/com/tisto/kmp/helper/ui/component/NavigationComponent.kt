@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.icon.IcDot
 import com.tisto.kmp.helper.ui.icon.MyIcon
-import com.tisto.kmp.helper.ui.icon.myicon.IcMenuSolar
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
@@ -169,7 +169,7 @@ fun NavigationViewSimple(
                             Spacer(Modifier.width(Spacing.box))
 
                             Icon(
-                                imageVector = main.icon ?: MyIcon.IcMenuSolar,
+                                imageVector = main.icon ?: Icons.Default.Menu,
                                 contentDescription = "Icon",
                                 tint = if (isSelectedMain) Colors.ColorPrimary else Colors.Gray3,
                                 modifier = Modifier.size(25.dp)

@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -156,7 +157,23 @@ fun ListMobileRow(
     text: String,
     secondary: String? = null,
     onClick: () -> Unit,
+
+    contentPadding: Dp = Spacing.box,
+    contentPaddingVertical: Dp? = null,
+    contentPaddingHorizontal: Dp? = null,
+    contentPaddingTop: Dp? = null,
+    contentPaddingBottom: Dp? = null,
+    contentPaddingStart: Dp? = null,
+    contentPaddingEnd: Dp? = null,
 ) {
+
+    val resolvedPadding = PaddingValues(
+        top = contentPaddingTop ?: contentPaddingVertical ?: contentPadding,
+        bottom = contentPaddingBottom ?: contentPaddingVertical ?: contentPadding,
+        start = contentPaddingStart ?: contentPaddingHorizontal ?: contentPadding,
+        end = contentPaddingEnd ?: contentPaddingHorizontal ?: contentPadding,
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -165,8 +182,7 @@ fun ListMobileRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.box)
-            ,
+                .padding(resolvedPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (imageUrl != null) {
@@ -333,7 +349,10 @@ private fun ListRowPreview() {
 private fun ListMobileRowPreview() {
     HelperTheme {
         Column {
-            ListMobileRow(text = "Nasi Goreng Spesial", secondary = "Rp 25.000 • Stok: 10", onClick = {})
+            ListMobileRow(
+                text = "Nasi Goreng Spesial",
+                secondary = "Rp 25.000 • Stok: 10",
+                onClick = {})
             ListMobileRow(text = "Es Teh Manis", secondary = "Rp 5.000", onClick = {})
             ListMobileRow(text = "Ayam Bakar", onClick = {})
         }
@@ -346,7 +365,10 @@ private fun ListActionsPreview() {
     HelperTheme {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Edit + Delete:", modifier = androidx.compose.ui.Modifier.padding(start = 12.dp))
+                Text(
+                    "Edit + Delete:",
+                    modifier = androidx.compose.ui.Modifier.padding(start = 12.dp)
+                )
                 ListActions(onEdit = {}, onDelete = {})
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
