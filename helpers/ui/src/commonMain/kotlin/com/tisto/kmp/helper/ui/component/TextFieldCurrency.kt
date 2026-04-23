@@ -188,15 +188,17 @@ class CurrencyVisualTransformation : VisualTransformation {
 @Composable
 fun CurrencyTextField(
     value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
     modifier: Modifier = Modifier,
+    label: String,
+    labelStyle: TextStyle = TextAppearance.body2(),
     imeAction: ImeAction = ImeAction.Next,
     isError: Boolean = false,
     supportingText: String? = null,
     textStyle: TextStyle = TextAppearance.body1(),
     cornerRadius: Dp = Radius.box,
+    prefixStyle: TextStyle = TextAppearance.body2(),
     prefix: String? = "Rp ",
+    suffixStyle: TextStyle = TextAppearance.body2(),
     suffix: String? = null,
     strokeColor: Color = Colors.Gray2,
     strokeWidth: Dp = 0.5.dp,
@@ -204,6 +206,7 @@ fun CurrencyTextField(
     strokeColorOnFocused: Color = Color.Black,
     maxLength: Int = Int.MAX_VALUE,
     enabled: Boolean = true,
+    onValueChange: (String) -> Unit,
 ) {
     val transformation = remember { CurrencyVisualTransformation() }
     val interactionSource = remember { MutableInteractionSource() }
@@ -223,9 +226,15 @@ fun CurrencyTextField(
             imeAction = imeAction,
         ),
         isError = isError,
-        label = { Text(label, color = if (isFocused) strokeColorOnFocused else Colors.Gray3) },
-        prefix = prefix?.let { { Text(it) } },
-        suffix = suffix?.let { { Text(it) } },
+        label = {
+            Text(
+                label,
+                color = if (isFocused) strokeColorOnFocused else Colors.Gray3,
+                style = labelStyle
+            )
+        },
+        prefix = prefix?.let { { Text(it, style = prefixStyle) } },
+        suffix = suffix?.let { { Text(it, style = suffixStyle) } },
         supportingText = supportingText?.let {
             {
                 Text(

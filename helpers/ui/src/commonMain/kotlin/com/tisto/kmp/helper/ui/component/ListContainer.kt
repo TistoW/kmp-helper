@@ -48,6 +48,7 @@ import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.model.FilterGroup
 import com.tisto.kmp.helper.utils.model.FilterItem
 import kotlinx.coroutines.launch
+import kotlin.Unit
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ListContainer — reusable list scaffold for KMP features.
@@ -155,6 +156,7 @@ fun <T> ListContainer(
     deleteItemName: (T) -> String = { "" },
     itemKey: (T) -> Any,
     tabletRow: (isPicker: Boolean, onEdit: (T) -> Unit, onDelete: (T) -> Unit) -> List<ListColumn<T>>,
+    additionalCompose: @Composable () -> Unit = {},
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
 ) {
     val isPicker = onPick != null
@@ -221,6 +223,7 @@ fun <T> ListContainer(
                 columns = resolvedColumns,
                 itemKey = itemKey,
                 mobileRow = mobileRow,
+                additionalCompose = additionalCompose,
                 onEvent = onEvent,
                 onOpenFilter = { showFilterSheet = true },
                 onPick = onPick,
@@ -276,6 +279,7 @@ private fun <T> ListContainerBody(
     columns: List<ListColumn<T>>,
     itemKey: (T) -> Any,
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
+    additionalCompose: @Composable () -> Unit = {},
     filterOptions: List<FilterGroup> = defaultFilter(),
     onEvent: (ListEvent<T>) -> Unit,
     onOpenFilter: () -> Unit,
@@ -317,6 +321,8 @@ private fun <T> ListContainerBody(
                 filterOptions = filterOptions,
                 onOpenFilter = onOpenFilter,
             )
+
+            additionalCompose()
 
             if (screenConfig.isTablet) {
                 ListHeader(

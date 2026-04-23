@@ -74,7 +74,6 @@ import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
-import com.tisto.kmp.helper.utils.PlatformType
 import com.tisto.kmp.helper.utils.ext.def
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -166,7 +165,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
             onValueChange = onValueChange,
             textStyle = textStyle,
             label = hint,
-            hintStyle = hintStyle,
+            labelStyle = hintStyle,
             placeholder = placeholder,
             placeholderStyle = placeholderStyle,
             prefix = prefix,
@@ -234,13 +233,13 @@ fun CustomTextField(
     value: String? = "",
     textStyle: TextStyle = TextAppearance.body1(),
     label: String = "",
-    hintStyle: TextStyle = TextAppearance.body1(),
+    labelStyle: TextStyle = TextAppearance.body2(),
     placeholder: String = "",
-    placeholderStyle: TextStyle = TextAppearance.body1(),
+    placeholderStyle: TextStyle = TextAppearance.body2(),
     prefix: String = "",
-    prefixStyle: TextStyle = TextAppearance.body1(),
+    prefixStyle: TextStyle = TextAppearance.body2(),
     suffix: String = "",
-    suffixStyle: TextStyle = TextAppearance.body1(),
+    suffixStyle: TextStyle = TextAppearance.body2(),
     supportingText: String? = null,
     supportingTextStyle: TextStyle = TextAppearance.body2(),
     editable: Boolean = true,
@@ -501,14 +500,14 @@ fun CustomTextField(
                     {
                         Text(
                             text = label,
-                            style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+                            style = labelStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
                         )
                     }
                 } else null,
                 placeholder = {
                     Text(
                         text = if (!floatingLabel && label.isNotEmpty()) label else placeholder,
-                        style = if (!floatingLabel && label.isNotEmpty()) hintStyle else placeholderStyle,
+                        style = if (!floatingLabel && label.isNotEmpty()) labelStyle else placeholderStyle,
                     )
                 },
                 prefix = {
