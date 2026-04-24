@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -127,12 +128,8 @@ fun PasswordTextField(
             { Text(text = msg, style = supportingTextStyle) }
         },
         trailingIcon = {
-            Box(
-                modifier = Modifier
-                    .size(35.dp)
-                    .padding(end = Spacing.box)
-                    .clickable { isPasswordVisible = !isPasswordVisible },
-                contentAlignment = Alignment.Center,
+            IconButton(
+                onClick = { isPasswordVisible = !isPasswordVisible}
             ) {
                 Icon(
                     imageVector = toggleIcon,
@@ -140,6 +137,15 @@ fun PasswordTextField(
                     modifier = Modifier.size(20.dp),
                 )
             }
+//            Box(
+//                modifier = Modifier
+//                    .size(35.dp)
+//                    .padding(end = Spacing.box)
+//                    .clickable { isPasswordVisible = !isPasswordVisible },
+//                contentAlignment = Alignment.Center,
+//            ) {
+//
+//            }
         },
         contentPadding = PaddingValues(
             top = Spacing.box,
