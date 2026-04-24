@@ -6,11 +6,10 @@ package com.tisto.kmp.helper.ui.boilerplate
 // MVI / UDF BOILERPLATE — Rules + copy-ready templates.
 // Replace "Example" with your feature name (e.g. "Invoice").
 //
-// REFERENCE IMPLEMENTATIONS (read side by side with this file):
-//   1. Category (image + picker + CRUD): kmp/feature/product/.../category/
-//      Use when: image upload, isActive toggle, picker mode, text+image form.
-//   2. Discount (numeric + type chips):  kmp/feature/product/.../discount/
-//      Use when: numeric/currency fields, type chips, conditional form fields, no image.
+// REFERENCE IMPLEMENTATION (read side by side with this file):
+//   Sample (CRUD + image + active toggle): boilerplate/sample/
+//     └── Implementasi langsung di helper ini — buka folder sample/ untuk kode aktual.
+//     └── Gunakan sebagai template: copy, rename "Sample" → "<Name>", sesuaikan fields.
 //
 // FILE LAYOUT:
 //   feature/<name>/
@@ -275,6 +274,7 @@ private fun CenteredMessage(padding: PaddingValues, message: String) {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 1 — DOMAIN MODEL (data/model/Example.kt)
+// 📂 Lihat contoh aktual: sample/data/model/Sample.kt
 // ══════════════════════════════════════════════════════════════════════════
 
 @Serializable
@@ -298,6 +298,7 @@ object ExampleTypeTypes {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 2 — REQUEST DTO (data/request/ExampleRequest.kt)
+// 📂 Lihat contoh aktual: sample/data/request/SampleRequest.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // @Serializable
@@ -313,6 +314,7 @@ object ExampleTypeTypes {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 3 — API SERVICE (data/ExampleApi.kt)
+// 📂 Lihat contoh aktual: sample/data/SampleApi.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // class ExampleApi(private val client: HttpClient) {
@@ -331,6 +333,7 @@ object ExampleTypeTypes {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 4 — REPOSITORY (data/ExampleRepository.kt)
+// 📂 Lihat contoh aktual: sample/data/SampleRepository.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // class ExampleRepository(private val api: ExampleApi) {
@@ -343,6 +346,7 @@ object ExampleTypeTypes {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 5 — KOIN MODULE (data/exampleModule.kt)
+// 📂 Lihat contoh aktual: sample/data/sampleModule.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // val exampleModule = module {
@@ -354,6 +358,7 @@ object ExampleTypeTypes {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 5B — STRINGS (presentation/ExampleStrings.kt)
+// 📂 Lihat contoh aktual: sample/presentation/SampleStrings.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // internal object ExampleStrings {
@@ -384,6 +389,7 @@ object ExampleTypeTypes {
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 6 — LIST CONTRACT (presentation/list/ExampleListContract.kt)
 // UiState/Event are generic ListUiState<T>/ListEvent<T>. Only Effect is feature-specific.
+// 📂 Lihat contoh aktual: sample/presentation/list/SampleListContract.kt
 // ══════════════════════════════════════════════════════════════════════════
 
 sealed interface ExampleListEffect {
@@ -393,6 +399,7 @@ sealed interface ExampleListEffect {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 7 — LIST VIEWMODEL (presentation/list/ExampleListViewModel.kt)
+// 📂 Lihat contoh aktual: sample/presentation/list/SampleListViewModel.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // class ExampleListViewModel(
@@ -504,6 +511,7 @@ sealed interface ExampleListEffect {
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 8 — LIST SCREEN (presentation/list/ExampleListScreen.kt)
 // Uses ListContainer<T> — handles Scaffold, Toolbar, search, filter, pagination, empty/loading/error.
+// 📂 Lihat contoh aktual: sample/presentation/list/SampleListScreen.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // @Composable
@@ -602,6 +610,7 @@ sealed interface ExampleListEffect {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 9 — FORM CONTRACT (presentation/form/ExampleFormContract.kt)
+// 📂 Lihat contoh aktual: sample/presentation/form/SampleFormContract.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // sealed interface ExampleFormMode {
@@ -633,6 +642,7 @@ sealed interface ExampleListEffect {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 10 — FORM VIEWMODEL (presentation/form/ExampleFormViewModel.kt)
+// 📂 Lihat contoh aktual: sample/presentation/form/SampleFormViewModel.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // class ExampleFormViewModel(
@@ -720,6 +730,7 @@ sealed interface ExampleListEffect {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 11 — FORM SCREEN (presentation/form/ExampleFormScreen.kt)
+// 📂 Lihat contoh aktual: sample/presentation/form/SampleFormScreen.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // @Composable
@@ -796,6 +807,7 @@ sealed interface ExampleListEffect {
 
 // ══════════════════════════════════════════════════════════════════════════
 // SECTION 12 — WRAPPER ROUTE (presentation/ExampleRoute.kt)
+// 📂 Lihat contoh aktual: sample/presentation/SampleRoute.kt
 // ══════════════════════════════════════════════════════════════════════════
 //
 // @Composable
