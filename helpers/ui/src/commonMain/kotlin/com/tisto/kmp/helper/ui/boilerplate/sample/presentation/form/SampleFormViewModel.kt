@@ -6,6 +6,9 @@ import com.tisto.kmp.helper.ui.boilerplate.sample.data.SampleRepository
 import com.tisto.kmp.helper.ui.boilerplate.sample.data.model.Sample
 import com.tisto.kmp.helper.ui.boilerplate.sample.data.request.SampleRequest
 import com.tisto.kmp.helper.ui.boilerplate.sample.presentation.SampleStrings
+import com.tisto.kmp.helper.utils.ext.def
+import com.tisto.kmp.helper.utils.ext.digitsOnly
+import com.tisto.kmp.helper.utils.ext.formatNumber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,15 +72,23 @@ internal class SampleFormViewModel(
             is SampleFormEvent.NameChanged -> _uiState.update {
                 it.copy(name = event.value, nameError = null) // clear error saat user ketik
             }
+
             is SampleFormEvent.DescriptionChanged -> _uiState.update {
                 it.copy(description = event.value)
             }
+
+            is SampleFormEvent.PriceChanged -> _uiState.update {
+                it.copy(price = event.value.digitsOnly())
+            }
+
             is SampleFormEvent.ImagePicked -> _uiState.update {
                 it.copy(pickedImage = event.value)
             }
+
             is SampleFormEvent.ActiveChanged -> _uiState.update {
                 it.copy(isActive = event.value)
             }
+
             SampleFormEvent.Submit -> submit()
             SampleFormEvent.Delete -> delete()
         }
@@ -97,6 +108,8 @@ internal class SampleFormViewModel(
                 it.copy(
                     name = if (current.name == initialItem?.name.orEmpty()) item.name else current.name,
                     description = if (current.description == initialItem?.description.orEmpty()) item.description.orEmpty() else current.description,
+                    price = if (current.price == (initialItem?.let { formatNumber(it.price.def()) }
+                            .orEmpty())) formatNumber(item.price.def()) else current.price,
                     imageUrl = if (current.pickedImage == null) item.image else current.imageUrl,
                     isActive = if (current.isActive == initialItem?.isActive) item.isActive else current.isActive,
                 )

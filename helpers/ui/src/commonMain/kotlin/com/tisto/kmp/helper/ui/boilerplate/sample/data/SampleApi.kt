@@ -2,6 +2,7 @@ package com.tisto.kmp.helper.ui.boilerplate.sample.data
 
 import com.tisto.kmp.helper.network.model.BaseResponse
 import com.tisto.kmp.helper.network.model.SearchRequest
+import com.tisto.kmp.helper.network.model.convertToQuery
 import com.tisto.kmp.helper.network.utils.deleteMethod
 import com.tisto.kmp.helper.network.utils.getMethod
 import com.tisto.kmp.helper.network.utils.postMethod

@@ -367,3 +367,8 @@ fun Double?.formatRupiah(hideCurrency: Boolean = false): String {
 fun String?.formatRupiah(hideCurrency: Boolean = false): String {
     return (this ?: "0").formatCurrency(!hideCurrency)
 }
+
+fun String.digitsOnly(): String = filter { it.isDigit() || it == '.' }
+
+fun formatNumber(value: Double): String =
+    if (value == value.toLong().toDouble()) value.toLong().toString() else value.toString()

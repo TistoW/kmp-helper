@@ -13,6 +13,7 @@ internal data class Sample(
     var outletId: String? = null,
     var name: String = "",
     var description: String? = null,
+    var price: Double? = null,
     var image: String? = null,
     var createdAt: String? = null,
     var updatedAt: String? = null,

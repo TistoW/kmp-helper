@@ -30,6 +30,7 @@ internal data class SampleFormUiState(
     val mode: SampleFormMode = SampleFormMode.Create,
     val name: String = "",
     val description: String = "",
+    val price: String = "",
     val imageUrl: String? = null,
     val pickedImage: PickedImage? = null,
     val isActive: Boolean = true,
@@ -45,6 +46,7 @@ internal data class SampleFormUiState(
 internal sealed interface SampleFormEvent {
     data class NameChanged(val value: String) : SampleFormEvent
     data class DescriptionChanged(val value: String) : SampleFormEvent
+    data class PriceChanged(val value: String) : SampleFormEvent
     data class ImagePicked(val value: PickedImage?) : SampleFormEvent
     data class ActiveChanged(val value: Boolean) : SampleFormEvent
     data object Submit : SampleFormEvent

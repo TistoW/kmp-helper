@@ -19,6 +19,7 @@ import com.tisto.kmp.helper.ui.boilerplate.sample.data.model.Sample
 import com.tisto.kmp.helper.ui.boilerplate.sample.presentation.SampleStrings
 import com.tisto.kmp.helper.ui.component.AppSnackbarVisuals
 import com.tisto.kmp.helper.ui.component.CardImagePicker
+import com.tisto.kmp.helper.ui.component.CurrencyTextField
 import com.tisto.kmp.helper.ui.component.CustomTextField
 import com.tisto.kmp.helper.ui.component.FormContainer
 import com.tisto.kmp.helper.ui.component.ScaffoldBox
@@ -94,6 +95,7 @@ private fun SampleFormEffectHandler(
                         type = effect.type.toSnackbarType(),
                     )
                 )
+
                 is SampleFormEffect.NavigateBack -> onDone(effect.message)
             }
         }
@@ -133,7 +135,9 @@ internal fun SampleFormScreen(
 
             // Image picker
             CardImagePicker(
-                modifier = Modifier.width(120.dp).height(120.dp),
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(120.dp),
                 imageUrl = state.imageUrl,
                 onPicker = { onEvent(SampleFormEvent.ImagePicked(it)) },
             )
@@ -167,9 +171,20 @@ internal fun SampleFormScreen(
 
             Spacer(Modifier.height(Spacing.normal))
 
+            // Description field
+            CurrencyTextField(
+                value = state.price,
+                onValueChange = { onEvent(SampleFormEvent.DescriptionChanged(it)) },
+                label = SampleStrings.labelDescription,
+                strokeWidth = 1.dp,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(Modifier.height(Spacing.normal))
+
             // Active switch
             SwitchCard(
-                title = SampleStrings.labelActive,
+                text = SampleStrings.labelActive,
                 checked = state.isActive,
                 onCheckedChange = { onEvent(SampleFormEvent.ActiveChanged(it)) },
             )
