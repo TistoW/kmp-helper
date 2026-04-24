@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -29,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -45,12 +48,21 @@ import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 
-// =============================================================================
-// PasswordTextField -- password input with visibility toggle.
+// ══════════════════════════════════════════════════════════════════════════════
+// PasswordTextField — standalone password input with visibility toggle.
 //
-// Built on [BaseOutlinedTextField].
-// =============================================================================
+// Usage:
+//   PasswordTextField(
+//       value = state.password,
+//       onValueChange = { onEvent(Event.PasswordChanged(it)) },
+//       hint = "Password",
+//   )
+//
+// Does NOT replace the old CustomTextField password handling — that stays for
+// backward compat. New features should use this instead.
+// ══════════════════════════════════════════════════════════════════════════════
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PasswordTextField(
     value: String,
@@ -78,6 +90,8 @@ fun PasswordTextField(
     val focusManager = LocalFocusManager.current
     var isPasswordVisible by remember { mutableStateOf(false) }
 
+    val currentStrokeWidth = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
+
     val visualTransformation = if (isPasswordVisible) {
         VisualTransformation.None
     } else {
@@ -86,13 +100,13 @@ fun PasswordTextField(
 
     val toggleIcon = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
 
-    BaseOutlinedTextField(
+    BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
         enabled = enabled,
         textStyle = textStyle,
         singleLine = true,
+        cursorBrush = SolidColor(strokeColorOnFocused),
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
@@ -103,54 +117,70 @@ fun PasswordTextField(
             onDone = { onDone?.invoke() },
         ),
         interactionSource = interactionSource,
-        shape = RoundedCornerShape(cornerRadius),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = strokeColorOnFocused,
-            unfocusedBorderColor = strokeColor,
-            focusedContainerColor = backgroundColor,
-            unfocusedContainerColor = backgroundColor,
-            disabledContainerColor = backgroundColor,
-            cursorColor = strokeColorOnFocused,
-        ),
-        strokeWidth = strokeWidth,
-        focusedStrokeWidth = focusedStrokeWidth,
-        isError = isError,
-        label = if (label.isNotEmpty()) {
-            {
-                Text(
-                    text = label,
-                    style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+        modifier = modifier.fillMaxWidth(),
+    ) { innerTextField ->
+        OutlinedTextFieldDefaults.DecorationBox(
+            value = value,
+            innerTextField = innerTextField,
+            enabled = enabled,
+            singleLine = true,
+            visualTransformation = visualTransformation,
+            label = if (label.isNotEmpty()) {
+                {
+                    Text(
+                        text = label,
+                        style = hintStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+                    )
+                }
+            } else null,
+            supportingText = supportingText?.let { msg ->
+                { Text(text = msg, style = supportingTextStyle) }
+            },
+            trailingIcon = {
+                Box(
+                    modifier = Modifier
+                        .size(35.dp)
+                        .padding(end = Spacing.box)
+                        .clickable { isPasswordVisible = !isPasswordVisible },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = toggleIcon,
+                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            },
+            contentPadding = PaddingValues(
+                top = Spacing.box,
+                bottom = Spacing.box,
+                start = Spacing.box,
+                end = 4.dp,
+            ),
+            interactionSource = interactionSource,
+            container = {
+                OutlinedTextFieldDefaults.Container(
+                    enabled = enabled,
+                    isError = isError,
+                    shape = RoundedCornerShape(cornerRadius),
+                    interactionSource = interactionSource,
+                    focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
+                    unfocusedBorderThickness = currentStrokeWidth,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = strokeColorOnFocused,
+                        unfocusedBorderColor = strokeColor,
+                        focusedContainerColor = backgroundColor,
+                        unfocusedContainerColor = backgroundColor,
+                        disabledContainerColor = backgroundColor,
+                        cursorColor = strokeColorOnFocused,
+                    ),
                 )
-            }
-        } else null,
-        supportingText = supportingText?.let { msg ->
-            { Text(text = msg, style = supportingTextStyle) }
-        },
-        trailingIcon = {
-            Box(
-                modifier = Modifier
-                    .size(35.dp)
-                    .padding(end = Spacing.box)
-                    .clickable { isPasswordVisible = !isPasswordVisible },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = toggleIcon,
-                    contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        },
-        contentPadding = PaddingValues(
-            top = Spacing.box,
-            bottom = Spacing.box,
-            start = Spacing.box,
-            end = 4.dp,
-        ),
-    )
+            },
+        )
+    }
 }
 
-// -- Preview ------------------------------------------------------------------
+// ── Preview ──────────────────────────────────────────────────────────────────
 
 @Composable
 private fun PasswordTextFieldExample() {

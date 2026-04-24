@@ -6,13 +6,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -25,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.MobilePreview
@@ -35,15 +39,16 @@ import com.tisto.kmp.helper.ui.theme.Radius
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 
-// =============================================================================
-// SelectableTextField -- read-only text field that acts as a tap target.
+// ── SelectableTextField ──────────────────────────────────────────────────────
 //
-// Clicking anywhere fires [onClick]. Use for fields that open a bottom sheet,
-// dialog, or picker on tap.
+// Read-only text field that acts as a tap target. Clicking anywhere on the
+// field (including the trailing chevron) fires [onClick] — no external
+// Modifier.clickable needed.
 //
-// Built on [BaseOutlinedTextField].
-// =============================================================================
+// Use for fields that open a bottom sheet, dialog, or picker on tap.
+// ─────────────────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectableTextField(
     value: String,
@@ -72,7 +77,7 @@ fun SelectableTextField(
     val interactionSource = remember { MutableInteractionSource() }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        BaseOutlinedTextField(
+        BasicTextField(
             value = value,
             onValueChange = {},
             readOnly = true,
@@ -80,39 +85,60 @@ fun SelectableTextField(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             interactionSource = interactionSource,
-            enabled = enabled,
-            isError = isError,
-            shape = RoundedCornerShape(cornerRadius),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = strokeColor,
-                unfocusedBorderColor = strokeColor,
-                disabledBorderColor = strokeColor.copy(alpha = 0.5f),
-            ),
-            strokeWidth = strokeWidth,
-            label = if (label.isNotEmpty()) {
-                { Text(text = label, style = labelStyle) }
-            } else null,
-            placeholder = if (placeholder.isNotEmpty()) {
-                { Text(text = placeholder, style = placeholderStyle) }
-            } else null,
-            prefix = if (prefix.isNotEmpty()) {
-                { Text(text = prefix, style = prefixStyle) }
-            } else null,
-            suffix = if (suffix.isNotEmpty()) {
-                { Text(text = suffix, style = suffixStyle) }
-            } else null,
-            supportingText = supportingText?.let { msg ->
-                { Text(text = msg, style = supportingTextStyle) }
-            },
-            trailingIcon = {
-                Icon(
-                    imageVector = endIcon,
-                    contentDescription = null,
-                    modifier = Modifier.size(trailingIconSize),
-                    tint = trailingIconTint,
-                )
-            },
-        )
+        ) { innerTextField ->
+            OutlinedTextFieldDefaults.DecorationBox(
+                value = value,
+                innerTextField = innerTextField,
+                enabled = enabled,
+                singleLine = true,
+                visualTransformation = VisualTransformation.None,
+                label = if (label.isNotEmpty()) {
+                    { Text(text = label, style = labelStyle) }
+                } else null,
+                placeholder = if (placeholder.isNotEmpty()) {
+                    { Text(text = placeholder, style = placeholderStyle) }
+                } else null,
+                prefix = if (prefix.isNotEmpty()) {
+                    { Text(text = prefix, style = prefixStyle) }
+                } else null,
+                suffix = if (suffix.isNotEmpty()) {
+                    { Text(text = suffix, style = suffixStyle) }
+                } else null,
+                supportingText = supportingText?.let { msg ->
+                    { Text(text = msg, style = supportingTextStyle) }
+                },
+                trailingIcon = {
+                    Icon(
+                        imageVector = endIcon,
+                        contentDescription = null,
+                        modifier = Modifier.size(trailingIconSize),
+                        tint = trailingIconTint,
+                    )
+                },
+                contentPadding = PaddingValues(
+                    top = Spacing.box,
+                    bottom = Spacing.box,
+                    start = Spacing.box,
+                    end = Spacing.box,
+                ),
+                interactionSource = interactionSource,
+                container = {
+                    OutlinedTextFieldDefaults.Container(
+                        enabled = enabled,
+                        isError = isError,
+                        shape = RoundedCornerShape(cornerRadius),
+                        interactionSource = interactionSource,
+                        focusedBorderThickness = strokeWidth,
+                        unfocusedBorderThickness = strokeWidth,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = strokeColor,
+                            unfocusedBorderColor = strokeColor,
+                            disabledBorderColor = strokeColor.copy(alpha = 0.5f),
+                        ),
+                    )
+                },
+            )
+        }
 
         // Full-surface transparent overlay — captures all taps including the icon area
         Box(
@@ -128,7 +154,7 @@ fun SelectableTextField(
     }
 }
 
-// -- Previews -----------------------------------------------------------------
+// ── Previews ─────────────────────────────────────────────────────────────────
 
 @Composable
 private fun SelectableTextFieldExample() {

@@ -19,11 +19,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,7 +42,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -72,22 +76,19 @@ import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.ui.theme.TextAppearance
 import com.tisto.kmp.helper.utils.ext.def
 
-// =============================================================================
-// CustomTextField -- general-purpose text input.
+// ══════════════════════════════════════════════════════════════════════════════
+// CustomTextField — general-purpose text input.
 //
 // For specialized inputs use the dedicated components:
-//   - Password   -> PasswordTextField   (TextFieldPassword.kt)
-//   - Currency   -> CurrencyTextField   (TextFieldCurrency.kt)
-//   - Search     -> SearchTextField      (TextFieldSearch.kt)
-//   - Selectable -> SelectableTextField  (TextFieldSelectable.kt)
-//
-// Built on [BaseOutlinedTextField].
+//   - Password  → PasswordTextField  (TextFieldPassword.kt)
+//   - Currency  → CurrencyTextField   (TextFieldCurrency.kt)
+//   - Search    → SearchTextField     (TextFieldSearch.kt)
 //
 // Legacy: the old version with formatCurrency/autoHandlePassword is preserved
-// in backuptextField/TextFieldCustom.kt for reference.
-// =============================================================================
+// in TextFieldCustom.old.kt for reference.
+// ══════════════════════════════════════════════════════════════════════════════
 
-// -- FormScope (focus-chain helper) -------------------------------------------
+// ── FormScope (focus-chain helper) ───────────────────────────────────────────
 
 @Composable
 fun FormScope(
@@ -136,8 +137,8 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         minLines: Int = 1,
         maxLength: Int? = null,
         cornerRadius: Dp = Radius.box,
-        formatCurrency: Boolean = false,
-        maxDecimalDigits: Int = 3,
+        formatCurrency: Boolean = false,          // legacy — use CurrencyTextField instead
+        maxDecimalDigits: Int = 3,                // legacy — use CurrencyTextField instead
         visualTransformation: VisualTransformation? = null,
         itemOptions: List<String> = listOf(),
         floatingLabel: Boolean = true,
@@ -148,7 +149,7 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
         focusedStrokeWidth: Dp? = null,
         strokeColor: Color = Colors.Gray2,
         strokeColorOnFocused: Color = Colors.Gray2,
-        autoHandlePassword: Boolean = true,
+        autoHandlePassword: Boolean = true,       // legacy — use PasswordTextField instead
         textTransform: TextTransform = TextTransform.NONE,
         onEnter: (() -> Unit)? = null,
         onItemSelected: ((Int) -> Unit)? = null,
@@ -217,8 +218,15 @@ class FormScopeImpl(private val focusRequesters: List<FocusRequester>) {
     }
 }
 
-// -- CustomTextField ----------------------------------------------------------
+// ── Enums ────────────────────────────────────────────────────────────────────
 
+enum class TextTransform { NONE, UPPERCASE, LOWERCASE, CAPITALIZE }
+
+enum class TextFieldStyle { OUTLINED, FILLED, CLEAR }
+
+// ── CustomTextField ──────────────────────────────────────────────────────────
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTextField(
     modifier: Modifier = Modifier,
@@ -252,8 +260,8 @@ fun CustomTextField(
     minLines: Int = 1,
     maxLength: Int? = null,
     cornerRadius: Dp = Radius.box,
-    formatCurrency: Boolean = false,          // legacy -- use CurrencyTextField instead
-    maxDecimalDigits: Int = 3,                // legacy -- use CurrencyTextField instead
+    formatCurrency: Boolean = false,          // legacy — use CurrencyTextField instead
+    maxDecimalDigits: Int = 3,                // legacy — use CurrencyTextField instead
     visualTransformation: VisualTransformation? = null,
     itemOptions: List<String> = listOf(),
     floatingLabel: Boolean = true,
@@ -267,7 +275,7 @@ fun CustomTextField(
     focusRequester: FocusRequester? = null,
     nextFocusRequester: FocusRequester? = null,
     previousFocusRequester: FocusRequester? = null,
-    autoHandlePassword: Boolean = true,       // legacy -- use PasswordTextField instead
+    autoHandlePassword: Boolean = true,       // legacy — use PasswordTextField instead
     allCaps: Boolean = false,
     textTransform: TextTransform = TextTransform.NONE,
     onEnter: (() -> Unit)? = null,
@@ -281,7 +289,8 @@ fun CustomTextField(
 
     val currentBgColor =
         if (isFocused && focusedBackgroundColor != null) focusedBackgroundColor else backgroundColor
-    val shape = RoundedCornerShape(cornerRadius)
+    val currentStrokeWidth =
+        if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
 
     // Legacy password handling
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -320,8 +329,6 @@ fun CustomTextField(
         else -> VisualTransformation.None
     }
 
-    // -- TextFieldValue state management --
-
     var tfv by remember {
         mutableStateOf(
             TextFieldValue(
@@ -344,99 +351,6 @@ fun CustomTextField(
             }
         }
     }
-
-    // -- onValueChange handler --
-
-    val handleValueChange: (TextFieldValue) -> Unit = { newV ->
-        if (formatCurrency) {
-            val input = newV.text.removePrefix(prefix)
-            val filtered = input.filter { it.isDigit() || it == ',' }
-            val commaCount = filtered.count { it == ',' }
-            val clean = if (commaCount > 1) {
-                filtered.replaceFirst(",", "").replace(",", "")
-            } else filtered
-
-            val parts = clean.split(",")
-            val integerPart = parts[0].filter { it.isDigit() }
-            val decimalPart =
-                parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
-
-            val rawValue = if (decimalPart.isNotEmpty()) "$integerPart.$decimalPart"
-            else if (clean.endsWith(",")) "$integerPart."
-            else integerPart
-
-            onValueChange(rawValue)
-            val formatted = formatCurrencyValue(rawValue)
-            tfv = TextFieldValue(formatted, TextRange(formatted.length))
-        } else {
-            val composing = newV.composition
-            val over =
-                maxLength != null && newV.text.length > maxLength && composing == null
-            val clippedText = if (over) newV.text.take(maxLength) else newV.text
-            val selStart = minOf(newV.selection.start, clippedText.length)
-            val selEnd = minOf(newV.selection.end, clippedText.length)
-            val next = if (over) {
-                newV.copy(
-                    text = clippedText,
-                    selection = TextRange(selStart, selEnd),
-                    composition = null,
-                )
-            } else newV
-
-            val needsTransform = transform != TextTransform.NONE
-            val transformedText = when (transform) {
-                TextTransform.UPPERCASE -> next.text.uppercase()
-                TextTransform.LOWERCASE -> next.text.lowercase()
-                TextTransform.CAPITALIZE -> next.text.split(" ")
-                    .joinToString(" ") {
-                        it.replaceFirstChar { c ->
-                            if (c.isLowerCase()) c.titlecase() else c.toString()
-                        }
-                    }
-
-                else -> next.text
-            }
-
-            onValueChange(transformedText)
-
-            tfv = if (needsTransform) {
-                next.copy(
-                    text = transformedText,
-                    selection = TextRange(transformedText.length)
-                )
-            } else {
-                next.copy(text = transformedText)
-            }
-        }
-    }
-
-    // -- Container for FILLED/CLEAR styles --
-
-    val customContainer: (@Composable () -> Unit)? = when (style) {
-        TextFieldStyle.OUTLINED -> null // use default outlined container from Base
-        TextFieldStyle.FILLED, TextFieldStyle.CLEAR -> {
-            {
-                val currentStroke =
-                    if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else strokeWidth
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(currentBgColor, shape)
-                        .then(
-                            if (currentStroke > 0.dp) {
-                                Modifier.border(
-                                    width = currentStroke,
-                                    color = if (isFocused) strokeColorOnFocused else strokeColor,
-                                    shape = shape,
-                                )
-                            } else Modifier
-                        )
-                )
-            }
-        }
-    }
-
-    // -- Layout --
 
     Box(
         modifier = modifier
@@ -482,13 +396,74 @@ fun CustomTextField(
                 } else Modifier
             )
     ) {
-        BaseOutlinedTextField(
+        BasicTextField(
             value = tfv,
-            onValueChange = handleValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { newV ->
+                if (formatCurrency) {
+                    val input = newV.text.removePrefix(prefix)
+                    val filtered = input.filter { it.isDigit() || it == ',' }
+                    val commaCount = filtered.count { it == ',' }
+                    val clean = if (commaCount > 1) {
+                        filtered.replaceFirst(",", "").replace(",", "")
+                    } else filtered
+
+                    val parts = clean.split(",")
+                    val integerPart = parts[0].filter { it.isDigit() }
+                    val decimalPart =
+                        parts.getOrNull(1)?.filter { it.isDigit() }?.take(maxDecimalDigits) ?: ""
+
+                    val rawValue = if (decimalPart.isNotEmpty()) "$integerPart.$decimalPart"
+                    else if (clean.endsWith(",")) "$integerPart."
+                    else integerPart
+
+                    onValueChange(rawValue)
+                    val formatted = formatCurrencyValue(rawValue)
+                    tfv = TextFieldValue(formatted, TextRange(formatted.length))
+                } else {
+                    val composing = newV.composition
+                    val over =
+                        maxLength != null && newV.text.length > maxLength && composing == null
+                    val clippedText = if (over) newV.text.take(maxLength) else newV.text
+                    val selStart = minOf(newV.selection.start, clippedText.length)
+                    val selEnd = minOf(newV.selection.end, clippedText.length)
+                    val next = if (over) {
+                        newV.copy(
+                            text = clippedText,
+                            selection = TextRange(selStart, selEnd),
+                            composition = null,
+                        )
+                    } else newV
+
+                    val needsTransform = transform != TextTransform.NONE
+                    val transformedText = when (transform) {
+                        TextTransform.UPPERCASE -> next.text.uppercase()
+                        TextTransform.LOWERCASE -> next.text.lowercase()
+                        TextTransform.CAPITALIZE -> next.text.split(" ")
+                            .joinToString(" ") {
+                                it.replaceFirstChar { c ->
+                                    if (c.isLowerCase()) c.titlecase() else c.toString()
+                                }
+                            }
+
+                        else -> next.text
+                    }
+
+                    onValueChange(transformedText)
+
+                    tfv = if (needsTransform) {
+                        next.copy(
+                            text = transformedText,
+                            selection = TextRange(transformedText.length)
+                        )
+                    } else {
+                        next.copy(text = transformedText)
+                    }
+                }
+            },
             enabled = enabled,
             readOnly = !editable,
             textStyle = textStyle,
+            cursorBrush = SolidColor(strokeColorOnFocused),
             visualTransformation = finalVisualTransformation,
             keyboardOptions = if (formatCurrency) {
                 KeyboardOptions(
@@ -511,96 +486,133 @@ fun CustomTextField(
             singleLine = singleLine,
             maxLines = maxLines,
             minLines = minLines,
-            onFocused = onFocused,
-            shape = shape,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = strokeColorOnFocused,
-                unfocusedBorderColor = strokeColor,
-                focusedContainerColor = currentBgColor,
-                unfocusedContainerColor = currentBgColor,
-                disabledContainerColor = currentBgColor,
-                cursorColor = strokeColorOnFocused,
-            ),
-            strokeWidth = strokeWidth,
-            focusedStrokeWidth = focusedStrokeWidth,
-            isError = isError,
-            container = customContainer,
-            // Decoration slots
-            label = if (floatingLabel && label.isNotEmpty()) {
-                {
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged { if (it.isFocused) onFocused() },
+        ) { innerTextField ->
+            OutlinedTextFieldDefaults.DecorationBox(
+                value = tfv.text,
+                innerTextField = innerTextField,
+                enabled = enabled,
+                singleLine = singleLine,
+                visualTransformation = finalVisualTransformation,
+                label = if (floatingLabel && label.isNotEmpty()) {
+                    {
+                        Text(
+                            text = label,
+                            style = labelStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+                        )
+                    }
+                } else null,
+                placeholder = {
                     Text(
-                        text = label,
-                        style = labelStyle.copy(color = if (isFocused) Color.Black else Color.Gray),
+                        text = if (!floatingLabel && label.isNotEmpty()) label else placeholder,
+                        style = if (!floatingLabel && label.isNotEmpty()) labelStyle else placeholderStyle,
                     )
-                }
-            } else null,
-            placeholder = {
-                Text(
-                    text = if (!floatingLabel && label.isNotEmpty()) label else placeholder,
-                    style = if (!floatingLabel && label.isNotEmpty()) labelStyle else placeholderStyle,
-                )
-            },
-            prefix = {
-                if (prefix.isNotEmpty() && (tfv.text.isNotEmpty() || isFocused)) {
-                    Text(prefix, style = prefixStyle)
-                }
-            },
-            suffix = {
-                if (suffix.isNotEmpty() && (tfv.text.isNotEmpty() || isFocused)) {
-                    Text(suffix, style = suffixStyle)
-                }
-            },
-            supportingText = supportingText?.let { msg ->
-                { Text(text = msg, style = supportingTextStyle) }
-            },
-            trailingIcon = finalEndIcon?.let {
-                {
-                    Box(
-                        modifier = Modifier
-                            .size(35.dp)
-                            .padding(end = Spacing.box)
-                            .clickable { finalEndIconOnClick() },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = if (isPasswordField) {
-                                if (isPasswordVisible) "Hide password" else "Show password"
-                            } else null,
-                            modifier = Modifier.size(endIconSize),
-                        )
+                },
+                prefix = {
+                    if (prefix.isNotEmpty() && (tfv.text.isNotEmpty() || isFocused)) {
+                        Text(prefix, style = prefixStyle)
                     }
-                }
-            },
-            leadingIcon = leadingIcon?.let {
-                {
-                    Box(
-                        modifier = Modifier
-                            .size(35.dp)
-                            .padding(start = Spacing.box)
-                            .clickable { leadingIconOnClick() },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = null,
-                            modifier = Modifier.size(leadingIconSize),
-                        )
+                },
+                suffix = {
+                    if (suffix.isNotEmpty() && (tfv.text.isNotEmpty() || isFocused)) {
+                        Text(suffix, style = suffixStyle)
                     }
-                }
-            },
-            contentPadding = PaddingValues(
-                top = Spacing.box,
-                bottom = Spacing.box,
-                start = if (leadingIcon != null) 4.dp else Spacing.box,
-                end = if (finalEndIcon != null) 4.dp else Spacing.box,
-            ),
-        )
+                },
+                supportingText = supportingText?.let { msg ->
+                    { Text(text = msg, style = supportingTextStyle) }
+                },
+                trailingIcon = finalEndIcon?.let {
+                    {
+                        Box(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .padding(end = Spacing.box)
+                                .clickable { finalEndIconOnClick() },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = it,
+                                contentDescription = if (isPasswordField) {
+                                    if (isPasswordVisible) "Hide password" else "Show password"
+                                } else null,
+                                modifier = Modifier.size(endIconSize),
+                            )
+                        }
+                    }
+                },
+                leadingIcon = leadingIcon?.let {
+                    {
+                        Box(
+                            modifier = Modifier
+                                .size(35.dp)
+                                .padding(start = Spacing.box)
+                                .clickable { leadingIconOnClick() },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = it,
+                                contentDescription = null,
+                                modifier = Modifier.size(leadingIconSize),
+                            )
+                        }
+                    }
+                },
+                contentPadding = PaddingValues(
+                    top = Spacing.box,
+                    bottom = Spacing.box,
+                    start = if (leadingIcon != null) 4.dp else Spacing.box,
+                    end = if (finalEndIcon != null) 4.dp else Spacing.box,
+                ),
+                interactionSource = interactionSource,
+                container = {
+                    when (style) {
+                        TextFieldStyle.OUTLINED -> {
+                            OutlinedTextFieldDefaults.Container(
+                                enabled = enabled,
+                                isError = isError,
+                                shape = RoundedCornerShape(cornerRadius),
+                                interactionSource = interactionSource,
+                                focusedBorderThickness = if (isFocused && focusedStrokeWidth != null) focusedStrokeWidth else currentStrokeWidth,
+                                unfocusedBorderThickness = currentStrokeWidth,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = strokeColorOnFocused,
+                                    unfocusedBorderColor = strokeColor,
+                                    focusedContainerColor = currentBgColor,
+                                    unfocusedContainerColor = currentBgColor,
+                                    disabledContainerColor = currentBgColor,
+                                    cursorColor = strokeColorOnFocused,
+                                ),
+                            )
+                        }
+
+                        TextFieldStyle.FILLED, TextFieldStyle.CLEAR -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(currentBgColor, RoundedCornerShape(cornerRadius))
+                                    .then(
+                                        if (currentStrokeWidth > 0.dp) {
+                                            Modifier.border(
+                                                width = currentStrokeWidth,
+                                                color = if (isFocused) strokeColorOnFocused else strokeColor,
+                                                shape = RoundedCornerShape(cornerRadius),
+                                            )
+                                        } else Modifier
+                                    )
+                            )
+                        }
+                    }
+                },
+            )
+        }
 
         if (!editable) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
+                    .background(Color.Transparent)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -635,7 +647,7 @@ fun CustomTextField(
     }
 }
 
-// -- Legacy currency formatter ------------------------------------------------
+// ── Legacy currency formatter ────────────────────────────────────────────────
 
 private fun formatCurrencyValue(value: String): String {
     if (value.isEmpty()) return ""
@@ -650,7 +662,7 @@ private fun formatCurrencyValue(value: String): String {
     else formattedInteger
 }
 
-// -- Previews -----------------------------------------------------------------
+// ── Previews ─────────────────────────────────────────────────────────────────
 
 @Composable
 private fun CustomTextFieldExamples() {
