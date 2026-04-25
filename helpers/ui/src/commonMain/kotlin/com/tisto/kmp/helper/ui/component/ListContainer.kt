@@ -178,57 +178,62 @@ fun <T> ListContainer(
         )
     }
 
-    Scaffold(
-        topBar = {
-            Toolbar(
-                screenConfig = screenConfig,
-                title = if (isPicker) titlePicker else title,
-                onAdd = if (showAddButton) {
-                    { onEvent(ListEvent.CreateClicked) }
-                } else null,
-                onBack = if (screenConfig.isMobile) onBack else null,
-                backIcon = backIcon,
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbar) },
-        containerColor = Color.White,
-        modifier = modifier
-    ) { padding ->
-        when (state) {
-            ListUiState.Loading -> ListCenteredLoader(padding)
-            is ListUiState.Error -> ListCenteredMessage(
-                padding,
-                state.message,
-                onRefresh = { onEvent(ListEvent.Refresh) })
+    Box(modifier = modifier) {
+        Scaffold(
+            topBar = {
+                Toolbar(
+                    screenConfig = screenConfig,
+                    title = if (isPicker) titlePicker else title,
+                    onAdd = if (showAddButton) {
+                        { onEvent(ListEvent.CreateClicked) }
+                    } else null,
+                    onBack = if (screenConfig.isMobile) onBack else null,
+                    backIcon = backIcon,
+                )
+            },
+            containerColor = Color.White,
+        ) { padding ->
+            when (state) {
+                ListUiState.Loading -> ListCenteredLoader(padding)
+                is ListUiState.Error -> ListCenteredMessage(
+                    padding,
+                    state.message,
+                    onRefresh = { onEvent(ListEvent.Refresh) })
 
-            is ListUiState.Empty -> ListContainerEmpty(
-                filterOptions = filterOptions,
-                padding = padding,
-                query = state.query,
-                filterCount = currentFilters.size,
-                screenConfig = screenConfig,
-                emptyText = emptyText,
-                searchHint = searchHint,
-                onQueryChanged = { onEvent(ListEvent.QueryChanged(it)) },
-                onRefresh = { onEvent(ListEvent.Refresh) },
-                onOpenFilter = { showFilterSheet = true },
-            )
+                is ListUiState.Empty -> ListContainerEmpty(
+                    filterOptions = filterOptions,
+                    padding = padding,
+                    query = state.query,
+                    filterCount = currentFilters.size,
+                    screenConfig = screenConfig,
+                    emptyText = emptyText,
+                    searchHint = searchHint,
+                    onQueryChanged = { onEvent(ListEvent.QueryChanged(it)) },
+                    onRefresh = { onEvent(ListEvent.Refresh) },
+                    onOpenFilter = { showFilterSheet = true },
+                )
 
-            is ListUiState.Success -> ListContainerBody(
-                filterOptions = filterOptions,
-                padding = padding,
-                state = state,
-                screenConfig = screenConfig,
-                isPicker = isPicker,
-                columns = resolvedColumns,
-                itemKey = itemKey,
-                mobileRow = mobileRow,
-                additionalCompose = additionalCompose,
-                onEvent = onEvent,
-                onOpenFilter = { showFilterSheet = true },
-                onPick = onPick,
-            )
+                is ListUiState.Success -> ListContainerBody(
+                    filterOptions = filterOptions,
+                    padding = padding,
+                    state = state,
+                    screenConfig = screenConfig,
+                    isPicker = isPicker,
+                    columns = resolvedColumns,
+                    itemKey = itemKey,
+                    mobileRow = mobileRow,
+                    additionalCompose = additionalCompose,
+                    onEvent = onEvent,
+                    onOpenFilter = { showFilterSheet = true },
+                    onPick = onPick,
+                )
+            }
         }
+
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 
     DeleteConfirmationDialog(
