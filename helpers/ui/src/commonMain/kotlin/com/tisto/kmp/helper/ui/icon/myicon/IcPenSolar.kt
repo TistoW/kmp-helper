@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.icon.MyIcon
 import kotlin.Unit
 
-public val MyIcon.IcPen2Solar: ImageVector
+public val MyIcon.IcPenSolar: ImageVector
     get() {
         if (_icPen2Solar != null) {
             return _icPen2Solar!!
@@ -81,6 +81,6 @@ private var _icPen2Solar: ImageVector? = null
 @Composable
 private fun Preview(): Unit {
     Box(modifier = Modifier.padding(12.dp)) {
-        Image(imageVector = MyIcon.IcPen2Solar, contentDescription = "")
+        Image(imageVector = MyIcon.IcPenSolar, contentDescription = "")
     }
 }

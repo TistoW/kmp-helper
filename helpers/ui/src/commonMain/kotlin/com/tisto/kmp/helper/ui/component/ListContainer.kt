@@ -409,7 +409,7 @@ private fun <T> ListContainerBody(
                     state = pullState,
                     isRefreshing = state.isRefreshing,
                     containerColor = Color.White,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.Black,
                 )
             },
         ) {

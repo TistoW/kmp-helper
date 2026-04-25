@@ -137,7 +137,7 @@ fun <T> ListRow(
         ) {
             columns.forEach { col ->
                 Row(
-                    modifier = Modifier.weight(col.weight),
+                    modifier = Modifier.weight(col.weight).padding(end = Spacing.small),
                     horizontalArrangement = col.contentArrangement,
                 ) {
                     col.cell(item)
@@ -313,13 +313,13 @@ fun SearchFilterRow(
 private data class PreviewItem(val name: String, val price: String, val stock: String)
 
 private val previewColumns = listOf(
-    ListColumn<PreviewItem>("name", "Nama Produk", weight = 2f) {
+    ListColumn("name", "Nama Produk", weight = 2f) {
         Text(it.name, style = TextAppearance.body1())
     },
-    ListColumn<PreviewItem>("price", "Harga", weight = 1f) {
+    ListColumn("price", "Harga", weight = 1f) {
         Text(it.price, style = TextAppearance.body1())
     },
-    ListColumn<PreviewItem>("stock", "Stok", weight = 1f, contentArrangement = Arrangement.Center) {
+    ListColumn("stock", "Stok", weight = 1f, contentArrangement = Arrangement.Center) {
         Text(it.stock, style = TextAppearance.body1())
     },
     ListColumn<PreviewItem>("actions", "Aksi", weight = 1f, contentArrangement = Arrangement.End) {
