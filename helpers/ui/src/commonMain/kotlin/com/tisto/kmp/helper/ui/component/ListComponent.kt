@@ -137,7 +137,9 @@ fun <T> ListRow(
         ) {
             columns.forEach { col ->
                 Row(
-                    modifier = Modifier.weight(col.weight).padding(end = Spacing.small),
+                    modifier = Modifier
+                        .weight(col.weight)
+                        .padding(end = Spacing.small),
                     horizontalArrangement = col.contentArrangement,
                 ) {
                     col.cell(item)
@@ -218,9 +220,14 @@ fun ListActions(
     options: List<String> = listOf(),
     onOptionsClicked: (String) -> Unit = {},
 ) {
-    Row {
+    Row (
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ){
         onEdit?.let {
-            IconButton(onClick = it) {
+            IconButton(
+                onClick = it,
+                modifier = Modifier.size(25.dp)
+            ) {
                 Icon(
                     MyIcon.IcPenBrokenSolar,
                     "Edit",
@@ -230,19 +237,28 @@ fun ListActions(
             }
         }
         onDelete?.let {
-            IconButton(onClick = it) {
+            IconButton(
+                onClick = it,
+                modifier = Modifier.size(25.dp)
+            ) {
                 Icon(MyIcon.IcTrashBrokenSolar, "Delete", tint = Color.Gray)
             }
         }
         onDetail?.let {
-            IconButton(onClick = it) {
+            IconButton(
+                onClick = it,
+                modifier = Modifier.size(25.dp)
+            ) {
                 Icon(MyIcon.IcEyeBrokenSolar, "Delete", tint = Color.Gray)
             }
         }
         onMore?.let {
             Box {
                 var expanded by remember { mutableStateOf(false) }
-                IconButton(onClick = { expanded = true }) {
+                IconButton(
+                    onClick = { expanded = true },
+                    modifier = Modifier.size(25.dp)
+                ) {
                     Icon(Icons.Default.MoreVert, "More", tint = Color.Gray)
                 }
                 DropdownMenu(
