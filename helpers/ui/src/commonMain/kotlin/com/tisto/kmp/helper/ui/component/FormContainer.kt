@@ -37,6 +37,7 @@ sealed interface FormContent {
 
 @Composable
 fun <ITEM> FormContainer(
+    modifier: Modifier = Modifier,
     title: String = "Title",
     forceTitle: String? = null,
     screenConfig: ScreenConfig = ScreenConfig(),
@@ -62,14 +63,16 @@ fun <ITEM> FormContainer(
     val isMobile = screenConfig.isMobile
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Colors.White),
     ) {
         Toolbar(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
-            onBack = if (!isMobile) null else onBack,
+            onBack = onBack,
             backIcon = backIcon,
+            onDelete = if (!isMobile) (if (item != null && onDelete != null) onDelete else null) else null,
+            onSave = if (!isMobile) onSave else null,
         )
 
         Box(
@@ -117,18 +120,22 @@ fun <ITEM> FormContainer(
                     }
 
                     // Bottom buttons
-                    FormButtonBar(
-                        isMobile = isMobile,
-                        isEdit = item != null && onDelete != null,
-                        isFormValid = isFormValid,
-                        isLoadingProcess = isLoadingProcess,
-                        saveText = saveText,
-                        deleteText = deleteText,
-                        backText = backText,
-                        onBack = onBack,
-                        onSave = onSave,
-                        onDelete = { showDeleteDialog = true },
-                    )
+                    if (isMobile) {
+                        FormButtonBar(
+                            isMobile = isMobile,
+                            isEdit = item != null && onDelete != null,
+                            isFormValid = isFormValid,
+                            isLoadingProcess = isLoadingProcess,
+                            saveText = saveText,
+                            deleteText = deleteText,
+                            backText = backText,
+                            onBack = onBack,
+                            onSave = onSave,
+                            onDelete = { showDeleteDialog = true },
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(Spacing.medium))
+                    }
                 }
             }
         }
@@ -221,9 +228,36 @@ private fun FormScreenContentPreview(
                     value = "",
                     onValueChange = { },
                     label = "Nama",
-                    style = TextFieldStyle.OUTLINED,
-                    strokeWidth = 1.dp,
                     modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.normal))
+
+                CurrencyTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = "Price",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.normal))
+
+                PasswordTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = "Password",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(modifier = Modifier.height(Spacing.normal))
+
+                CustomTextField(
+                    value = "",
+                    onValueChange = { },
+                    label = "Deskripsi",
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 6
                 )
             }
         },

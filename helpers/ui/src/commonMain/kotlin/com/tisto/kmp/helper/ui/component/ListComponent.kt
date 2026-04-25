@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -38,6 +39,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.ScreenConfig
+import com.tisto.kmp.helper.ui.icon.MyIcon
+import com.tisto.kmp.helper.ui.icon.myicon.IcEyeBrokenSolar
+import com.tisto.kmp.helper.ui.icon.myicon.IcPenBrokenSolar
+import com.tisto.kmp.helper.ui.icon.myicon.IcTrashBrokenSolar
 import com.tisto.kmp.helper.ui.theme.Colors
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Spacing
@@ -216,17 +221,22 @@ fun ListActions(
     Row {
         onEdit?.let {
             IconButton(onClick = it) {
-                Icon(Icons.Default.Edit, "Edit", tint = Color.Gray)
+                Icon(
+                    MyIcon.IcPenBrokenSolar,
+                    "Edit",
+                    tint = Color.Gray,
+                    modifier = Modifier.size(21.dp)
+                )
             }
         }
         onDelete?.let {
             IconButton(onClick = it) {
-                Icon(Icons.Default.Delete, "Delete", tint = Color.Gray)
+                Icon(MyIcon.IcTrashBrokenSolar, "Delete", tint = Color.Gray)
             }
         }
         onDetail?.let {
             IconButton(onClick = it) {
-                Icon(Icons.Default.RemoveRedEye, "Delete", tint = Color.Gray)
+                Icon(MyIcon.IcEyeBrokenSolar, "Delete", tint = Color.Gray)
             }
         }
         onMore?.let {
