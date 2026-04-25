@@ -37,6 +37,7 @@ fun CardImagePicker(
     strokeColor: Color = Colors.Gray4,
     contentPadding : Dp = Spacing.small,
     isShowLabel: Boolean = true,
+    directlyShowImage: Boolean = true,
     onPicker: ((PickedImage?) -> Unit)? = null
 ) {
 
@@ -64,7 +65,7 @@ fun CardImagePicker(
             onClick = picker::pick
         ) {
 
-            if (picker.bitmap != null) {
+            if (picker.bitmap != null && directlyShowImage) {
                 Image(
                     bitmap = picker.bitmap!!,
                     contentDescription = picker.picked?.name,

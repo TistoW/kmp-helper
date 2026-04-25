@@ -72,6 +72,55 @@ enum class ButtonStyle {
  */
 
 @Composable
+fun NormalButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: ButtonStyle = ButtonStyle.Primary,
+    textStyle: TextStyle = TextAppearance.body2Bold(),
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
+    horizontalContentPadding: Dp = Spacing.box,
+    verticalContentPadding: Dp = 0.dp,
+    imageVector: ImageVector? = null,
+    // ── Legacy override params ───────────────────────────────────────────
+    // Only applied when style == Primary. Use `style` for all new callers.
+    backgroundColor: Color? = null,                    // null = ambil dari theme
+    contentColor: Color = Color.White,
+    disabledBackgroundColor: Color = Colors.Gray4,
+    strokeWidth: Dp = 0.dp,
+    elevation: Dp = 0.dp,
+    cornerRadius: Dp = Radius.normal,
+    strokeColor: Color? = null,                        // null = ambil dari theme
+    textColor: Color = Colors.White,
+    imageTint: Color = Colors.White,
+    contentPadding: PaddingValues? = null,
+    onClick: () -> Unit,
+) {
+    ButtonNormal(
+        text = text,
+        modifier = modifier,
+        style = style,
+        textStyle = textStyle,
+        enabled = enabled,
+        isLoading = isLoading,
+        horizontalContentPadding = horizontalContentPadding,
+        verticalContentPadding = verticalContentPadding,
+        imageVector = imageVector,
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
+        disabledBackgroundColor = disabledBackgroundColor,
+        strokeWidth = strokeWidth,
+        elevation = elevation,
+        cornerRadius = cornerRadius,
+        strokeColor = strokeColor,
+        textColor = textColor,
+        imageTint = imageTint,
+        contentPadding = contentPadding,
+        onClick = onClick,
+    )
+}
+
+@Composable
 fun ButtonNormal(
     text: String,
     modifier: Modifier = Modifier,
