@@ -25,7 +25,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -398,12 +401,22 @@ private fun <T> ListContainerBody(
     }
 
     if (usePullToRefresh) {
+        val pullState = rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = { onEvent(ListEvent.Refresh) },
+            state = pullState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = state.isRefreshing,
+                    containerColor = Color.White,
+                    color = Color.Black,
+                )
+            },
         ) {
             content()
         }
@@ -550,7 +563,7 @@ private fun previewTabletColumns(
 @Composable
 private fun ListContainerLoadingPreview() {
     HelperTheme {
-        ListContainer<PreviewProduct>(
+        ListContainer(
             screenConfig = ScreenConfig(maxWidth = 360.dp),
             state = ListUiState.Loading,
             snackbar = remember { SnackbarHostState() },
