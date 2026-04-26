@@ -73,6 +73,7 @@ fun <ITEM> FormContainer(
             backIcon = backIcon,
             onDelete = if (!isMobile) (if (item != null && onDelete != null) onDelete else null) else null,
             onSave = if (!isMobile) onSave else null,
+            isLoading = isLoadingProcess
         )
 
         Box(
