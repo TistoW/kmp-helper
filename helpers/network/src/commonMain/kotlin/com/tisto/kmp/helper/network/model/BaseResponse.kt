@@ -34,6 +34,8 @@ import kotlinx.serialization.Serializable
 data class BaseResponse<T>(
     val code: String,
     val message: String,
+    val status: Boolean? = true,
+    val statusCode: Int? = 200,
     val data: T? = null,
     val lastPage: Int? = null,
     val currentPage: Int? = null,
