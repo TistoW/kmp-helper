@@ -55,7 +55,7 @@ fun ScaffoldBox(
             if (snackbarHostState != null) {
                 AppSnackbarHost(
                     hostState = snackbarHostState,
-                    modifier = Modifier.align(Alignment.TopCenter),
+                    modifier = Modifier.align(Alignment.TopCenter).padding(it),
                 )
             }
         }
