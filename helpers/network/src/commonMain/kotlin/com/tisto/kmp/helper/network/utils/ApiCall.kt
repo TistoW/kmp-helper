@@ -1,7 +1,6 @@
 package com.tisto.kmp.helper.network.utils
 
 import com.tisto.kmp.helper.network.model.BaseResponse
-import com.tisto.kmp.helper.utils.ext.def
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -65,10 +64,10 @@ fun <T, R> apiCall(
                 Resource.Success(
                     data = mappedData,
                     message = response.message,
-                    lastPage = response.lastPage.def(1),
+                    lastPage = response.resolvedLastPage,
                     currentPage = response.currentPage,
                     total = response.total,
-                    perPage = response.perPage,
+                    perPage = response.resolvedPerPage,
                     lastSync = response.lastSync
                 )
             )

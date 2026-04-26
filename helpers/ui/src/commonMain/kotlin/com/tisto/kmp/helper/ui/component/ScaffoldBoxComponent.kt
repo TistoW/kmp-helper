@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
@@ -37,11 +38,7 @@ fun ScaffoldBox(
         modifier = modifier,
         topBar = topBar,
         bottomBar = bottomBar,
-        snackbarHost = snackbarHost ?: if (snackbarHostState != null) {
-            { AppSnackbarHost(snackbarHostState) }
-        } else {
-            {}
-        },
+        snackbarHost = snackbarHost ?: {},
         floatingActionButton = floatingActionButton,
         floatingActionButtonPosition = floatingActionButtonPosition,
         containerColor = containerColor,
@@ -55,6 +52,12 @@ fun ScaffoldBox(
         ) {
             content(it)
             LoadingDialog(isLoadingProcess)
+            if (snackbarHostState != null) {
+                AppSnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                )
+            }
         }
     }
 
