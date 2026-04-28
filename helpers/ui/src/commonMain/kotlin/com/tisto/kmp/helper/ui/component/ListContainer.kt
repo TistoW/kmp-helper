@@ -611,24 +611,6 @@ private fun ListContainerErrorPreview() {
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, name = "ListContainer - Empty (Mobile)")
-@Composable
-private fun ListContainerEmptyPreview() {
-    HelperTheme {
-        ListContainer<PreviewProduct>(
-            screenConfig = ScreenConfig(maxWidth = 360.dp),
-            state = ListUiState.Empty(query = "nasi"),
-            snackbar = remember { SnackbarHostState() },
-            title = "Produk",
-            itemKey = { it.id },
-            tabletRow = ::previewTabletColumns,
-            mobileRow = { item, onClick ->
-                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
-            },
-        )
-    }
-}
-
 @Preview(showBackground = true, widthDp = 360, name = "ListContainer - Success (Mobile)")
 @Composable
 private fun ListContainerSuccessMobilePreview() {
