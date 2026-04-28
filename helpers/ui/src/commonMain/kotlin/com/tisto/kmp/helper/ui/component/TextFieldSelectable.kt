@@ -63,7 +63,7 @@ fun SelectableTextField(
     enabled: Boolean = true,
     isError: Boolean = false,
     cornerRadius: Dp = Radius.box,
-    strokeColor: Color = Colors.Gray2,
+    strokeColor: Color = Colors.Gray4,
     strokeWidth: Dp = 0.5.dp,
     endIcon: ImageVector = Icons.Default.KeyboardArrowRight,
     trailingIconSize: Dp = 20.dp,
