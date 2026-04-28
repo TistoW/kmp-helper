@@ -160,6 +160,8 @@ fun <T> ListContainer(
     deleteItemName: (T) -> String = { "" },
     itemKey: (T) -> Any,
     tabletRow: (isPicker: Boolean, onEdit: (T) -> Unit, onDelete: (T) -> Unit) -> List<ListColumn<T>>,
+    customTabletHeader: (@Composable () -> Unit)? = null,
+    customTabletRow: (@Composable (item: T, onClick: () -> Unit) -> Unit)? = null,
     additionalCompose: @Composable () -> Unit = {},
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
 ) {
@@ -227,6 +229,8 @@ fun <T> ListContainer(
                     screenConfig = screenConfig,
                     isPicker = isPicker,
                     columns = resolvedColumns,
+                    customTabletHeader = customTabletHeader,
+                    customTabletRow = customTabletRow,
                     itemKey = itemKey,
                     mobileRow = mobileRow,
                     additionalCompose = additionalCompose,
@@ -289,6 +293,8 @@ private fun <T> ListContainerBody(
     screenConfig: ScreenConfig,
     isPicker: Boolean,
     columns: List<ListColumn<T>>,
+    customTabletHeader: (@Composable () -> Unit)? = null,
+    customTabletRow: (@Composable (item: T, onClick: () -> Unit) -> Unit)? = null,
     itemKey: (T) -> Any,
     mobileRow: @Composable (item: T, onClick: () -> Unit) -> Unit,
     additionalCompose: @Composable () -> Unit = {},
@@ -337,12 +343,16 @@ private fun <T> ListContainerBody(
             additionalCompose()
 
             if (screenConfig.isTablet) {
-                ListHeader(
-                    columns = columns,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = contentHorizontalPadding)
-                )
+                if (customTabletHeader != null) {
+                    customTabletHeader()
+                } else {
+                    ListHeader(
+                        columns = columns,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = contentHorizontalPadding)
+                    )
+                }
             }
 
             LazyColumn(
@@ -358,6 +368,8 @@ private fun <T> ListContainerBody(
                     }
                     if (screenConfig.isMobile) {
                         mobileRow(item) { onClick() }
+                    } else if (customTabletRow != null) {
+                        customTabletRow(item) { onClick() }
                     } else {
                         ListRow(item = item, columns = columns, onClick = { onClick() })
                     }
