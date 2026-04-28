@@ -153,6 +153,7 @@ fun <T> ListContainer(
     onDateRangeApply: (DateRangeResult) -> Unit = {},
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     showAddButton: Boolean = true,
+    overTakeOnAddClicked: (() -> Unit)? = null,
     onEvent: (ListEvent<T>) -> Unit = {},
     onBack: () -> Unit = {},
     onPick: ((T) -> Unit)? = null,
@@ -188,7 +189,10 @@ fun <T> ListContainer(
                     screenConfig = screenConfig,
                     title = if (isPicker) titlePicker else title,
                     onAdd = if (showAddButton) {
-                        { onEvent(ListEvent.CreateClicked) }
+                        {
+                            if (overTakeOnAddClicked != null) overTakeOnAddClicked()
+                            else onEvent(ListEvent.CreateClicked)
+                        }
                     } else null,
                     onBack = if (screenConfig.isMobile) onBack else null,
                     backIcon = backIcon,
