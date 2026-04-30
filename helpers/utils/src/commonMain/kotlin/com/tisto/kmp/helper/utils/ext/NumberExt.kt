@@ -273,12 +273,13 @@ fun Number?.formatCurrency(
     val isNegative = value < 0
     val absValue = abs(value)
 
-    // FIX: Gunakan toPlainString() untuk avoid scientific notation
-    val valueStr = absValue.toBigDecimal().toPlainString()
-    val parts = valueStr.split(".")
-
-    val integerPart = parts[0].toLongOrNull() ?: 0L
-    val fractionStr = parts.getOrNull(1) ?: ""
+    val integerPart = absValue.toLong()
+    val fractionStr = run {
+        val frac = absValue - integerPart.toDouble()
+        if (frac < 1e-10) ""
+        else (frac * 1_000_000_000.0 + 0.5).toLong()
+            .toString().padStart(9, '0').trimEnd('0')
+    }
 
     val fraction = if (fractionStr.isNotEmpty()) {
         processFraction(fractionStr, maxFractionDigits, rounding)
