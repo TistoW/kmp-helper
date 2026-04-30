@@ -105,7 +105,7 @@ fun Double.toRawPriceString(): String {
     val longPart = rounded.toLong()
     val decPart = rounded - longPart.toDouble()
     if (decPart < 0.0001) return longPart.toString()
-    val decStr = "%.3f".format(decPart).drop(2).trimEnd('0')
+    val decStr = ((decPart * 1000).roundToLong()).toString().padStart(3, '0').trimEnd('0')
     return "${longPart},${decStr}"
 }
 

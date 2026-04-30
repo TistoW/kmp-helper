@@ -19,6 +19,13 @@ annotation class MobilePreview
 
 @Preview(
     showBackground = true,
+    name = "Mobile Landscape",
+    device = "spec:width=411dp,height=891dp,dpi=420,isRound=false,chinSize=0dp,orientation=landscape",
+)
+annotation class MobileLandscapePreview
+
+@Preview(
+    showBackground = true,
     name = "Desktop Full HD",
     device = Devices.DESKTOP,
 )
