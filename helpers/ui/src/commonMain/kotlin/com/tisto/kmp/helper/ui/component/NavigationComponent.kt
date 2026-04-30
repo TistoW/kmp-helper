@@ -282,7 +282,7 @@ fun NavigationViewSimple(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = userProfile.name.def("Zenenta Admin"),
+                        text = userProfile.name.def("App Admin"),
                         style = TextAppearance.body2Bold(),
                         color = Colors.Dark
                     )

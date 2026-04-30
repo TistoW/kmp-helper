@@ -89,7 +89,7 @@ internal fun SampleListRoute(
         }
     }
 
-    // Di project gunakan ZenentaTheme { screenConfig -> ... }
+    // Di project gunakan AppTheme { screenConfig -> ... }
     // Di helper gunakan HelperTheme + ScreenConfig default
     HelperTheme {
         SampleListScreen(

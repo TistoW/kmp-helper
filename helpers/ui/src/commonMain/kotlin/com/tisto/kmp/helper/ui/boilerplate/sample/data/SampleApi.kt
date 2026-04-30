@@ -21,7 +21,7 @@ import io.ktor.client.HttpClient
 internal class SampleApi(private val client: HttpClient) {
 
     // Ganti "/v2/sample" dengan URL endpoint yang sesuai, misal "$v2/sample"
-    // $v2 berasal dari com.zenenta.core.utils.constants.Constants
+    // $v2 berasal dari com.app_package.core.utils.constants.Constants
 
     suspend fun create(body: SampleRequest?): BaseResponse<Sample> = client.postMethod(
         url = "/v2/sample",

@@ -67,7 +67,7 @@ internal fun SampleFormRoute(
 
     SampleFormEffectHandler(viewModel.effect, snackbar, onDone)
 
-    // Di project gunakan ZenentaTheme { screenConfig -> ... }
+    // Di project gunakan AppTheme { screenConfig -> ... }
     HelperTheme {
         SampleFormScreen(
             state = state,

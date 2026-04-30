@@ -42,7 +42,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Use helper-network extensions: postMethod, getMethod, putMethod, deleteMethod.
 //   postMethod/putMethod accept a pickedImage param for multipart uploads.
 //   API methods return BaseResponse<T> raw — no unwrapping in the Api layer.
-//   URL prefix: $v2 from com.zenenta.core.utils.constants.Constants.
+//   URL prefix: $v2 from com.app_package.core.utils.constants.Constants.
 //
 // ── REPOSITORY ──
 //   Concrete class only, no interface, no UseCase layer.
@@ -143,7 +143,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Every screen has both. Route = stateful, Screen = pure @Composable.
 //   Route: safeKoinViewModel() ?: return (NEVER koinViewModel — it crashes on missing VM).
 //     Owns SnackbarHostState. Collects effects in private @Composable EffectHandler.
-//     Wraps with ZenentaTheme { screenConfig -> ... } to get responsive ScreenConfig.
+//     Wraps with AppTheme { screenConfig -> ... } to get responsive ScreenConfig.
 //     Passes viewModel::onEvent and screenConfig to Screen.
 //   Screen: always declares screenConfig: ScreenConfig = ScreenConfig() as first param
 //     so previews can call it without a theme wrapper.
@@ -236,7 +236,7 @@ package com.tisto.kmp.helper.ui.boilerplate
 //   Use raw OutlinedTextField/TextField (use CustomTextField/CurrencyTextField/SearchTextField).
 //   Use raw Switch in Row (use SwitchCard).
 //   Use Scaffold+TopAppBar+FAB in list/form (use ListContainer / ScaffoldBox+FormContainer).
-//   Derive ScreenConfig from LocalConfiguration inside Screen (receive it from ZenentaTheme).
+//   Derive ScreenConfig from LocalConfiguration inside Screen (receive it from AppTheme).
 //   Use raw @Preview (use @MobilePreview/@TabletPreview).
 //   Use loadExisting(itemId) in form VM (use initialItem + refreshInBackground).
 // ══════════════════════════════════════════════════════════════════════════
@@ -531,7 +531,7 @@ sealed interface ExampleListEffect {
 //     LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.onEvent(ListEvent.Refresh) }
 //     LaunchedEffect(pendingMessage) { if (pendingMessage != null) { snackbar.showSnackbar(pendingMessage); onMessageShown() } }
 //
-//     ZenentaTheme { screenConfig ->
+//     AppTheme { screenConfig ->
 //         ExampleListScreen(screenConfig = screenConfig, state = state, snackbar = snackbar,
 //             onEvent = viewModel::onEvent, onBack = onBack, onPick = onPick)
 //     }
@@ -596,7 +596,7 @@ sealed interface ExampleListEffect {
 // )
 //
 // @Composable private fun ScreenContentPreview(screenConfig: ScreenConfig = ScreenConfig()) {
-//     ZenentaTheme {
+//     AppTheme {
 //         ExampleListScreen(screenConfig = screenConfig, state = ListUiState.Success(
 //             items = listOf(Example(id="1",name="Item Satu",updatedAt="2025-12-22T04:12:09.000Z"),
 //                 Example(id="2",name="Item Dua",updatedAt="2025-12-22T04:12:09.000Z"),
@@ -741,7 +741,7 @@ sealed interface ExampleListEffect {
 //     val state by viewModel.uiState.collectAsStateWithLifecycle()
 //     val snackbar = remember { SnackbarHostState() }
 //     ExampleFormEffectHandler(viewModel.effect, snackbar, onDone)
-//     ZenentaTheme { screenConfig ->
+//     AppTheme { screenConfig ->
 //         ExampleFormScreen(state = state, snackbar = snackbar, screenConfig = screenConfig,
 //             onEvent = viewModel::onEvent, onBack = { onDone(null) })
 //     }
