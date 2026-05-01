@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tisto.kmp.helper.ui.ext.ScreenConfig
+import com.tisto.kmp.helper.ui.ext.TabletPreview
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Spacing
 import com.tisto.kmp.helper.utils.PlatformType
@@ -470,8 +471,10 @@ private fun ListContainerEmpty(
     ) {
         Spacer(modifier = Modifier.height(Spacing.small))
 
+        val contentHorizontalPadding =
+            if (screenConfig.isMobile) Spacing.normal else Spacing.extraLarge
         SearchFilterRow(
-            modifier = Modifier.padding(horizontal = Spacing.normal, Spacing.box),
+            modifier = Modifier.padding(horizontal = contentHorizontalPadding, Spacing.box),
             screenConfig = screenConfig,
             searchQuery = query,
             hint = searchHint,
@@ -598,7 +601,7 @@ private fun ListContainerLoadingPreview() {
 @Composable
 private fun ListContainerErrorPreview() {
     HelperTheme {
-        ListContainer<PreviewProduct>(
+        ListContainer(
             screenConfig = ScreenConfig(maxWidth = 360.dp),
             state = ListUiState.Error("Gagal memuat data. Periksa koneksi internet Anda."),
             snackbar = remember { SnackbarHostState() },
@@ -616,7 +619,7 @@ private fun ListContainerErrorPreview() {
 @Composable
 private fun ListContainerSuccessMobilePreview() {
     HelperTheme {
-        ListContainer<PreviewProduct>(
+        ListContainer(
             screenConfig = ScreenConfig(maxWidth = 360.dp),
             state = ListUiState.Success(
                 items = previewProductItems,
@@ -650,6 +653,30 @@ private fun ListContainerSuccessTabletPreview() {
                 totalItems = previewProductItems.size,
                 page = 1,
                 lastPage = 3,
+            ),
+            snackbar = remember { SnackbarHostState() },
+            title = "Produk",
+            itemKey = { it.id },
+            tabletRow = ::previewTabletColumns,
+            mobileRow = { item, onClick ->
+                ListMobileRow(text = item.name, secondary = item.price, onClick = onClick)
+            },
+        )
+    }
+}
+
+@TabletPreview
+@Composable
+private fun ListContainerEmptyTabletPreview() {
+    HelperTheme {
+        ListContainer<PreviewProduct>(
+            screenConfig = ScreenConfig(maxWidth = 800.dp),
+            state = ListUiState.Success(
+                items = listOf(),
+                query = "",
+                totalItems = 0,
+                page = 1,
+                lastPage = 1,
             ),
             snackbar = remember { SnackbarHostState() },
             title = "Produk",

@@ -46,7 +46,7 @@ fun <ITEM> FormContainer(
     item: ITEM? = null,
     selectedItemName: String? = "item ini",
     isLoadingProcess: Boolean = false,
-    onBack: () -> Unit = {},
+    onBack: (() -> Unit)? = null,
     onSave: () -> Unit = {},
     onDelete: (() -> Unit)? = null,
     saveText: String = "Simpan",
@@ -162,7 +162,7 @@ private fun FormButtonBar(
     saveText: String,
     deleteText: String,
     backText: String,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
     onSave: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -174,7 +174,9 @@ private fun FormButtonBar(
         if (!isMobile) {
             ButtonNormal(
                 text = backText,
-                onClick = onBack,
+                onClick = {
+                    onBack?.invoke()
+                },
                 isLoading = isLoadingProcess,
                 backgroundColor = Color.Black,
                 horizontalContentPadding = Spacing.normal,

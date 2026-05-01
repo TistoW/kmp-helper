@@ -12,11 +12,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 
 @Composable
 fun OverlayBox(
+    modifier: Modifier = Modifier,
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.White.copy(alpha = 0.8f)) // Semi-transparent overlay
             .pointerInput(Unit) {
