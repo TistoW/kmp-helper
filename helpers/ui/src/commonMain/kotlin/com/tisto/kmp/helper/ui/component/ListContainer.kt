@@ -431,6 +431,7 @@ private fun <T> ListContainerBody(
                     isRefreshing = state.isRefreshing,
                     containerColor = Color.White,
                     color = Color.Black,
+                    modifier = Modifier.align(Alignment.TopCenter),
                 )
             },
         ) {
