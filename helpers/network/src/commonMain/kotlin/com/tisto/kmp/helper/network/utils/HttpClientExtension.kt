@@ -37,7 +37,7 @@ suspend inline fun <reified T> HttpClient.getMethod(
         headers?.forEach { (key, value) -> header(key, value) }
         query?.forEach { (k, v) -> parameter(k, v) }
     }
-    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
+//    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
     return response.body()
 
 }
@@ -66,7 +66,7 @@ suspend inline fun <reified Req : Any, reified Res> HttpClient.postMethod(
         headers?.forEach { (key, value) -> header(key, value) }
         setBody(body, typeInfo<Req>()) // 🔥 INI KUNCINYA
     }
-    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
+//    if (response.status == HttpStatusCode.Unauthorized) throw UnauthorizedException()
     return response.body()
 }
 

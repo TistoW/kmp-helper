@@ -572,30 +572,37 @@ fun CustomTextField(
                     }
                 }
             },
-            leadingIcon = leadingIcon?.let {
-                {
-                    Box(
-                        modifier = Modifier
-                            .size(35.dp)
-                            .padding(start = Spacing.box)
-                            .clickable { leadingIconOnClick() },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = null,
-                            modifier = Modifier.size(leadingIconSize),
-                        )
-                    }
-                }
-            },
+            // leadingIcon intentionally NOT passed to DecorationBox — Material3 shifts the
+            // floating label rightward by the icon width when leadingIcon is present,
+            // causing the label to appear misaligned. The icon is rendered as an overlay below.
+            leadingIcon = null,
             contentPadding = PaddingValues(
                 top = Spacing.box,
                 bottom = Spacing.box,
-                start = if (leadingIcon != null) 4.dp else Spacing.box,
+                start = if (leadingIcon != null) 40.dp else Spacing.box,
                 end = if (finalEndIcon != null) 4.dp else Spacing.box,
             ),
         )
+
+        leadingIcon?.let { icon ->
+            Box(
+                modifier = Modifier
+                    .size(35.dp)
+                    .padding(start = Spacing.box)
+                    .align(Alignment.CenterStart)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { leadingIconOnClick() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(leadingIconSize),
+                )
+            }
+        }
 
         if (!editable) {
             Box(
