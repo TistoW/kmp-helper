@@ -6,7 +6,7 @@ import kotlin.random.Random
 
 fun String?.shorten(maxLength: Int = 10): String {
     val displaySearch = if (this?.length.def(0) > maxLength) {
-        this?.take(10) + "..."
+        this?.take(maxLength) + "..."
     } else {
         this.def()
     }
@@ -14,6 +14,8 @@ fun String?.shorten(maxLength: Int = 10): String {
 }
 
 fun String.ellipsis(maxLength: Int = 10) = shorten(maxLength)
+
+fun String.maxLength(maxLength: Int = 10) = shorten(maxLength)
 
 fun String?.startWithZeroPhone(): String? {
     if (this.isNullOrEmpty()) return this
@@ -72,11 +74,52 @@ private val firstNames = listOf(
 )
 
 private val lastNames = listOf(
-    "Pratama", "Santoso", "Dewi", "Kusuma", "Saputra", "Ayu", "Sari", "Susanto", "Setiawan", "Riyadi",
-    "Ananda", "Permata", "Puspita", "Wirawan", "Syahputra", "Susanti", "Hidayat", "Bakri", "Melinda", "Nugroho",
-    "Mansur", "Putri", "Siregar", "Wijaya", "Lestari", "Supriyadi", "Ridwan", "Mahendra", "Gunawan", "Ramadhan",
-    "Utami", "Maharani", "Amelia", "Andika", "Purnama", "Hakim", "Aditya", "Hartono", "Rahman", "Anggraini",
-    "Akbar", "Widodo", "Septiani", "Hartati", "Abidin", "Fadhilah"
+    "Pratama",
+    "Santoso",
+    "Dewi",
+    "Kusuma",
+    "Saputra",
+    "Ayu",
+    "Sari",
+    "Susanto",
+    "Setiawan",
+    "Riyadi",
+    "Ananda",
+    "Permata",
+    "Puspita",
+    "Wirawan",
+    "Syahputra",
+    "Susanti",
+    "Hidayat",
+    "Bakri",
+    "Melinda",
+    "Nugroho",
+    "Mansur",
+    "Putri",
+    "Siregar",
+    "Wijaya",
+    "Lestari",
+    "Supriyadi",
+    "Ridwan",
+    "Mahendra",
+    "Gunawan",
+    "Ramadhan",
+    "Utami",
+    "Maharani",
+    "Amelia",
+    "Andika",
+    "Purnama",
+    "Hakim",
+    "Aditya",
+    "Hartono",
+    "Rahman",
+    "Anggraini",
+    "Akbar",
+    "Widodo",
+    "Septiani",
+    "Hartati",
+    "Abidin",
+    "Fadhilah"
 )
 
 fun randomInt(from: Int, to: Int): Int {
@@ -190,7 +233,6 @@ fun String.isEmailValid(): Boolean {
     val emailRegex = Regex("^[A-Za-z](.*)([@]{1})(.{1,})(\\.)(.{1,})")
     return emailRegex.matches(this)
 }
-
 
 
 // ====================================
