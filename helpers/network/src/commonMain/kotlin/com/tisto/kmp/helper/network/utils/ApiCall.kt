@@ -1,6 +1,8 @@
 package com.tisto.kmp.helper.network.utils
 
 import com.tisto.kmp.helper.network.model.BaseResponse
+import com.tisto.kmp.helper.utils.ext.logs
+import com.tisto.kmp.helper.utils.ext.toJson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
@@ -53,6 +55,8 @@ fun <T, R> apiCall(
     // Execute API call
     val response = apiCall()
 
+    logs("response.message: ${response.message} - response.code : ${response.code}")
+
     if (response.isSuccess) {
         if (response.data != null) {
             // Map DTO to domain model
@@ -72,6 +76,7 @@ fun <T, R> apiCall(
                 )
             )
         } else {
+
             emit(
                 Resource.Error(
                     exception = Exception("API Error: ${response.message}"),

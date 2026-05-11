@@ -15,10 +15,7 @@ sealed class Resource<out T> {
         val total: Int? = null,
         val perPage: Int? = null,
         val lastSync: String? = null
-    ) : Resource<T>() {
-        val isPaginated: Boolean
-            get() = lastPage != null || currentPage != null || total != null
-    }
+    ) : Resource<T>()
 
     data class Error(
         val exception: Throwable,
