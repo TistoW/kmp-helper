@@ -855,7 +855,6 @@ fun EditTextCustomExamples() {
                 onValueChange = { name = it },
                 hint = "Nama",
                 style = TextFieldStyle.OUTLINED,
-                strokeWidth = 1.dp,
                 strokeColor = Color(0xFFE0E0E0),
                 strokeColorOnFocused = Color(0xFF0ABAB5),
                 modifier = Modifier.fillMaxWidth()
@@ -884,7 +883,6 @@ fun EditTextCustomExamples() {
                 onValueChange = { password = it },
                 hint = "Password",
                 style = TextFieldStyle.OUTLINED,
-                strokeWidth = 1.dp,
                 focusedStrokeWidth = 2.dp,
                 strokeColor = Color(0xFFE0E0E0),
                 strokeColorOnFocused = Color(0xFF0ABAB5),

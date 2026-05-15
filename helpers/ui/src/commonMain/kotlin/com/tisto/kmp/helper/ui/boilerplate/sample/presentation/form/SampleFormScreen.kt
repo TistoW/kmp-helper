@@ -150,7 +150,6 @@ internal fun SampleFormScreen(
                 onValueChange = { onEvent(SampleFormEvent.NameChanged(it)) },
                 label = SampleStrings.labelName,
                 style = TextFieldStyle.OUTLINED,
-                strokeWidth = 1.dp,
                 isError = state.nameError != null,
                 supportingText = state.nameError,
                 modifier = Modifier.fillMaxWidth(),
@@ -165,7 +164,6 @@ internal fun SampleFormScreen(
                 onValueChange = { onEvent(SampleFormEvent.DescriptionChanged(it)) },
                 label = SampleStrings.labelDescription,
                 style = TextFieldStyle.OUTLINED,
-                strokeWidth = 1.dp,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -176,7 +174,6 @@ internal fun SampleFormScreen(
                 value = state.price,
                 onValueChange = { onEvent(SampleFormEvent.DescriptionChanged(it)) },
                 label = SampleStrings.labelDescription,
-                strokeWidth = 1.dp,
                 modifier = Modifier.fillMaxWidth(),
             )
 
