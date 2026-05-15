@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -191,12 +192,12 @@ private fun FormButtonBar(
         ) {
             if (isEdit) {
                 ButtonNormal(
+                    style = ButtonStyle.Outlined,
                     text = deleteText,
                     onClick = onDelete,
                     isLoading = isLoadingProcess,
                     strokeWidth = 1.dp,
-                    strokeColor = Color.Black,
-                    textColor = Colors.Black,
+                    strokeColor = MaterialTheme.colorScheme.primary,
                     horizontalContentPadding = Spacing.normal,
                     modifier = if (isMobile) Modifier.weight(1f) else Modifier.widthIn(min = 100.dp),
                 )
@@ -205,7 +206,7 @@ private fun FormButtonBar(
             ButtonNormal(
                 text = saveText,
                 onClick = onSave,
-                backgroundColor = Color.Black,
+                backgroundColor = MaterialTheme.colorScheme.primary,
                 horizontalContentPadding = Spacing.normal,
                 isLoading = isLoadingProcess,
                 enabled = isFormValid,

@@ -35,7 +35,7 @@ fun SwitchCard(
     text: String = "",
     subText: String = "",
     backgroundColor: Color = Colors.Gray5,
-    checkedColor: Color = Color.Black,
+    checkedColor: Color = MaterialTheme.colorScheme.primary,
     uncheckedColor: Color = Colors.Gray4,
     styleText: TextStyle = TextAppearance.body2Bold(),
     styleSubText: TextStyle = TextAppearance.body2(),

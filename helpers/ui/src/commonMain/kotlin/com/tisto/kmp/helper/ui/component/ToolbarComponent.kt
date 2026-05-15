@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.More
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -106,9 +107,8 @@ fun Toolbar(
                 ButtonNormal(
                     style = ButtonStyle.Outlined,
                     text = deleteText,
-                    strokeColor = Colors.Black,
+                    strokeColor = MaterialTheme.colorScheme.primary,
                     horizontalContentPadding = Spacing.normal,
-//                    imageVector = Icons.Default.DeleteOutline,
                     onClick = onDelete,
                     modifier = Modifier
                         .height(Heights.normal)
@@ -120,10 +120,12 @@ fun Toolbar(
                 if (onAdd != null || onSave != null) Spacer(modifier = Modifier.width(Spacing.box))
             }
 
+            //strokeColor = MaterialTheme.colorScheme.primary,
+            //                    textColor = MaterialTheme.colorScheme.primary,
             if (onAdd != null) {
                 ButtonNormal(
                     text = addText,
-                    backgroundColor = Colors.Black,
+                    backgroundColor = MaterialTheme.colorScheme.primary,
                     horizontalContentPadding = Spacing.normal,
 //                    imageVector = Icons.Default.Add,
                     onClick = onAdd,
@@ -136,7 +138,7 @@ fun Toolbar(
             if (onSave != null) {
                 ButtonNormal(
                     text = saveText,
-                    backgroundColor = Colors.Black,
+                    backgroundColor = MaterialTheme.colorScheme.primary,
                     horizontalContentPadding = Spacing.normal,
 //                    imageVector = Icons.Default.Add,
                     onClick = onSave,

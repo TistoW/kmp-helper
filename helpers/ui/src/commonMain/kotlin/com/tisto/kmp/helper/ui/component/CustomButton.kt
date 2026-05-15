@@ -137,8 +137,8 @@ fun ButtonNormal(
     strokeWidth: Dp = 0.dp,
     elevation: Dp = 0.dp,
     cornerRadius: Dp = Radius.normal,
-    strokeColor: Color? = null,                        // null = ambil dari theme
-    textColor: Color = Colors.White,
+    strokeColor: Color? = MaterialTheme.colorScheme.primary,                        // null = ambil dari theme
+    textColor: Color = Colors.White,  // fallback ke theme,
     imageTint: Color = Colors.White,
     contentPadding: PaddingValues? = null,
     onClick: () -> Unit,
