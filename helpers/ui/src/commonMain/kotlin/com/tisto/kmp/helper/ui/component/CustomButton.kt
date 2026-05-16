@@ -163,7 +163,7 @@ fun ButtonNormal(
         ButtonStyle.Outlined -> {
             resolvedBg = Color.Transparent
             resolvedText = strokeColor ?: primaryColor
-            resolvedStrokeWidth = 1.dp
+            resolvedStrokeWidth = if (strokeWidth == 0.dp) 1.dp else strokeWidth
             resolvedStroke = strokeColor ?: primaryColor
             resolvedContent = strokeColor ?: primaryColor
         }
@@ -179,7 +179,7 @@ fun ButtonNormal(
         ButtonStyle.OutlinedDestructive -> {
             resolvedBg = Color.Transparent
             resolvedText = Colors.Delete
-            resolvedStrokeWidth = 1.dp
+            resolvedStrokeWidth = if (strokeWidth == 0.dp) 1.dp else strokeWidth
             resolvedStroke = Colors.Delete
             resolvedContent = Colors.Delete
         }
