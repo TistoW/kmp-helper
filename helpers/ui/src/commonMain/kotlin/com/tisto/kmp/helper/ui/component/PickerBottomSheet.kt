@@ -41,6 +41,8 @@ fun <T> PickerBottomSheet(
     addLabel: String = "",
     searchLabel: String = "Cari...",
     emptyLabel: String = "Belum ada data",
+    itemSubLabel: ((T) -> String?)? = null,
+    itemLeadingContent: (@Composable (T) -> Unit)? = null,
 ) {
     var query by remember { mutableStateOf("") }
     val filtered = remember(query, items) {
@@ -97,14 +99,32 @@ fun <T> PickerBottomSheet(
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(filtered) { item ->
-                        Text(
-                            text = itemLabel(item),
-                            style = MaterialTheme.typography.bodyLarge,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { onSelect(item) }
-                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                        )
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (itemLeadingContent != null) {
+                                itemLeadingContent(item)
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = itemLabel(item),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                val subLabel = itemSubLabel?.invoke(item)
+                                if (!subLabel.isNullOrBlank()) {
+                                    Text(
+                                        text = subLabel,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     }
                 }
