@@ -82,6 +82,7 @@ ktorBom = "3.4.2"
 roomRuntime = "2.8.4"
 roomKtx = "2.8.4"
 roomCompiler = "2.8.4"
+sqldelight = "2.0.2"
 
 # ============================================
 # DEPENDENCY INJECTION
@@ -324,6 +325,15 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "roomRuntime" }
 
 # ============================================
+# DATABASE - SQLDELIGHT (KMP)
+# ============================================
+sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
+sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
+sqldelight-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+sqldelight-jvm = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
+
+# ============================================
 # DEPENDENCY INJECTION - KOIN
 # ============================================
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroid" }
@@ -421,6 +431,10 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "barcodeScanning" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraCamera2" }
 
+helper-core-ui = { module = "helper:helpers", version = "ui" }
+helper-core-network = { module = "helper:helpers", version = "network" }
+helper-core-utils = { module = "helper:helpers", version = "utils" }
+
 [plugins]
 # ============================================
 # ANDROID PLUGINS
@@ -447,6 +461,8 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 # ============================================
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics" }
+
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
