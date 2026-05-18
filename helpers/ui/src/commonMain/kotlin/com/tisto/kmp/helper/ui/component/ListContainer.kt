@@ -199,7 +199,7 @@ fun <T> ListContainer(
                         }
                     } else null,
                     addText = addText,
-                    onBack = if (screenConfig.isMobile) onBack else null,
+                    onBack = if (screenConfig.isMobile || isPicker) onBack else null,
                     backIcon = backIcon,
                 )
             },
