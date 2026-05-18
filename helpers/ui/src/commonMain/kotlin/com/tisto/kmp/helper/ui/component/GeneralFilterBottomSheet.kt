@@ -127,6 +127,7 @@ fun resolveDatesFromPreset(preset: String): Pair<String, String> {
             val y = today.minus(DatePeriod(days = 1))
             y.toString() to y.toString()
         }
+
         "last7" -> today.minus(DatePeriod(days = 6)).toString() to today.toString()
         "last30" -> today.minus(DatePeriod(days = 29)).toString() to today.toString()
         "thisWeek" -> {
@@ -135,6 +136,7 @@ fun resolveDatesFromPreset(preset: String): Pair<String, String> {
             val end = start.plus(DatePeriod(days = 6))
             start.toString() to end.toString()
         }
+
         "lastWeek" -> {
             val dayOfWeek = today.dayOfWeek.ordinal
             val thisWeekStart = today.minus(DatePeriod(days = dayOfWeek))
@@ -142,20 +144,24 @@ fun resolveDatesFromPreset(preset: String): Pair<String, String> {
             val lastWeekEnd = lastWeekStart.plus(DatePeriod(days = 6))
             lastWeekStart.toString() to lastWeekEnd.toString()
         }
+
         "thisMonth" -> {
             val start = LocalDate(today.year, today.monthNumber, 1)
             start.toString() to today.toString()
         }
+
         "lastMonth" -> {
             val firstThisMonth = LocalDate(today.year, today.monthNumber, 1)
             val lastMonthEnd = firstThisMonth.minus(DatePeriod(days = 1))
             val lastMonthStart = LocalDate(lastMonthEnd.year, lastMonthEnd.monthNumber, 1)
             lastMonthStart.toString() to lastMonthEnd.toString()
         }
+
         "thisYear" -> {
             val start = LocalDate(today.year, 1, 1)
             start.toString() to today.toString()
         }
+
         else -> today.toString() to today.toString()
     }
 }
@@ -371,7 +377,7 @@ private fun DateRangeFilterSection(
 
     Spacer(Modifier.height(Spacing.small))
     HorizontalDivider(thickness = 0.5.dp, color = Colors.Gray4)
-    Spacer(Modifier.height(Spacing.small))
+    Spacer(Modifier.height(Spacing.normal))
 
     // Custom date range pickers
     Row(

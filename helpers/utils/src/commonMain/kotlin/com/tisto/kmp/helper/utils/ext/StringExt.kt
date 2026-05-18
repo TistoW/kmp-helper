@@ -339,3 +339,9 @@ private val colorNames = listOf(
 fun randomColorName(): String {
     return colorNames.random()
 }
+
+fun String?.optionalText(prefix: String? = null, suffix: String? = null): String {
+    val _prefix = if (!prefix.isNullOrEmpty()) prefix else ""
+    val _suffix = if (!suffix.isNullOrEmpty()) suffix else ""
+    return if (!this.isNullOrEmpty()) "  •  $_prefix $this $_suffix" else ""
+}

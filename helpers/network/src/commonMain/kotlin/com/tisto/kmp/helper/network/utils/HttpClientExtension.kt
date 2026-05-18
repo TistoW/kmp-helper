@@ -10,11 +10,13 @@ import io.ktor.http.*
 import io.ktor.http.content.PartData
 import io.ktor.util.reflect.typeInfo
 import io.ktor.utils.io.ByteReadChannel
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 
 
+@Serializable
 class EmptyBody()
 class UnauthorizedException : Exception("Unauthorized")
 

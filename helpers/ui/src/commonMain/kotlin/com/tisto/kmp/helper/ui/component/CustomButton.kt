@@ -137,8 +137,8 @@ fun ButtonNormal(
     strokeWidth: Dp = 0.dp,
     elevation: Dp = 0.dp,
     cornerRadius: Dp = Radius.normal,
-    strokeColor: Color? = null,                        // null = ambil dari theme
-    textColor: Color = Colors.White,
+    strokeColor: Color? = MaterialTheme.colorScheme.primary,                        // null = ambil dari theme
+    textColor: Color = Colors.White,  // fallback ke theme,
     imageTint: Color = Colors.White,
     contentPadding: PaddingValues? = null,
     onClick: () -> Unit,
@@ -163,7 +163,7 @@ fun ButtonNormal(
         ButtonStyle.Outlined -> {
             resolvedBg = Color.Transparent
             resolvedText = strokeColor ?: primaryColor
-            resolvedStrokeWidth = 1.dp
+            resolvedStrokeWidth = if (strokeWidth == 0.dp) 1.dp else strokeWidth
             resolvedStroke = strokeColor ?: primaryColor
             resolvedContent = strokeColor ?: primaryColor
         }
@@ -179,7 +179,7 @@ fun ButtonNormal(
         ButtonStyle.OutlinedDestructive -> {
             resolvedBg = Color.Transparent
             resolvedText = Colors.Delete
-            resolvedStrokeWidth = 1.dp
+            resolvedStrokeWidth = if (strokeWidth == 0.dp) 1.dp else strokeWidth
             resolvedStroke = Colors.Delete
             resolvedContent = Colors.Delete
         }

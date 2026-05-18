@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -71,7 +72,9 @@ fun <ITEM> FormContainer(
             title = if (!forceTitle.isNullOrEmpty()) forceTitle else title.title(item != null),
             onBack = onBack,
             backIcon = backIcon,
-            onDelete = if (!isMobile) (if (item != null && onDelete != null) onDelete else null) else null,
+            onDelete = if (!isMobile) (if (item != null && onDelete != null) ({
+                showDeleteDialog = true
+            }) else null) else null,
             onSave = if (!isMobile) onSave else null,
             isLoading = isLoadingProcess
         )
@@ -83,6 +86,7 @@ fun <ITEM> FormContainer(
                 .verticalScroll(scrollState)
                 .imePadding()
         ) {
+
             Surface(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -102,9 +106,11 @@ fun <ITEM> FormContainer(
                 shape = RoundedCornerShape(Radius.medium),
                 color = Color.White,
             ) {
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(vertical = if (isMobile) 0.dp else Spacing.normal)
                         .then(if (!isMobile) Modifier.padding(horizontal = Spacing.medium) else Modifier),
                 ) {
                     // Form fields
@@ -121,24 +127,25 @@ fun <ITEM> FormContainer(
                     }
 
                     // Bottom buttons
-                    if (isMobile) {
-                        FormButtonBar(
-                            isMobile = isMobile,
-                            isEdit = item != null && onDelete != null,
-                            isFormValid = isFormValid,
-                            isLoadingProcess = isLoadingProcess,
-                            saveText = saveText,
-                            deleteText = deleteText,
-                            backText = backText,
-                            onBack = onBack,
-                            onSave = onSave,
-                            onDelete = { showDeleteDialog = true },
-                        )
-                    } else {
+                    if (!isMobile) {
                         Spacer(modifier = Modifier.height(Spacing.medium))
                     }
                 }
             }
+        }
+
+        if (isMobile) {
+            FormButtonBar(
+                isMobile = isMobile,
+                isEdit = item != null && onDelete != null,
+                isFormValid = isFormValid,
+                isLoadingProcess = isLoadingProcess,
+                saveText = saveText,
+                deleteText = deleteText,
+                onSave = onSave,
+                onDelete = { showDeleteDialog = true },
+            )
+
         }
 
         DeleteConfirmationDialog(
@@ -161,28 +168,15 @@ private fun FormButtonBar(
     isLoadingProcess: Boolean,
     saveText: String,
     deleteText: String,
-    backText: String,
-    onBack: (() -> Unit)? = null,
     onSave: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = if (isMobile) Spacing.normal else Spacing.medium),
+            .padding(top = Spacing.tiny, bottom = Spacing.box)
+            .padding(horizontal = Spacing.normal),
     ) {
-        if (!isMobile) {
-            ButtonNormal(
-                text = backText,
-                onClick = {
-                    onBack?.invoke()
-                },
-                isLoading = isLoadingProcess,
-                backgroundColor = Color.Black,
-                horizontalContentPadding = Spacing.normal,
-                modifier = Modifier.widthIn(min = 100.dp)
-            )
-        }
 
         Row(
             modifier = if (isMobile) Modifier.fillMaxWidth()
@@ -191,12 +185,12 @@ private fun FormButtonBar(
         ) {
             if (isEdit) {
                 ButtonNormal(
+                    style = ButtonStyle.Outlined,
                     text = deleteText,
                     onClick = onDelete,
                     isLoading = isLoadingProcess,
                     strokeWidth = 1.dp,
-                    strokeColor = Color.Black,
-                    textColor = Colors.Black,
+                    strokeColor = MaterialTheme.colorScheme.primary,
                     horizontalContentPadding = Spacing.normal,
                     modifier = if (isMobile) Modifier.weight(1f) else Modifier.widthIn(min = 100.dp),
                 )
@@ -205,7 +199,7 @@ private fun FormButtonBar(
             ButtonNormal(
                 text = saveText,
                 onClick = onSave,
-                backgroundColor = Color.Black,
+                backgroundColor = MaterialTheme.colorScheme.primary,
                 horizontalContentPadding = Spacing.normal,
                 isLoading = isLoadingProcess,
                 enabled = isFormValid,

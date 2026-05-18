@@ -8,7 +8,8 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun HelperTheme(content: @Composable () -> Unit) {
     val colors = lightColorScheme(
-        primary = Colors.Green700,
+        primary = Color.Blue,
+        onSurface = Color.Black,
         background = Color.White,
         surface = Color.White,
         surfaceVariant = Color.White,

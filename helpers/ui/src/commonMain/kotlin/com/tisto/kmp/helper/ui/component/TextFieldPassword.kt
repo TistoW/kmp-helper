@@ -174,7 +174,6 @@ private fun PasswordTextFieldExample() {
             value = password,
             onValueChange = { password = it },
             label = "Password",
-            strokeWidth = 1.dp,
         )
 
         Text("2. With error", style = TextAppearance.body2())
@@ -182,7 +181,6 @@ private fun PasswordTextFieldExample() {
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = "Konfirmasi Password",
-            strokeWidth = 1.dp,
             isError = true,
             supportingText = "Password tidak sama",
         )

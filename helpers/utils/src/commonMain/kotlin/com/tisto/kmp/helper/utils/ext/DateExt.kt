@@ -76,7 +76,7 @@ fun String?.reformatDate(
 }
 
 fun String?.formatDate(
-    toFormat: String = "dd MMM yyyy HH:mm:ss",
+    toFormat: String = "dd MMM yyyy HH:mm",
     fromFormat: String = defaultDateFormat
 ): String {
     val date = this ?: dateExample

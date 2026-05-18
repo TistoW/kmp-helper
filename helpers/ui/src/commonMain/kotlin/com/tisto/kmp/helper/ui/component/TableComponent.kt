@@ -123,7 +123,7 @@ fun <T> TableHeader(
                     if (col.header != null) col.header.invoke()
                     else Text(
                         text = col.title,
-                        style = TextAppearance.body1Bold(),
+                        style = TextAppearance.title2(),
                         color = Color.Gray
                     )
                 }
