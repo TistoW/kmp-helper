@@ -55,8 +55,6 @@ fun <T, R> apiCall(
     // Execute API call
     val response = apiCall()
 
-    logs("response.message: ${response.message} - response.code : ${response.code}")
-
     if (response.isSuccess) {
         if (response.data != null) {
             // Map DTO to domain model
