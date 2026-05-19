@@ -81,7 +81,7 @@ fun <T, R> apiCall(
                 Resource.Error(
                     exception = Exception("API Error: ${response.message}"),
                     message = response.message,
-                    code = response.code
+                    code = response.statusCode?.toString() ?: response.code
                 )
             )
         }
@@ -91,7 +91,7 @@ fun <T, R> apiCall(
             Resource.Error(
                 exception = Exception("API Error: ${response.message}"),
                 message = response.message,
-                code = response.code
+                code = response.statusCode?.toString() ?: response.code
             )
         )
     }
