@@ -97,8 +97,8 @@ fun <T> ListHeader(
                     if (col.header != null) col.header.invoke()
                     else Text(
                         text = col.title,
-                        style = TextAppearance.body1Bold(),
-                        color = Color.Gray,
+                        style = TextAppearance.body1(),
+                        color = Color.Black,
                     )
                 }
                 if (index != columns.lastIndex) {
@@ -220,9 +220,9 @@ fun ListActions(
     options: List<String> = listOf(),
     onOptionsClicked: (String) -> Unit = {},
 ) {
-    Row (
+    Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ){
+    ) {
         onEdit?.let {
             IconButton(
                 onClick = it,
