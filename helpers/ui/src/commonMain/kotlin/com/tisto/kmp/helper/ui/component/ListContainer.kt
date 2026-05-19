@@ -154,6 +154,7 @@ fun <T> ListContainer(
     onDateRangeApply: (DateRangeResult) -> Unit = {},
     backIcon: ImageVector = Icons.AutoMirrored.Filled.ArrowBack,
     showAddButton: Boolean = true,
+    addText : String= "Tambah",
     overTakeOnAddClicked: (() -> Unit)? = null,
     onEvent: (ListEvent<T>) -> Unit = {},
     onBack: () -> Unit = {},
@@ -197,7 +198,8 @@ fun <T> ListContainer(
                             else onEvent(ListEvent.CreateClicked)
                         }
                     } else null,
-                    onBack = if (screenConfig.isMobile) onBack else null,
+                    addText = addText,
+                    onBack = if (screenConfig.isMobile || isPicker) onBack else null,
                     backIcon = backIcon,
                 )
             },
