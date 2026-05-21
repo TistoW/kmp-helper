@@ -97,7 +97,7 @@ fun <ITEM> FormContainer(
                         else Modifier
                             .padding(top = Spacing.huge)
                             .shadow(
-                                elevation = 5.dp,
+                                elevation = 2.dp,
                                 shape = RoundedCornerShape(Radius.medium),
                                 ambientColor = Color.Black.copy(alpha = 0.10f),
                                 clip = false,

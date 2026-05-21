@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tisto.kmp.helper.ui.theme.HelperTheme
 import com.tisto.kmp.helper.ui.theme.Heights
 import com.tisto.kmp.helper.ui.theme.Padding
@@ -95,7 +96,8 @@ fun Toolbar(
 
             Text(
                 text = title,
-                style = TextAppearance.title2Bold(),
+                style = TextAppearance.body1Bold(),
+                fontSize = 18.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
