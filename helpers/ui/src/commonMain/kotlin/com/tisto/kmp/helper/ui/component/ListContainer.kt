@@ -158,6 +158,7 @@ fun <T> ListContainer(
     overTakeOnAddClicked: (() -> Unit)? = null,
     onEvent: (ListEvent<T>) -> Unit = {},
     onBack: () -> Unit = {},
+    showBack: Boolean = true,
     onPick: ((T) -> Unit)? = null,
     deleteItemName: (T) -> String = { "" },
     itemKey: (T) -> Any,
@@ -199,7 +200,7 @@ fun <T> ListContainer(
                         }
                     } else null,
                     addText = addText,
-                    onBack = if (screenConfig.isMobile || isPicker) onBack else null,
+                    onBack = if ((screenConfig.isMobile || isPicker) && showBack) onBack else null,
                     backIcon = backIcon,
                 )
             },
